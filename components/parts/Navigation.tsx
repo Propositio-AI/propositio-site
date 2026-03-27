@@ -9,7 +9,7 @@ import {
 const Navigation = () => {
   return (
     <NavigationMenu>
-      <NavigationMenuList className="flex justify-center gap-4">
+      <NavigationMenuList className="flex justify-center gap-3">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
             <Link href="#aboutSection">About</Link>
