@@ -1,0 +1,17 @@
+{
+  "facebook": {
+    "url": "https://www.facebook.com/people/Propositio-AI/61578161068164/",
+    "label": "Facebook",
+    "icon": "facebook"
+  },
+  "instagram": {
+    "url": "https://www.instagram.com/propositio_ai?igsh=MW10b2pkdnEwamkzbw%3D%3D&utm_source=qr",
+    "label": "Instagram",
+    "icon": "instagram"
+  },
+  "x": {
+    "url": "https://x.com/Propositio_ai",
+    "label": "X",
+    "icon": "x"
+  }
+}
