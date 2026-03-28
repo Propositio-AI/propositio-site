@@ -8,8 +8,8 @@ export default function HeroSection() {
       className="flex flex-col items-center text-center bg-cover bg-center w-full"
       style={{
         backgroundImage: "url('/images/hero.jpg')",
-        paddingTop: '100px',
-        paddingBottom: '60px',
+        paddingTop: '120px',
+        paddingBottom: '80px',
         paddingLeft: '16px',
         paddingRight: '16px',
       }}
@@ -27,7 +27,5 @@ export default function HeroSection() {
         Propositio AIは、学生と教育関係者のための革新的AIプロダクトを開発しています。学びとキャリアの未来を、テクノロジーで切り拓きます。
       </p>
     </div>
-    
-
   )
 }
