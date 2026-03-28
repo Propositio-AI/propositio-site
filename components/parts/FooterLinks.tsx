@@ -2,9 +2,9 @@ import Link from "next/link";
 
 const FooterLinks = () => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs sm:text-sm">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-xs">
       {/* サービス */}
-      <div>
+      <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">サービス</h3>
         <ul className="space-y-4">
           <li><Link href="" className="hover:text-black">Karynos</Link></li>
@@ -12,7 +12,7 @@ const FooterLinks = () => {
       </div>
       
       {/* コンテンツ */}
-      <div>
+      <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">コンテンツ</h3>
         <ul className="space-y-4">
           <li><Link href="" className="hover:text-black">ブログ</Link></li>
@@ -21,7 +21,7 @@ const FooterLinks = () => {
       </div>
     
       {/* 会社 */}
-      <div>
+      <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">会社</h3>
         <ul className="space-y-4">
           <li><Link href="" className="hover:text-black">会社概要</Link></li>
@@ -30,7 +30,7 @@ const FooterLinks = () => {
       </div>
       
       {/* 法的情報 */}
-      <div>
+      <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">法的情報</h3>
         <ul className="space-y-4">
           <li><Link href="" className="hover:text-black">利用規約</Link></li>

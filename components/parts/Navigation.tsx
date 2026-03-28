@@ -12,27 +12,27 @@ const Navigation = () => {
       <NavigationMenuList className="flex justify-center gap-3">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link href="#aboutSection">About</Link>
+            <Link href="#aboutSection" className="text-xs">About</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link href="#productsSection">Products</Link>
+            <Link href="#productsSection" className="text-xs">Products</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link href="#membersSection">Members</Link>
+            <Link href="#membersSection" className="text-xs">Members</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link href="#joinSection">Join</Link>
+            <Link href="#joinSection" className="text-xs">Join</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link href="/contact">Contact</Link>
+            <Link href="/contact" className="text-xs">Contact</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>
