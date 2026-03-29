@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="sm:flex sm:justify-between sm:gap-4 py-7 border-b border-gray-300">
           <div className="mb-4 sm:mb-0">
             <h2 className="text-sm md:text-xl font-bold text-gray-900">Propositio AI</h2>
-            <p className="md:text-sm mt-2 w-70">
+            <p className="md:text-sm mt-2 w-120">
               可能性を全ての人に。
               <br />
               学生と教育関係者のための革新的AIプロダクトを開発しています。

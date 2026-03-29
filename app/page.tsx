@@ -1,4 +1,4 @@
-import { HeroSection, AboutSection, KarynosIntroSection, MemberIntroSection, JoinSection } from '@/components/home';
+import { HeroSection, AboutSection, KarynosIntroSection, MemberIntroSection, JoinSection } from '@/components/section/home';
 export default function Home() {
   return (
   <main>

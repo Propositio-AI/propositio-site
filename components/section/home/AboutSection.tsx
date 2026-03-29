@@ -3,8 +3,8 @@ const AboutSection = () => {
   return (
     <div
       id="aboutSection"
-      className="py-16 px-6 md:px-15">
-      <h2 className="text-lg md:text-3xl font-bold text-muted-foreground mb-6">About</h2>
+      className="py-16 px-6 mt-10 md:px-15">
+      <h2 className="text-lg md:text-3xl font-bold text-muted-foreground mb-4 md:mb-6">About</h2>
       <div className="container mx-auto md:flex md:justify-around mb-18">
         <div className="space-y-2 mb-10 md:mb-0 md:w-1/3">
           <h3 className="text-3xl md:text-6xl font-semibold">夢を夢で<br />終わらせない</h3>
