@@ -7,7 +7,6 @@ import { FaRocket } from "react-icons/fa6";
 import { FaArrowRightToBracket } from "react-icons/fa6";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -20,7 +19,7 @@ const JoinSection = () => {
       className="py-16 px-6 md:px-15">
       <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
       <Card className="relative mx-auto w-full max-w-2xl pt-0">
-        <div className="absolute inset-0 z-30 aspect-video" />
+        <div className="pointer-events-none absolute inset-0 z-30 aspect-video" />
         <img
           src="/images/join.png"
           alt="Event cover"
@@ -38,7 +37,9 @@ const JoinSection = () => {
           </div>
         </CardHeader>
         <CardFooter>
-          <Button className="w-full md:text-lg"><Link href="/join">参加募集ページへ</Link><FaArrowRightToBracket /></Button>
+          <Button asChild className="w-full md:text-lg">
+            <Link href="/join" className="flex items-center justify-center gap-2">参加募集ページへ<FaArrowRightToBracket /></Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

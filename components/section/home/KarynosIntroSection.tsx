@@ -1,9 +1,7 @@
 
 const KarynosIntroSection = () => {
   return (
-    <div>
-      
-    </div>
+    <div id="productsSection" />
   )
 }
 

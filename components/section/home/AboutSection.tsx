@@ -7,7 +7,7 @@ const AboutSection = () => {
       <h2 className="text-lg md:text-3xl font-bold text-muted-foreground mb-4 md:mb-6">About</h2>
       <div className="container mx-auto md:flex md:justify-around mb-18">
         <div className="space-y-2 mb-10 md:mb-0 md:w-1/3">
-          <h3 className="text-3xl md:text-6xl font-semibold">夢を夢で<br />終わらせない</h3>
+          <h3 className="text-3xl md:text-6xl font-semibold mb-5">夢を夢で<br />終わらせない</h3>
           <p className="text-sm md:text-lg text-muted-foreground">AIの力で、すべての学生が自分の可能性を信じ、それを実現するための手段を得られる社会へ</p>
         </div>
         <img src="/images/history.png" alt="History" className="w-full h-auto object-contain md:w-3/7 md:pl-8" />

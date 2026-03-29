@@ -121,10 +121,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  [id] {
+    scroll-margin-top: 6rem;
+  }
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply bg-background text-foreground overflow-x-clip;
   }
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-clip;
+    scroll-behavior: smooth;
   }
 }

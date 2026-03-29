@@ -1,0 +1,131 @@
+{
+  "roles": [
+    {
+      "role": "フルスタックエンジニア",
+      "description": "フロントからバックエンドまでを横断し、プロダクト全体を設計、実装します。",
+      "members": [
+        {
+          "name": "Kage",
+          "position": "leader",
+          "image": "/images/members/Kage.png",
+          "grade": "B3",
+          "hobby": "バトミントン",
+          "comment": "ほぼ機械"
+        },
+        {
+          "name": "LonB",
+          "position": "member",
+          "image": "/images/members/LonB.png",
+          "grade": "B3",
+          "hobby": "バレーボール観戦",
+          "comment": "生涯学習日々成長"
+        }
+      ]
+    },
+    {
+      "role": "AIエンジニア",
+      "description": "AI技術を活用し、サービスに新しい価値や可能性を生み出します。",
+      "members": [
+        {
+          "name": "Daiki",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B3",
+          "hobby": "ダーツ",
+          "comment": "努力する"
+        },
+        {
+          "name": "Masaya",
+          "position": "member",
+          "image": "/images/members/Masaya.png",
+          "grade": "B2",
+          "hobby": "音楽",
+          "comment": "学割詳しいです。何でも聞いてください。"
+        }
+      ]
+    },
+    {
+      "role": "フロントエンジニア",
+      "description": "ユーザー体験を重視し、直感的で使いやすいUIを形にします。",
+      "members": [
+        {
+          "name": "Toya",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B3",
+          "hobby": "バイク",
+          "comment": "よっしゃきた"
+        },
+        {
+          "name": "Wasei",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B2",
+          "hobby": "ドラム、読書、犬猫、資格勉強",
+          "comment": "明日やれることは明日やればいいと思っています"
+        }
+      ]
+    },
+    {
+      "role": "バックエンドエンジニア",
+      "description": "システムの中核を支え、安全で拡張性の高い基盤を構築します。",
+      "members": [
+        {
+          "name": "Towa",
+          "position": "member",
+          "image": "/images/members/Towa.png",
+          "grade": "B3",
+          "hobby": "服探し、ゲーム、勉強",
+          "comment": "目指せハイスぺ"
+        },
+        {
+          "name": "Shoya",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B3",
+          "hobby": "ゲーム、バスケ",
+          "comment": "身長では負けません"
+        }
+      ]
+    },
+    {
+      "role": "マーケティング",
+      "description": "ユーザ視点で価値を届け、サービスの成長を戦略的に支えます。",
+      "members": [
+        {
+          "name": "Isamu",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B3",
+          "hobby": "...",
+          "comment": "..."
+        },
+        {
+          "name": "Kissy",
+          "position": "member",
+          "image": "/images/members/Kissy.png",
+          "grade": "B3",
+          "hobby": "アカペラ、ジャグリング、手品",
+          "comment": "Live a little"
+        },
+        {
+          "name": "Takanabe",
+          "position": "member",
+          "image": "/images/members/Takanabe.png",
+          "grade": "B3",
+          "hobby": "読書",
+          "comment": "どうぞよろしくお願いします"
+        },
+        {
+          "name": "Fumino",
+          "position": "member",
+          "image": "/images/members/none.png",
+          "grade": "B3",
+          "hobby": "映画鑑賞、弓道、旅行",
+          "comment": "AIについて詳しくないですが、活動を通して日々勉強しています！"
+        }
+      ]
+    }
+
+  ]
+}
