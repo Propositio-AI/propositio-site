@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const FooterLinks = () => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-xs">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-xs md:text-sm">
       {/* サービス */}
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">サービス</h3>

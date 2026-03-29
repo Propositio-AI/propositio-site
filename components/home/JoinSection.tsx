@@ -1,4 +1,5 @@
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button"
 import { MdOutlinePeople } from "react-icons/md";
 import { FaRegLightbulb } from "react-icons/fa";
@@ -16,9 +17,9 @@ import {
 const JoinSection = () => {
   return (
     <div id="aboutSection"
-      className="py-16 px-6 sm:px-15">
-      <h2 className="text-lg sm:text-xl font-bold text-gray-600 mb-6">Join</h2>
-      <Card className="relative mx-auto w-full max-w-xl pt-0">
+      className="py-16 px-6 md:px-15">
+      <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-6">Join</h2>
+      <Card className="relative mx-auto w-full max-w-2xl pt-0">
         <div className="absolute inset-0 z-30 aspect-video" />
         <img
           src="/images/join.png"
@@ -26,18 +27,18 @@ const JoinSection = () => {
           className="relative z-20 w-full object-cover"
         />
         <CardHeader>
-          <CardTitle>一緒に未来を創りませんか?</CardTitle>
-          <CardDescription>
+          <CardTitle className="md:text-2xl mb-1">「勉強の意味が分からない」を、AIで解決する。<br className="hidden md:block"/>学習と夢をつなぐ教育プラットフォームを、一緒につくろう。</CardTitle>
+          <CardDescription className="md:text-xl">
             Prositio AIは、教育とキャリアの課題解決に情熱を持つ仲間を募集しています。学生企業ならではの挑戦と成長の機会があなたを待っています。
           </CardDescription>
           <div className="flex items-center gap-2 mt-4">
-            <Badge variant="secondary"><MdOutlinePeople />チームワーク</Badge>
-            <Badge variant="secondary"><FaRegLightbulb />革新的な挑戦</Badge>
-            <Badge variant="secondary"><FaRocket />成長機会</Badge>
+            <Badge variant="secondary" className="md:text-base"><MdOutlinePeople className="w-5 h-5"/>チームワーク</Badge>
+            <Badge variant="secondary" className="md:text-base"><FaRegLightbulb className="w-4 h-4" />革新的な挑戦</Badge>
+            <Badge variant="secondary" className="md:text-base"><FaRocket className="w-4 h-4" />成長機会</Badge>
           </div>
         </CardHeader>
         <CardFooter>
-          <Button className="w-full">参加募集ページへ<FaArrowRightToBracket /></Button>
+          <Button className="w-full md:text-lg"><Link href="/join">参加募集ページへ</Link><FaArrowRightToBracket /></Button>
         </CardFooter>
       </Card>
     </div>
