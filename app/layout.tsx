@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
+      data-scroll-behavior="smooth"
       className={`${notoSansJp.variable} h-full antialiased`}
     >
       <body className={`${notoSansJp.className} min-h-full flex flex-col`}>
