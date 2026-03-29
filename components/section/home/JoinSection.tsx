@@ -17,7 +17,7 @@ const JoinSection = () => {
   return (
     <div id="joinSection"
       className="py-16 px-6 md:px-15">
-      <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
       <Card className="relative mx-auto w-full max-w-2xl pt-0">
         <div className="pointer-events-none absolute inset-0 z-30 aspect-video" />
         <img
