@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
+import { IoIosSend } from "react-icons/io";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -79,7 +80,7 @@ const JoinForm = () => {
   }
 
   return (
-    <Card className="w-full sm:max-w-lg">
+    <Card className="w-full sm:max-w-lg md:max-w-2xl">
       <CardContent>
         <form id="contact_form" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
@@ -204,6 +205,7 @@ const JoinForm = () => {
         <Field orientation="horizontal" className="flex flex-col items-center">
           <Button type="submit" form="contact_form">
             応募する
+            <IoIosSend />
           </Button>
         </Field>
       </CardFooter>

@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
+import { IoIosSend } from "react-icons/io";
+
 
 import { Button } from "@/components/ui/button"
 import {
@@ -74,11 +76,11 @@ const ContactForm = () => {
   }
 
   return (
-    <Card className="w-full sm:max-w-md">
+    <Card className="w-full sm:max-w-md md:max-w-xl">
       <CardHeader>
         <CardTitle>お問い合わせフォーム</CardTitle>
         <CardDescription>
-          ご質問やご相談は、以下のフォームからお寄せください。
+          ご質問やご相談は、こちらのフォームからお寄せください。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -163,6 +165,7 @@ const ContactForm = () => {
         <Field orientation="horizontal" className="flex flex-col items-center">
           <Button type="submit" form="contact_form" className="px-4">
             送信する
+            <IoIosSend />
           </Button>
         </Field>
       </CardFooter>
