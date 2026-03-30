@@ -11,10 +11,10 @@ const DreamAction = () => {
         <BsLightningCharge className="w-4 h-4" />
         <span className="text-xs md:text-sm"><TextReveal as="span" text="Career Realization Platform" startDelay={0} /></span>
       </div>
-      <h3 className="text-center bg-linear-to-r from-red-600 via-purple-500 to-pink-200 bg-clip-text text-transparent text-4xl md:text-6xl font-bold mb-4">
+      <h3 className="text-center bg-linear-to-r from-red-600 via-purple-500 to-pink-200 bg-clip-text text-transparent text-4xl md:text-6xl font-bold mb-5">
         Dream Action
       </h3>
-      <p className="text-center text-muted-foreground text-base md:text-lg shadow-[0_0_30px_1px_rgba(255,0,0,0.2)] rounded-xl py-0.5 px-1">
+      <p className="text-center text-muted-foreground font-bold text-base md:text-lg shadow-[0_0_30px_1px_rgba(255,0,0,0.2)] rounded-xl py-0.5 px-1.5">
         <TextReveal as="span" text="見つけた夢を、現実に" startDelay={0.1} />
       </p>
       <div className="mx-3 py-1 px-3 mb-3 rounded-xl mt-5">

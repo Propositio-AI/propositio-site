@@ -11,10 +11,10 @@ const DreamMatching = () => {
         <BsLightningCharge className="w-4 h-4" />
         <span className="text-xs md:text-sm"><TextReveal as="span" text="Carrer Discovery Platform" startDelay={0} /></span>
       </div>
-      <h3 className="text-center bg-linear-to-r from-blue-700 via-purple-500 to-pink-200 bg-clip-text text-transparent text-4xl md:text-6xl font-bold mb-4">
+      <h3 className="text-center bg-linear-to-r from-blue-700 via-purple-500 to-pink-200 bg-clip-text text-transparent text-4xl md:text-6xl font-bold mb-5">
         Dream Matching
       </h3>
-      <p className="text-center text-muted-foreground text-base md:text-lg shadow-[0_0_30px_1px_rgba(0,0,255,0.2)] rounded-xl py-0.5 px-1">
+      <p className="text-center text-muted-foreground font-bold text-base md:text-lg shadow-[0_0_30px_1px_rgba(0,0,255,0.2)] rounded-xl py-0.5 px-1">
         <TextReveal as="span" text="将来の夢を、スワイプで見つける" startDelay={0.1} />
       </p>
       <div className="mx-3 py-1 px-3 mb-3 rounded-xl mt-5">
