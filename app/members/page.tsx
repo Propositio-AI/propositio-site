@@ -1,6 +1,6 @@
 import data from "@/data/membersData.json";
 import { Role } from "@/lib/types";
-import MemberCardList from "@/components/parts/MemberCardList";
+import MemberCardList from "@/components/parts/member/MemberCardList";
 import ToHomePageButton from "@/components/parts/ToHomePageButton";
 
 const MembersPage = () => {

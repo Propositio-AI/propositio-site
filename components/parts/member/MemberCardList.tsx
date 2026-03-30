@@ -1,4 +1,4 @@
-import MemberCard from "@/components/parts/MemberCard"
+import MemberCard from "@/components/parts/member/MemberCard"
 import { Role } from "@/lib/types";
 
 type Props ={

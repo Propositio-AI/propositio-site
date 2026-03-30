@@ -1,6 +1,6 @@
 "use client"
-import DreamMatching from "@/components/parts/DreamMatching"
-import DreamAction from "@/components/parts/DreamAction"
+import DreamMatching from "@/components/parts/product/DreamMatching"
+import DreamAction from "@/components/parts/product/DreamAction"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
