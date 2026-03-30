@@ -11,7 +11,7 @@ const MissionSection = () => {
             私たちは「可能性を全ての人に」届けることを目指しています。日本の若者が抱える「無力感」を、Aiの力によって変え、一人ひとりが自分の可能性に挑戦できる社会を実現します。
           </p>
         </div>
-        {/* 画像入れる予定 */}
+        <img src="/images/join.png" alt="join" className="w-full md:w-1/2 lg:w-2/5 mt-6 md:mt-0 md:ml-6" />
       </div>
     </div>
   )

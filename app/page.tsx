@@ -3,8 +3,8 @@ export default function Home() {
   return (
   <main className="w-full">
     <HeroSection/>
-    <AboutSection />
     <KarynosIntroSection />
+    <AboutSection />
     <MemberIntroSection />
     <JoinSection />
   </main>
