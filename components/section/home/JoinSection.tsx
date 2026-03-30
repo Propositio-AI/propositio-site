@@ -15,7 +15,7 @@ import {
 
 const JoinSection = () => {
   return (
-    <div id="joinSection"
+    <div id="join"
       className="py-16 px-6 md:px-15">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
       <Card className="relative mx-auto w-full max-w-2xl pt-0">

@@ -1,7 +1,7 @@
 import { TbHexagonNumber1Filled, TbHexagonNumber2Filled, TbHexagonNumber3Filled, TbHexagonNumber4Filled } from "react-icons/tb";
 const MeritSection = () => {
   return (
-    <div id="meritSection" className="px-6 md:px-16 py-16 bg-gray-50">
+    <div id="merit" className="px-6 md:px-16 py-16 bg-gray-50">
       <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Merit</h2>
       <div className="mx-auto w-full max-w-5xl py-15 px-4 md:px-10 border border-gray-200 rounded-lg bg-white text-center">
         <h3 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">参加するメリット</h3>

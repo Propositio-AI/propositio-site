@@ -5,7 +5,7 @@ export default function HeroSection() {
 
   return (
     <div 
-      id="heroSection"
+      id="hero"
       className="flex flex-col items-center text-center bg-cover bg-center w-full"
       style={{
         backgroundImage: "url('/images/hero.jpg')",

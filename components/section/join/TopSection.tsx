@@ -2,7 +2,7 @@ import { MdOutlinePeople } from "react-icons/md";
 
 const TopSection = () => {
   return (
-    <div  id="topSection"
+    <div  id="top"
       className="px-6 md:px-15 text-center mb-20">
       <div className="backdrop-blur-xs inline-flex text-black items-center border border-gray-400 rounded-2xl py-1 px-3 mb-4 md:mb-6">
         <MdOutlinePeople className="w-5 h-5" />

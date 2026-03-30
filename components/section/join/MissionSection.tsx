@@ -2,7 +2,7 @@ import React from 'react'
 
 const MissionSection = () => {
   return (
-    <div id="missionSection" className="px-6 md:px-16 py-16 bg-gray-50">
+    <div id="mission" className="px-6 md:px-16 py-16 bg-gray-50">
       <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Mission</h2>
       <div className="flex flex-col items-center md:flex-row">
         <div>

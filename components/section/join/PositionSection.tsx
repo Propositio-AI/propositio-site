@@ -1,7 +1,7 @@
 import PositionList from "@/components/parts/PositionList";
 const PositionSection = () => {
   return (
-    <div id="positionSection" className="px-6 md:px-16 py-16">
+    <div id="position" className="px-6 md:px-16 py-16">
       <h2 className="text-lg md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Position</h2>
       <div className="flex flex-col items-center">
         <div className="text-center">

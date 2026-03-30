@@ -5,7 +5,7 @@ import { FaArrowRightToBracket } from "react-icons/fa6";
 
 const MemberIntroSection = () => {
   return (
-    <div id="membersSection" className=" py-16 px-6 md:px-15 bg-gray-50">
+    <div id="members" className=" py-16 px-6 md:px-15 bg-gray-50">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Members</h2>
       <div className="container mx-auto flex flex-col md:flex-row items-center">
         <img src="/images/memberIntro.png" alt="Member Introduction" className="w-full h-auto object-contain md:w-1/2" />
