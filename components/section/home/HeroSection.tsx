@@ -1,7 +1,19 @@
+'use client';
+
+import { useEffect, useState } from "react";
 import { TbPointFilled } from "react-icons/tb";
 import { TextReveal } from "@/components/unlumen-ui/text-reveal";
 
 export default function HeroSection() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setVisible(true);
+    }, 800);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
     <div 
@@ -15,7 +27,7 @@ export default function HeroSection() {
         paddingRight: '16px',
       }}
     >
-      <div className="backdrop-blur-xs inline-flex text-white items-center border border-white rounded-2xl py-1 px-3 mb-3">
+      <div className={`backdrop-blur-xs inline-flex text-white items-center border border-white rounded-2xl py-1 px-3 mb-3 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
         <TbPointFilled className="w-4 h-4" />
         <TextReveal as="span" text="学生企業が届けるAI" className="text-xs md:text-sm lg:text-lg" startDelay={1} />
       </div>
