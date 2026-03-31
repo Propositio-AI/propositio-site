@@ -32,8 +32,8 @@ export default function HeroSection() {
         <TextReveal as="span" text="学生企業が届けるAI" className="text-xs md:text-sm lg:text-lg" startDelay={1} />
       </div>
       <h1 className="text-white text-3xl md:text-6xl font-semibold">
-        <TextReveal text="可能性を" startDelay={0.2} duration={0.5} />
-        <TextReveal text="すべての人に" startDelay={0.8} duration={0.5} />
+        <TextReveal as="span" text="可能性を" startDelay={0.2} duration={0.5} className="block leading-tight" />
+        <TextReveal as="span" text="すべての人に" startDelay={0.8} duration={0.5} className="block leading-tight" />
       </h1>
       <p className="text-xs md:text-base text-white mt-2 max-w-2xl">
         <TextReveal as="span" text="Propositio AIは、 学生と教育関係者のための革新的AIプロダクトを開発しています。学びとキャリアの未来を、テクノロジーで切り拓きます。" startDelay={1} />

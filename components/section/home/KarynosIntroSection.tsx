@@ -62,7 +62,7 @@ const KarynosIntroSection = () => {
           </button>
         ))}
       </div>
-      <div className="mt-4 mx-1 p-8 border rounded-lg bg-card">
+      <div className="mt-4 mx-2 md:mx-16 p-8 border rounded-lg bg-card">
         <div>
           {activeTab === "matching" ? (
             <div className="space-y-4">
