@@ -1,0 +1,20 @@
+'use server';
+import { supabase } from "@/lib/supabase";
+
+type ApplicationFormData = {
+  email: string;
+  name: string;
+  school_info: string;
+  position: string;
+  motivation: string;
+};
+
+export async function insertApplication(data: ApplicationFormData) {
+  const { error } = await supabase.from("join_applications").insert([data]);
+
+  if(error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}

@@ -1,10 +1,10 @@
 "use client"
 
-import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
+import { insertApplication } from "@/app/actions/join"
 import { IoIosSend } from "react-icons/io";
 
 import { Button } from "@/components/ui/button"
@@ -50,7 +50,7 @@ const formSchema = z.object({
     .max(200, "200文字以内で入力してください。"),
 })
 
-const JoinForm = () => {
+const ApplicationForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,21 +62,17 @@ const JoinForm = () => {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-      classNames: {
-        content: "flex flex-col gap-2",
-      },
-      style: {
-        "--border-radius": "calc(var(--radius)  + 4px)",
-      } as React.CSSProperties,
-    })
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      await insertApplication(data);
+      toast("お申し込みを受け付けました", {
+        description: "内容を確認のうえ、順次ご返信いたします。",
+      }),
+        form.reset();
+    }
+    catch (error) {
+      toast.error("Failed to submit the form.");
+    }
   }
 
   return (
@@ -160,7 +156,7 @@ const JoinForm = () => {
                     {...field}
                     id="contact_form-position"
                     aria-invalid={fieldState.invalid}
-                    placeholder="例：学生"
+                    placeholder="例：フロントエンドエンジニア"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -213,4 +209,4 @@ const JoinForm = () => {
   )
 }
 
-export default JoinForm
+export default ApplicationForm

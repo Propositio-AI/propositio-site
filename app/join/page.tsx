@@ -1,4 +1,4 @@
-import { TopSection, MissionSection, PositionSection, MeritSection, JoinFormSection } from "@/components/section/join";
+import { TopSection, MissionSection, PositionSection, MeritSection, ApplicationFormSection } from "@/components/section/join";
 import type { Metadata } from "next";
 import ToHomePageButton from "@/components/parts/ToHomePageButton";
 
@@ -14,7 +14,7 @@ const JoinPage = () => {
       <MissionSection />
       <PositionSection />
       <MeritSection />
-      <JoinFormSection />
+      <ApplicationFormSection />
       <ToHomePageButton />
     </main>
   )

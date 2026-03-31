@@ -1,6 +1,6 @@
-import JoinForm from "@/components/parts/join/JoinForm"
+import ApplicationForm from "@/components/parts/join/ApplicationForm"
 
-const JoinFormSection = () => {
+const ApplicationFormSection = () => {
   return (
     <div className="flex flex-col items-center px-4 md:px-16 py-16">
       <div className="text-center mb-5">
@@ -9,9 +9,9 @@ const JoinFormSection = () => {
           Propositio AIに興味を持っていただきありがとうございます。以下のフォームからご応募ください。
         </p>
       </div>
-      <JoinForm />
+      <ApplicationForm />
     </div>
   )
 }
 
-export default JoinFormSection
+export default ApplicationFormSection
