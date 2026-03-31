@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
+import { insertContact } from "@/app/actions/contact"
 import { IoIosSend } from "react-icons/io";
 
 
@@ -42,9 +43,11 @@ const formSchema = z.object({
     .max(254, "メールアドレスが長すぎます。"),
   title: z
     .string()
+    .min(1, "件名を入力してください。")
     .max(32, "件名は32文字以内で入力してください。"),
   content: z
     .string()
+    .min(1, "お問い合わせ内容を入力してください。")
     .max(200, "お問い合わせ内容は200文字以内で入力してください。"),
 })
 
@@ -58,21 +61,18 @@ const ContactForm = () => {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-      classNames: {
-        content: "flex flex-col gap-2",
-      },
-      style: {
-        "--border-radius": "calc(var(--radius)  + 4px)",
-      } as React.CSSProperties,
-    })
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      await insertContact(data);
+      toast("お問い合わせを受け付けました", {
+          description: "内容を確認のうえ、順次ご返信いたします。",
+        }),
+      form.reset();
+    }
+    catch (error) {
+      toast.error("Failed to submit the form.");
+    }
+
   }
 
   return (
@@ -100,7 +100,7 @@ const ContactForm = () => {
                     type="email"
                     aria-invalid={fieldState.invalid}
                     placeholder="youremail@example.com"
-                    autoComplete="off"
+                    autoComplete="email"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />

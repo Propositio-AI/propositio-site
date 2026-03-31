@@ -1,0 +1,18 @@
+'use server';
+import { supabase } from "@/lib/supabase";
+
+type ContactFormData = {
+  email: string;
+  title: string;
+  content: string;
+};
+
+export async function insertContact(data: ContactFormData) {
+  const { error } = await supabase.from("contact_inquiries").insert([data]);
+
+  if(error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
