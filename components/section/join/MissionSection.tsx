@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 const MissionSection = () => {
   return (
@@ -11,7 +12,14 @@ const MissionSection = () => {
             私たちは「可能性を全ての人に」届けることを目指しています。日本の若者が抱える「無力感」を、Aiの力によって変え、一人ひとりが自分の可能性に挑戦できる社会を実現します。
           </p>
         </div>
-        <Image src="/images/join.png" alt="join" className="w-full md:w-1/2 lg:w-2/5 mt-6 md:mt-0 md:ml-6" />
+        <Image
+          src="/images/join.png"
+          alt="join"
+          width={900}
+          height={600}
+          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 40vw"
+          className="mt-6 h-auto w-full md:mt-0 md:ml-6 md:w-1/2 lg:w-2/5"
+        />
       </div>
     </div>
   )
