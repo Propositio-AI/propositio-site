@@ -25,7 +25,7 @@ const KarynosIntroSection = () => {
   }, [activeTab])
 
   return (
-    <div id="products" className="py-10">
+    <div id="products" className="py-10 bg-gray-50">
       <div className="px-6 md:px-15 mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-3 leading-tight">
           Product

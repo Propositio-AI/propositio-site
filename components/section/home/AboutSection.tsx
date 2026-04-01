@@ -6,7 +6,7 @@ const AboutSection = () => {
   return (
     <div
       id="about"
-      className="py-8 px-6 md:mt-10 md:px-15 bg-gray-50">
+      className="py-8 px-6 md:mt-10 md:px-15">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
         <TextReveal as="span" text="About" startDelay={0.1} />
       </h2>

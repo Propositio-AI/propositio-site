@@ -15,7 +15,7 @@ const FooterLinks = () => {
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">コンテンツ</h3>
         <ul className="space-y-4">
-          <li><Link href="/blog" className="hover:text-black">ブログ</Link></li>
+          <li><Link href="/#blog" className="hover:text-black">ブログ</Link></li>
           <li><Link href="/#members" className="hover:text-black">メンバー紹介</Link></li>
           <li><Link href="/#join" className="hover:text-black">参加募集</Link></li>
         </ul>
