@@ -22,6 +22,11 @@ const Navigation = () => {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
+            <Link href="/#blog" className="text-base md:text-lg">Blog</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
             <Link href="/#members" className="text-base md:text-lg">Members</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>

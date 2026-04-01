@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import {
   Card,
   CardAction,
@@ -18,9 +18,11 @@ const MemberCard = ({ member }: Props) => {
   return (
     <Card className="relative w-64 shrink-0 overflow-hidden pt-0 border border-gray-300">
       <div className="p-4 pb-0">
-        <img
+        <Image
           src={`${member.image}`}
           alt={member.name}
+          width={600}
+          height={400}
           className="relative z-20 aspect-video h-40 w-full rounded-md object-cover"
         />
       </div>

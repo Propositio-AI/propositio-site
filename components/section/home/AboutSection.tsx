@@ -1,11 +1,12 @@
 
 import { TextReveal } from "@/components/unlumen-ui/text-reveal";
+import Image from "next/image";
 
 const AboutSection = () => {
   return (
     <div
       id="about"
-      className="py-8 px-6 md:mt-10 md:px-15">
+      className="py-8 px-6 md:mt-10 md:px-15 bg-gray-50">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
         <TextReveal as="span" text="About" startDelay={0.1} />
       </h2>
@@ -19,7 +20,7 @@ const AboutSection = () => {
             <TextReveal as="span" text="AIの力で、すべての学生が自分の可能性を信じ、それを実現するための手段を得られる社会へ" startDelay={1} />
           </p>
         </div>
-        <img src="/images/history.png" alt="History" className="w-full h-auto object-contain md:w-3/7 md:pl-8" />
+        <Image src="/images/history.png" alt="History" width={600} height={400} className="w-full h-auto object-contain md:w-3/7 md:pl-8" />
       </div>
       <div>
         <dl className="flex flex-col md:flex-row md:items-center md:justify-around">

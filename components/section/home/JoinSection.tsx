@@ -5,6 +5,7 @@ import { MdOutlinePeople } from "react-icons/md";
 import { FaRegLightbulb } from "react-icons/fa";
 import { FaRocket } from "react-icons/fa6";
 import { FaArrowRightToBracket } from "react-icons/fa6";
+import Image from "next/image";
 import {
   Card,
   CardDescription,
@@ -20,9 +21,11 @@ const JoinSection = () => {
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
       <Card className="relative mx-auto w-full max-w-2xl pt-0">
         <div className="pointer-events-none absolute inset-0 z-30 aspect-video" />
-        <img
+        <Image
           src="/images/join.png"
           alt="Event cover"
+          width={600}
+          height={400}
           className="relative z-20 w-full object-cover"
         />
         <CardHeader>

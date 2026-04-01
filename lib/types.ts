@@ -20,3 +20,13 @@ export type Role = {
   description: string;
   members: Member[];
 }
+
+export type Blog = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  instagram_url: string;
+  published_at: string;
+  tags: string[];
+};

@@ -7,7 +7,7 @@ const FooterLinks = () => {
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">サービス</h3>
         <ul className="space-y-4">
-          <li><Link href="" className="hover:text-black">Karynos</Link></li>
+          <li><Link href="/#products" className="hover:text-black">Karynos</Link></li>
         </ul>
       </div>
       
@@ -15,8 +15,9 @@ const FooterLinks = () => {
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">コンテンツ</h3>
         <ul className="space-y-4">
-          <li><Link href="" className="hover:text-black">ブログ</Link></li>
-          <li><Link href="" className="hover:text-black">参加募集</Link></li>
+          <li><Link href="/blog" className="hover:text-black">ブログ</Link></li>
+          <li><Link href="/#members" className="hover:text-black">メンバー紹介</Link></li>
+          <li><Link href="/#join" className="hover:text-black">参加募集</Link></li>
         </ul>
       </div>
     
@@ -24,8 +25,8 @@ const FooterLinks = () => {
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">会社</h3>
         <ul className="space-y-4">
-          <li><Link href="" className="hover:text-black">会社概要</Link></li>
-          <li><Link href="" className="hover:text-black">お問い合わせ</Link></li>
+          <li><Link href="/#about" className="hover:text-black">会社概要</Link></li>
+          <li><Link href="/contact" className="hover:text-black">お問い合わせ</Link></li>
         </ul>
       </div>
       
@@ -33,8 +34,8 @@ const FooterLinks = () => {
       <div className="mb-4">
         <h3 className="text-gray-900 font-bold mb-4">法的情報</h3>
         <ul className="space-y-4">
-          <li><Link href="" className="hover:text-black">利用規約</Link></li>
-          <li><Link href="" className="hover:text-black">プライバシーポリシー</Link></li>
+          <li><Link href="/terms" className="hover:text-black">利用規約</Link></li>
+          <li><Link href="/privacy" className="hover:text-black">プライバシーポリシー</Link></li>
         </ul>
       </div>
     </div>
