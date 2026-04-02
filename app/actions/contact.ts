@@ -10,9 +10,19 @@ type ContactFormData = {
 export async function insertContact(data: ContactFormData) {
   const { error } = await supabase.from("contact_inquiries").insert([data]);
 
-  if(error) {
+  if (error) {
     throw new Error(error.message);
   }
 
   return { success: true };
+}
+
+export async function getAllContacts() {
+  const { data, error } = await supabase.from("contact_inquiries").select("*").order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 }

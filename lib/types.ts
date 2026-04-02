@@ -30,3 +30,23 @@ export type Blog = {
   published_at: string;
   tags: string[];
 };
+
+export type Contact = {
+  id: string;
+  email: string;
+  title: string;
+  content: string;
+  created_at: string;
+  status: string;
+}
+
+export type Application = {
+  id: string;
+  name: string;
+  email: string;
+  school_info: string;
+  position: string;
+  motivation: string;
+  created_at: string;
+  status: string;
+}

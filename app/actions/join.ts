@@ -18,3 +18,13 @@ export async function insertApplication(data: ApplicationFormData) {
 
   return { success: true };
 }
+
+export async function getAllApplications() {
+  const { data, error } = await supabase.from("join_applications").select("*").order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
