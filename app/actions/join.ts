@@ -28,3 +28,16 @@ export async function getAllApplications() {
 
   return data;
 }
+
+export async function updateApplicationStatus(id: string, status: string) {
+  const { error } = await supabase
+    .from("join_applications")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}

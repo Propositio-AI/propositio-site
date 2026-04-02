@@ -1,6 +1,6 @@
 'use client';
 
-import { getAllContacts } from "@/app/actions/contact"
+import { getAllContacts, updateContactStatus } from "@/app/actions/contact"
 import { useEffect, useState } from "react"
 import { Contact } from "@/lib/types"
 import ContactManageTable from "@/components/parts/contact/ContactManageTable"
@@ -21,6 +21,15 @@ const ManageContactsPage = () => {
     fetchAllContacts();
   }, []);
 
+  const handleStatusChange = async (id: string, status: string) => {
+    await updateContactStatus(id, status);
+    setContacts((prev) =>
+      prev.map((contact) =>
+        contact.id === id ? { ...contact, status } : contact
+      )
+    );
+  };
+
   return (
     <main className="mt-30 md:mt-40 mb-40 w-full px-6 sm:px-15">
       <div className="mb-6 flex items-center justify-between">
@@ -29,7 +38,7 @@ const ManageContactsPage = () => {
           DashBoardへ→
         </Link>
       </div>
-      <ContactManageTable contacts={contacts} />
+      <ContactManageTable contacts={contacts} onStatusChange={handleStatusChange} />
     </main>
   )
 }

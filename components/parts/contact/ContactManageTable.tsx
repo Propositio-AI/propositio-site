@@ -10,9 +10,12 @@ import { Contact } from "@/lib/types"
 
 type ContactsProps = {
   contacts: Contact[];
+  onStatusChange: (id: string, status: string) => Promise<void>;
 }
 
-const ContactManageTable = ({ contacts }: ContactsProps) => {
+const statusOptions = ["未対応", "対応中", "完了"]
+
+const ContactManageTable = ({ contacts, onStatusChange }: ContactsProps) => {
   const formatDate = (value: string) => {
     return new Date(value).toLocaleDateString("ja-JP")
   }
@@ -37,7 +40,21 @@ const ContactManageTable = ({ contacts }: ContactsProps) => {
             <TableCell className={wrapCellClass}>{contact.title}</TableCell>
             <TableCell className="whitespace-normal break-all align-top">{contact.email}</TableCell>
             <TableCell className={wrapCellClass}>{contact.content}</TableCell>
-            <TableCell className={wrapCellClass}>{contact.status}</TableCell>
+            <TableCell className={wrapCellClass}>
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={contact.status}
+                onChange={async (event) => {
+                  await onStatusChange(contact.id, event.target.value)
+                }}
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

@@ -1,6 +1,6 @@
 'use client';
 
-import { getAllApplications } from "@/app/actions/join"
+import { getAllApplications, updateApplicationStatus } from "@/app/actions/join"
 import { useEffect, useState } from "react"
 import { Application } from "@/lib/types"
 import ApplicationManageTable from "@/components/parts/join/ApplicationManageTable"
@@ -21,6 +21,15 @@ const ManageApplicationsPage = () => {
     fetchAllApplications();
   }, []);
 
+  const handleStatusChange = async (id: string, status: string) => {
+    await updateApplicationStatus(id, status);
+    setApplications((prev) =>
+      prev.map((application) =>
+        application.id === id ? { ...application, status } : application
+      )
+    );
+  };
+
   return (
     <main className="mt-30 md:mt-40 mb-40 w-full px-4 sm:px-15">
       <div className="mb-6 flex items-center justify-between">
@@ -29,7 +38,7 @@ const ManageApplicationsPage = () => {
           DashBoardへ→
         </Link>
       </div>
-      <ApplicationManageTable applications={applications} />
+      <ApplicationManageTable applications={applications} onStatusChange={handleStatusChange} />
     </main>
   )
 

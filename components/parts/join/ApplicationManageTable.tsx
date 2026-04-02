@@ -10,9 +10,12 @@ import { Application } from "@/lib/types"
 
 type ApplicationsProps = {
   applications: Application[];
+  onStatusChange: (id: string, status: string) => Promise<void>;
 }
 
-const ApplicationManageTable = ({ applications }: ApplicationsProps) => {
+const statusOptions = ["未対応", "対応中", "完了"]
+
+const ApplicationManageTable = ({ applications, onStatusChange }: ApplicationsProps) => {
   const formatDate = (value: string) => {
     return new Date(value).toLocaleDateString("ja-JP")
   }
@@ -41,7 +44,21 @@ const ApplicationManageTable = ({ applications }: ApplicationsProps) => {
             <TableCell className={wrapCellClass}>{application.school_info}</TableCell>
             <TableCell className={wrapCellClass}>{application.position}</TableCell>
             <TableCell className={wrapCellClass}>{application.motivation}</TableCell>
-            <TableCell className={wrapCellClass}>{application.status}</TableCell>
+            <TableCell className={wrapCellClass}>
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={application.status}
+                onChange={async (event) => {
+                  await onStatusChange(application.id, event.target.value)
+                }}
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

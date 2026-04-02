@@ -26,3 +26,16 @@ export async function getAllContacts() {
 
   return data;
 }
+
+export async function updateContactStatus(id: string, status: string) {
+  const { error } = await supabase
+    .from("contact_inquiries")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
