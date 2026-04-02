@@ -24,18 +24,18 @@ const DreamMatching = () => {
       <div className="grid grid-cols-3 gap-3 md:gap-10 mt-5">
         <div className="border border-gray-300 rounded-lg p-2 group hover:shadow-[0_0_30px_1px_rgba(0,0,255,0.4)] w-26 h-38 md:w-40 lg:w-50 lg:h-40 space-y-1 transition-transform duration-2000 hover:-translate-y-2">
           <GoNorthStar className="w-7 h-7 md:w-8 md:h-8 bg-black p-1 rounded-lg text-blue-400" />
-          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="押し付けない" startDelay={0.4} /></h4>
-          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="診断結果に縛られない、自由な探索体験" startDelay={0.45} /></p>
+          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="押し付けない" startDelay={0.2} /></h4>
+          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="診断結果に縛られない、自由な探索体験" startDelay={0.25} /></p>
         </div>
         <div className="border border-gray-300 rounded-lg p-2 group hover:shadow-[0_0_30px_1px_rgba(128,0,255,0.4)] w-26 h-38 md:w-40 lg:w-50 lg:h-40 space-y-1 transition-transform duration-2000 hover:-translate-y-2">
           <FaRegCompass className="w-7 h-7 md:w-8 md:h-8 bg-black p-1 rounded-lg text-purple-400" />
-          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="500+の職業" startDelay={0.5} /></h4>
-          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="豊富なデータベースから、あなたの可能性を広げる" startDelay={0.55} /></p>
+          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="500+の職業" startDelay={0.3} /></h4>
+          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="豊富なデータベースから、あなたの可能性を広げる" startDelay={0.35} /></p>
         </div>
         <div className="border border-gray-300 rounded-lg p-2 group hover:shadow-[0_0_30px_1px_rgba(255,0,225,0.4)] w-26 h-38 md:w-40 lg:w-50 lg:h-40 space-y-1 transition-transform duration-2000 hover:-translate-y-2">
           <FaRegHeart className="w-7 h-7 md:w-8 md:h-8 bg-black p-1.5 rounded-lg text-pink-400" />
-          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="自分で選ぶ" startDelay={0.6} /></h4>
-          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="興味から始まる、主体的なキャリア選択" startDelay={0.65} /></p>
+          <h4 className="font-bold text-sm lg:text-xl"><TextReveal as="span" text="自分で選ぶ" startDelay={0.4} /></h4>
+          <p className="text-muted-foreground text-xs md:text-sm lg:text-base"><TextReveal as="span" text="興味から始まる、主体的なキャリア選択" startDelay={0.45} /></p>
         </div>
       </div>
     </div>
