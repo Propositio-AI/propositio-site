@@ -35,7 +35,7 @@ const ManageBlogsPage = () => {
           </Link>
         </div>
       </div>
-      <BlogManageTable blogs={Blogs} />
+      <BlogManageTable blogs={Blogs} onDeleted={fetchAllBlogs} />
     </main>
   )
 }

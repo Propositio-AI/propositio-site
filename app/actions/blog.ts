@@ -1,7 +1,5 @@
 'use server';
 import { supabase_anon, supabase_role } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
-
 
 export async function getAllBlogs() {
   const { data, error } = await supabase_anon.from("blogs").select("*").order("published_at", { ascending: false });
@@ -33,5 +31,15 @@ export async function insertBlog(blog: BlogData) {
     throw new Error(error.message);
   }
 
+  return { success: true };
+}
+
+export async function deleteBlog(id: string) {
+  const { error } = await supabase_role.from("blogs").delete().eq("id", id);
+
+  if(error) {
+    throw new Error(error.message);
+  } 
+  
   return { success: true };
 }
