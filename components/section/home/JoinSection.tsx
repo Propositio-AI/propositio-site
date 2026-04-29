@@ -1,50 +1,43 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"
-import { MdOutlinePeople } from "react-icons/md";
-import { FaRegLightbulb } from "react-icons/fa";
-import { FaRocket } from "react-icons/fa6";
 import { FaArrowRightToBracket } from "react-icons/fa6";
 import Image from "next/image";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+
 
 const JoinSection = () => {
   return (
     <div id="join"
       className="py-16 px-6 md:px-15 bg-gray-50">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Join</h2>
-      <Card className="relative mx-auto w-full max-w-2xl pt-0">
-        <div className="pointer-events-none absolute inset-0 z-30 aspect-video" />
-        <Image
-          src="/images/join.png"
-          alt="Event cover"
-          width={600}
-          height={400}
-          className="relative z-20 w-full object-cover"
-        />
-        <CardHeader>
-          <CardTitle className="md:text-2xl mb-1">「勉強の意味が分からない」を、AIで解決する。<br className="hidden md:block"/>学習と夢をつなぐ教育プラットフォームを、一緒につくろう。</CardTitle>
-          <CardDescription className="md:text-xl">
-            Prositio AIは、教育とキャリアの課題解決に情熱を持つ仲間を募集しています。学生企業ならではの挑戦と成長の機会があなたを待っています。
-          </CardDescription>
-          <div className="flex items-center gap-2 mt-4">
-            <Badge variant="secondary" className="md:text-base"><MdOutlinePeople className="w-5 h-5"/>チームワーク</Badge>
-            <Badge variant="secondary" className="md:text-base"><FaRegLightbulb className="w-4 h-4" />革新的な挑戦</Badge>
-            <Badge variant="secondary" className="md:text-base"><FaRocket className="w-4 h-4" />成長機会</Badge>
-          </div>
-        </CardHeader>
-        <CardFooter>
-          <Button asChild className="w-full md:text-lg">
-            <Link href="/join" className="flex items-center justify-center gap-2">参加募集ページへ<FaArrowRightToBracket /></Link>
-          </Button>
-        </CardFooter>
-      </Card>
+
+      <div className="grid md:grid-cols-2 gap-10 items-center px-4 md:px-16">
+        <div>
+          <h3 className="text-3xl md:text-5xl font-bold leading-tight md:mb-6">
+            AI開発で、<br /><span className="text-green-500">「実力」と「実績」</span>を手に入れる
+          </h3>
+          <p className="text-base md:text-lg text-muted-foreground mb-6">
+            Propositio AIでは、LLMを活用したプロダクト開発を通して、実務レベルの開発経験とチーム開発力を身につけることができます。<br />
+            就活で語れるガクチカや、エンジニアとしての実力を伸ばしたい人へ。
+          </p>
+          <Link href="/join">
+            <div className="flex items-center gap-4 pb-2 border-b-2 border-blue-500 w-max group group-hover:border-blue-600 transition-colors">
+              <p className="font-medium">メリット・募集詳細を見る</p>
+              <div className="bg-blue-500 text-white py-1.5 px-4 group-hover:bg-blue-600 group-hover:rounded transition-colors">
+                <FaArrowRightToBracket className="w-3 h-3" />
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        <div className="relative w-full aspect-3/2">
+          <Image
+            src="/images/join_image.png"
+            alt="Join Image"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-contain"
+          />
+        </div>
+      </div>
     </div>
   )
 }
