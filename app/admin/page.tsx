@@ -34,9 +34,6 @@ const AdminPage = async () => {
           <Link href="/admin/join" className="text-blue-500 hover:underline">
             参加応募管理ページへ→
           </Link>
-          <Link href="/admin/blog" className="text-blue-500 hover:underline">
-            ブログ管理ページへ→
-          </Link>
         </div>
       </div>
     </div>

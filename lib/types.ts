@@ -25,10 +25,10 @@ export type Blog = {
   id: string;
   title: string;
   description: string;
-  thumbnail_url: string;
+  top_image: { url: string };
   instagram_url: string;
   published_at: string;
-  tags: string[];
+  tags: { id: string; tag_name: string }[];
 };
 
 export type Contact = {
