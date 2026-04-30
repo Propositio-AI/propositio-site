@@ -1,7 +1,7 @@
 'use client';
 import BlogCard from "./BlogCard";
 import { useEffect, useState } from "react";
-import { client } from "@/lib/client";
+import { getClient } from "@/lib/client";
 import { Blog } from "@/lib/types";
 
 const BlogCardList = () => {
@@ -9,6 +9,7 @@ const BlogCardList = () => {
   useEffect(() => {
     const fetchAllBlogs = async () => {
       try {
+        const client = getClient();
         const res = await client.get({ endpoint: "instagram"});
         setBlogs(res.contents);
     }
