@@ -7,9 +7,16 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "neobfxrodekynlqjoari.supabase.co",
+        pathname: "/**",
+        search: "",
+      },
+      {
+        protocol: "https",
+        hostname: "images.microcms-assets.io",
+        pathname: "/**",
+        search: "",
       },
     ],
-    domains: ["images.microcms-assets.io"],
   },
 };
 
