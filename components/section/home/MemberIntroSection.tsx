@@ -1,6 +1,5 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { FaArrowRightToBracket } from "react-icons/fa6";
 
 
@@ -19,12 +18,17 @@ const MemberIntroSection = () => {
           />
         </div>
         <div className="space-y-3 sm:w-1/2">
-          <h3 className="text-3xl md:text-5xl font-bold">私たちは<br />学生中心のチームです</h3>
-          <p className="text-base md:text-lg text-muted-foreground">Propositio AIは、企画から運用までを全て学生のみで担うチームです。メンバーが主体的に協力しながらプロダクト成長に取り組み、情報系に限らず、多様なバックグラウンドのメンバーが活躍しています。</p>
-          <div className="flex flex-col items-end">
-            <Button asChild>
-              <Link href="/members" className="">メンバーを見る<FaArrowRightToBracket /></Link>
-            </Button>
+          <h3 className="text-3xl md:text-5xl font-bold leading-tight">私たちは<br /><span className="text-blue-500">学生中心のチーム</span>です</h3>
+          <p className="text-base md:text-lg text-muted-foreground">Propositio AIは、企画から運用までを全て<span className="text-black font-medium">学生のみ</span>で担うチームです。メンバーが主体的に協力しながらプロダクト成長に取り組み、情報系に限らず、多様なバックグラウンドのメンバーが活躍しています。</p>
+          <div className="flex">
+            <Link href="/members" className="ml-auto">
+              <div className="flex items-center gap-4 pb-2 border-b-2 border-green-500 w-max group group-hover:border-green-600 transition-colors">
+                <p className="font-medium">メンバーを見る</p>
+                <div className="bg-green-500 text-white py-1.5 px-4 group-hover:bg-green-600 group-hover:rounded transition-colors">
+                  <FaArrowRightToBracket className="w-3 h-3" />
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

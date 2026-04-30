@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
         hostname: "neobfxrodekynlqjoari.supabase.co",
       },
     ],
+    domains: ["images.microcms-assets.io"],
   },
 };
 
