@@ -9,14 +9,14 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
-      <header className="fixed top-0 left-0 w-full border-b border-gray-300 bg-white p-2 z-50">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="fixed top-0 left-0 w-full border-b border-gray-300 bg-white z-50">
+        <div className="mx-auto flex items-stretch justify-between">
+          <div className="flex items-center gap-3 py-2 md:py-4 ml-4 md:ml-8">
             <Image src="/logo.png" alt="Propositio AI Logo" width={45} height={20} className="w-14" />
-            <h1 className="text-lg md:text-2xl font-extrabold">Propositio AI</h1>
+            <h1 className="text-lg md:text-3xl font-extrabold">Propositio AI</h1>
           </div>
           {/* ハンバーガーボタン */}
-          <Button variant="outline" size="icon" aria-label="Submit" className="md:hidden"
+          <Button variant="outline" size="icon" aria-label="Submit" className="md:hidden my-auto mr-4"
             onClick={() => setIsOpen(!isOpen)}>
             <RxHamburgerMenu />
           </Button>

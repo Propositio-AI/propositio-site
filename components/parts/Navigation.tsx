@@ -1,47 +1,45 @@
 import Link from "next/link"
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu"
 
 const Navigation = () => {
   return (
-    <NavigationMenu>
-      <NavigationMenuList className="flex justify-center gap-3 flex-wrap">
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/#products" className="text-base md:text-lg">Product</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/#about" className="text-base md:text-lg">About</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/#blog" className="text-base md:text-lg">Blog</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/#members" className="text-base md:text-lg">Members</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/#join" className="text-base md:text-lg">Join</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <Link href="/contact" className="text-base md:text-lg">Contact</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+    <nav className="flex flex-col md:flex-row h-full items-stretch">
+      <Link
+        href="/#products"
+        className="c-btn slide flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        Products
+      </Link>
+      <Link
+        href="/#about"
+        className="c-btn slide flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        About
+      </Link>
+      <Link
+        href="/#blog"
+        className="c-btn slide flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        Blog
+      </Link>
+      <Link
+        href="/#members"
+        className="c-btn slide flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        Members
+      </Link>
+      <Link
+        href="/#join"
+        className="c-btn slide flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        Join
+      </Link>
+      <Link
+        href="/contact"
+        className="bg-blue-500 text-white hover:bg-blue-600 flex h-full min-h-10 items-center px-6 text-base md:text-lg"
+      >
+        Contact
+      </Link>
+    </nav>
   )
 }
 
