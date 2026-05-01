@@ -7,21 +7,21 @@ const AboutSection = () => {
     <div
       id="about"
       className="py-8 px-6 md:mt-10 md:px-15">
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-10">
         About
       </h2>
       <div className="container mx-auto md:flex md:flex-col md:items-center">
         <h3 className="text-3xl md:text-6xl font-semibold md:mb-4">
           誰もが夢を持ち、自由に追いかけられる世界
         </h3>
-        <p className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-6">
+        <p className="text-lg md:text-xl font-bold text-gray-700 mb-4">
           <span className="block leading-tight">- DREAM FREELY, CHASE BOLDLY -</span>
         </p>
-        <div className="container mx-auto flex flex-col-reverse gap-10 my-10 md:flex-row md:justify-around md:mb-18">
+        <div className="container mx-auto flex flex-col-reverse gap-10 md:flex-row md:justify-around md:mb-18">
           <div className="mb-10 md:mb-0 md:w-1/2 space-y-6 md:space-y-0">
-            <p className="text-base md:text-xl text-muted-foreground leading-relaxed md:mt-10">
+            <p className="text-base md:text-xl text-muted-foreground leading-relaxed md:mt-10 mb-5">
               <span className="block mb-2 font-medium text-foreground">
-              「夢を持つことに、一体どんな価値があるのか？」
+                「夢を持つことに、一体どんな価値があるのか？」
               </span>
 
               <span className="block mb-4">
@@ -55,21 +55,21 @@ const AboutSection = () => {
               </span>
             </p>
             <div className="flex">
-            <Link href="/about" className="ml-auto">
-              <div className="flex items-center gap-4 pb-2 border-b-2 border-blue-500 w-max group group-hover:border-blue-600 transition-colors">
-                <p className="font-medium">企業概要を見る</p>
-                <div className="bg-blue-500 text-white py-1.5 px-4 group-hover:bg-blue-600 group-hover:rounded transition-colors">
-                  <FaArrowRightToBracket className="w-3 h-3" />
+              <Link href="/about" className="ml-auto">
+                <div className="flex items-center gap-4 pb-2 border-b-2 border-blue-500 w-max group group-hover:border-blue-600 transition-colors">
+                  <p className="font-medium">企業概要を見る</p>
+                  <div className="bg-blue-500 text-white py-1.5 px-4 group-hover:bg-blue-600 group-hover:rounded transition-colors">
+                    <FaArrowRightToBracket className="w-3 h-3" />
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           </div>
-          </div>
-          <Image src="/images/history.png" alt="History" width={600} height={400} className="w-full h-auto object-contain md:w-1/2 md:pl-8" />
+          <Image src="/images/history.png" alt="History" width={600} height={400} className="w-full h-auto object-contain md:w-3/7 md:pl-8 my-8 md:my-0" />
         </div>
       </div>
-      <div>
-        <dl className="flex flex-col md:flex-row md:items-center md:justify-around">
+      <div className="my-10">
+        <dl className="flex flex-col gap-5 md:flex-row md:items-center md:justify-around">
           <div className="text-center font-bold">
             <dt className="text-lg text-muted-foreground mb-1">
               団体名
