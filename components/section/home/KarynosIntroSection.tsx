@@ -1,266 +1,308 @@
 "use client";
-
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import {
-    ArrowRight,
-    CheckCircle2,
-    MonitorUp,
-    MousePointer2,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "motion/react";
+import { BsLightningCharge } from "react-icons/bs";
+import { GoNorthStar } from "react-icons/go";
+import { FaRegCompass } from "react-icons/fa6";
+import {
+    FaRegHeart,
+    FaProjectDiagram,
+    FaRegCalendarCheck,
+} from "react-icons/fa";
+import { FaBook } from "react-icons/fa6";
+import Link from "next/link";
 
-const tabs = [
-    {
-        id: "matching",
-        label: "Dream Matching",
-        eyebrow: "Career Discovery",
-        title: "夢中になれる進路を、気軽に見つける。",
-        description:
-            "スワイプ感覚で興味を探りながら、職業や将来像との出会いを広げるキャリア発見サービスです。",
-        color: "blue",
-        points: ["直感的な探索体験", "職業と偶然の出会い", "興味から進路選択"],
-        mockItems: ["Interest Cards", "Career Match", "Saved Dreams"],
-    },
-    {
-        id: "action",
-        label: "Dream Action",
-        eyebrow: "Career Action",
-        title: "見つけた夢を、今日の行動に変える。",
-        description:
-            "目標に向けた行動計画、学習リソース、進捗管理をまとめて支援するキャリア実現サービスです。",
-        color: "green",
-        points: ["行動計画の整理", "必要な学習の可視化", "進捗の継続サポート"],
-        mockItems: ["Action Plan", "Learning Path", "Progress"],
-    },
+const TABS = [
+    { id: "matching", label: "Dream Matching" },
+    { id: "action", label: "Dream Action" },
 ] as const;
 
-type TabId = (typeof tabs)[number]["id"];
+type TabId = (typeof TABS)[number]["id"];
 
-const colorStyles = {
-    blue: {
-        active: "border-blue-500 bg-blue-50 text-blue-700",
-        indicator: "bg-blue-500",
-        badge: "border-blue-200 bg-blue-50 text-blue-700",
-        accent: "bg-blue-500",
-        soft: "bg-blue-50 text-blue-700",
-        ring: "ring-blue-100",
+const PRODUCT_DATA = {
+    matching: {
+        badge: "Career Discovery Platform",
+        title: "Dream Matching",
+        tagline: "将来の夢を、スワイプで見つける",
+        description:
+            "マッチングアプリ感覚で500以上の職業から将来の夢を探せるサービス。診断に押し付けられるのではなく、自分の興味から選べます。",
+        features: [
+            {
+                Icon: GoNorthStar,
+                label: "押し付けない",
+                desc: "診断結果に縛られない自由な探索体験",
+                color: "text-blue-500",
+            },
+            {
+                Icon: FaRegCompass,
+                label: "500+の職業",
+                desc: "豊富なデータベースから可能性を広げる",
+                color: "text-blue-400",
+            },
+            {
+                Icon: FaRegHeart,
+                label: "自分で選ぶ",
+                desc: "興味から始まる主体的なキャリア選択",
+                color: "text-blue-300",
+            },
+        ],
+        accentBg: "bg-blue-500",
+        accentText: "text-blue-500",
+        badgeCls: "bg-blue-50 border-blue-200 text-blue-600",
+        gradient: "from-blue-600 to-blue-400",
+        barColor: "bg-blue-400",
+        glowColor: "bg-blue-400",
+        screenGrad: "from-blue-50 to-white",
+        iconBg: "bg-blue-100",
+        initials: "DM",
+        initialsClr: "text-blue-500",
     },
-    green: {
-        active: "border-green-500 bg-green-50 text-green-700",
-        indicator: "bg-green-500",
-        badge: "border-green-200 bg-green-50 text-green-700",
-        accent: "bg-green-500",
-        soft: "bg-green-50 text-green-700",
-        ring: "ring-green-100",
+    action: {
+        badge: "Career Realization Platform",
+        title: "Dream Action",
+        tagline: "見つけた夢を、現実に",
+        description:
+            "見つけた夢に対して具体的なアクションプランを提案。段階的なステップで、あなたの夢実現をサポートします。",
+        features: [
+            {
+                Icon: FaProjectDiagram,
+                label: "行動計画",
+                desc: "夢実現に必要なステップバイステップの計画",
+                color: "text-green-500",
+            },
+            {
+                Icon: FaBook,
+                label: "学習リソース",
+                desc: "目標達成に必要な知識とスキルを体系的に提供",
+                color: "text-green-400",
+            },
+            {
+                Icon: FaRegCalendarCheck,
+                label: "進捗管理",
+                desc: "あなたの成長過程を追跡し達成を応援",
+                color: "text-green-300",
+            },
+        ],
+        accentBg: "bg-green-500",
+        accentText: "text-green-500",
+        badgeCls: "bg-green-50 border-green-200 text-green-600",
+        gradient: "from-green-600 to-green-400",
+        barColor: "bg-green-400",
+        glowColor: "bg-green-400",
+        screenGrad: "from-green-50 to-white",
+        iconBg: "bg-green-100",
+        initials: "DA",
+        initialsClr: "text-green-500",
     },
-} as const;
+};
 
-const KarynosIntroSection = () => {
-    const [activeTab, setActiveTab] = useState<TabId>(tabs[0].id);
+const INTERVAL_MS = 10000;
 
-    const activeService = useMemo(
-        () => tabs.find((tab) => tab.id === activeTab) ?? tabs[0],
-        [activeTab],
-    );
-    const styles = colorStyles[activeService.color];
+export default function KarynosIntroSection() {
+    const [activeTab, setActiveTab] = useState<TabId>("matching");
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        setProgress(0);
+        const start = Date.now();
+
+        const barId = setInterval(() => {
+            const p = Math.min(((Date.now() - start) / INTERVAL_MS) * 100, 100);
+            setProgress(p);
+        }, 100);
+
+        const switchId = setTimeout(() => {
+            setActiveTab((cur) => (cur === "matching" ? "action" : "matching"));
+        }, INTERVAL_MS);
+
+        return () => {
+            clearInterval(barId);
+            clearTimeout(switchId);
+        };
+    }, [activeTab]);
+
+    const data = PRODUCT_DATA[activeTab];
 
     return (
-        <section
-            id="products"
-            className="bg-white px-5 py-12 sm:px-8 md:px-15 md:py-16"
-        >
-            <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-                <div className="space-y-6">
-                    <div className="space-y-3">
-                        <p className="text-sm font-bold uppercase tracking-normal text-gray-500">
-                            Product Karynos
-                        </p>
-                        <h2 className="max-w-xl text-3xl font-bold leading-tight text-black md:text-5xl">
-                            夢を見つけ、<br></br>行動に移すための<br></br>
-                            キャリア支援アプリ。
-                        </h2>
-                    </div>
-
-                    <div
-                        className="grid gap-2 sm:grid-cols-2"
-                        role="tablist"
-                        aria-label="Karynos services"
-                    >
-                        {tabs.map((tab) => {
-                            const isActive = activeTab === tab.id;
-                            const tabStyles = colorStyles[tab.color];
-
-                            return (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={isActive}
-                                    aria-controls={`karynos-panel-${tab.id}`}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={cn(
-                                        "group relative min-h-20 rounded-lg border border-gray-200 bg-white p-4 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-gray-200",
-                                        isActive && tabStyles.active,
-                                    )}
-                                >
-                                    <span className="block text-xs font-bold text-gray-500">
-                                        {tab.eyebrow}
-                                    </span>
-                                    <span className="mt-1 block text-lg font-bold">
-                                        {tab.label}
-                                    </span>
-                                    <span
-                                        className={cn(
-                                            "absolute bottom-0 left-4 h-1 w-10 rounded-full opacity-0 transition-all duration-300",
-                                            tabStyles.indicator,
-                                            isActive && "w-20 opacity-100",
-                                        )}
-                                    />
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div
-                        key={activeService.id}
-                        id={`karynos-panel-${activeService.id}`}
-                        role="tabpanel"
-                        className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500"
-                    >
-                        <div
+        <section id="products" className="py-16 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-6 md:px-12">
+                {/* ── Header ── */}
+                <div className="mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-500 leading-tight">
+                        Product
+                        <span
                             className={cn(
-                                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-bold",
-                                styles.badge,
+                                "ml-3 text-5xl md:text-6xl transition-colors duration-500",
+                                data.accentText,
                             )}
                         >
-                            <MousePointer2 className="size-4" />
-                            {activeService.label}
-                        </div>
-                        <div className="space-y-3">
-                            <h3 className="text-2xl font-bold leading-tight text-black md:text-3xl">
-                                {activeService.title}
-                            </h3>
-                            <p className="max-w-2xl text-base leading-relaxed text-gray-600">
-                                {activeService.description}
-                            </p>
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-3">
-                            {activeService.points.map((point) => (
-                                <div
-                                    key={point}
-                                    className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm font-medium text-gray-700"
-                                >
-                                    <CheckCircle2
-                                        className={cn(
-                                            "mt-0.5 size-4 shrink-0",
-                                            activeService.color === "blue"
-                                                ? "text-blue-600"
-                                                : "text-green-600",
-                                        )}
-                                    />
-                                    <span>{point}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <Button
-                            asChild
-                            className="h-10 bg-black px-4 text-white hover:bg-gray-800"
-                        >
-                            <Link href="/products">
-                                詳しく見る
-                                <ArrowRight className="size-4" />
-                            </Link>
-                        </Button>
+                            Karynos
+                        </span>
+                    </h2>
+                    <p className="mt-2 text-sm md:text-base text-gray-500 max-w-xl leading-relaxed">
+                        Dream Matchingで夢を見つけ、Dream
+                        Actionで夢実現へ。2つのサービスであなたのキャリアを支援します。
+                    </p>
+                </div>
+
+                {/* ── Tab Switcher ── */}
+                <div className="mb-3">
+                    <div className="inline-flex bg-white border border-gray-200 rounded-full p-1 shadow-sm gap-1">
+                        {TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    "px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300",
+                                    activeTab === tab.id
+                                        ? cn(
+                                              PRODUCT_DATA[tab.id].accentBg,
+                                              "text-white shadow-md",
+                                          )
+                                        : "text-gray-500 hover:text-gray-800",
+                                )}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className="relative">
+                {/* ── Progress bar (auto-switch indicator) ── */}
+                <div className="h-0.5 bg-gray-200 rounded-full mb-10 max-w-xs">
                     <div
-                        className={cn(
-                            "rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm ring-8",
-                            styles.ring,
-                        )}
+                        className={cn("h-full rounded-full", data.barColor)}
+                        style={{ width: `${progress}%`, transition: "none" }}
+                    />
+                </div>
+
+                {/* ── Content ── */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -14 }}
+                        transition={{ duration: 0.25 }}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
                     >
-                        <div className="rounded-lg border border-gray-300 bg-white">
-                            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                    <MonitorUp className="size-5 text-gray-700" />
-                                    <span className="text-sm font-bold text-gray-700">
-                                        App screen preview
-                                    </span>
-                                </div>
-                                <span
-                                    className={cn(
-                                        "rounded-full px-2 py-1 text-xs font-bold",
-                                        styles.soft,
-                                    )}
-                                >
-                                    Placeholder
-                                </span>
+                        {/* Left: Info */}
+                        <div>
+                            <span
+                                className={cn(
+                                    "inline-flex items-center gap-1.5 border rounded-full py-1 px-3 text-xs font-medium mb-4",
+                                    data.badgeCls,
+                                )}
+                            >
+                                <BsLightningCharge className="w-3 h-3" />
+                                {data.badge}
+                            </span>
+
+                            <h3
+                                className={cn(
+                                    "bg-gradient-to-r bg-clip-text text-transparent text-4xl md:text-5xl font-bold mb-2",
+                                    data.gradient,
+                                )}
+                            >
+                                {data.title}
+                            </h3>
+
+                            <p className="text-lg font-bold text-gray-700 mb-3">
+                                {data.tagline}
+                            </p>
+                            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                                {data.description}
+                            </p>
+
+                            {/* Feature cards */}
+                            <div className="grid grid-cols-3 gap-3 mb-7">
+                                {data.features.map((f, i) => (
+                                    <div
+                                        key={i}
+                                        className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:-translate-y-1 transition-transform duration-200"
+                                    >
+                                        <f.Icon
+                                            className={cn(
+                                                "w-5 h-5 mb-2",
+                                                f.color,
+                                            )}
+                                        />
+                                        <p className="font-semibold text-xs text-gray-800 mb-1">
+                                            {f.label}
+                                        </p>
+                                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                                            {f.desc}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
 
-                            <div
-                                key={`${activeService.id}-screen`}
-                                className="grid min-h-80 gap-4 p-4 md:min-h-96 md:grid-cols-[0.75fr_1fr] animate-in fade-in zoom-in-95 duration-500"
+                            {/* CTA */}
+                            <Link
+                                href="/products"
+                                className={cn(
+                                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-80",
+                                    data.accentBg,
+                                )}
                             >
-                                <div className="space-y-3 rounded-lg bg-black p-4 text-white">
-                                    <div
-                                        className={cn(
-                                            "h-2 w-16 rounded-full",
-                                            styles.accent,
-                                        )}
-                                    />
-                                    <div className="space-y-2">
-                                        <div className="h-3 w-24 rounded-full bg-white/80" />
-                                        <div className="h-3 w-32 rounded-full bg-white/40" />
-                                    </div>
-                                    <div className="mt-8 grid gap-2">
-                                        {activeService.mockItems.map(
-                                            (item, index) => (
-                                                <div
-                                                    key={item}
-                                                    className="rounded-lg border border-white/15 bg-white/10 p-3 transition-transform duration-300 hover:translate-x-1"
-                                                >
-                                                    <div className="text-xs text-white/60">
-                                                        0{index + 1}
-                                                    </div>
-                                                    <div className="mt-1 text-sm font-bold">
-                                                        {item}
-                                                    </div>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
-                                </div>
+                                詳しく見る
+                                <span aria-hidden>→</span>
+                            </Link>
+                        </div>
 
-                                <div className="flex min-h-64 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-100 p-6">
-                                    <div className="max-w-xs text-center">
+                        {/* Right: App screenshot frame */}
+                        <div className="flex justify-center">
+                            <div className="relative">
+                                {/* Glow */}
+                                <div
+                                    className={cn(
+                                        "absolute -inset-6 -z-10 rounded-[4rem] blur-3xl opacity-20",
+                                        data.glowColor,
+                                    )}
+                                />
+                                {/* Phone frame */}
+                                <div className="bg-gray-900 rounded-[3rem] p-[10px] shadow-2xl w-[220px] md:w-[260px]">
+                                    <div className="bg-gray-800 rounded-[2.6rem] overflow-hidden">
+                                        {/* Notch */}
+                                        <div className="flex justify-center py-2">
+                                            <div className="bg-gray-900 w-20 h-5 rounded-full" />
+                                        </div>
+                                        {/* Screen placeholder */}
                                         <div
                                             className={cn(
-                                                "mx-auto mb-4 flex size-14 items-center justify-center rounded-full text-white shadow-sm animate-pulse",
-                                                styles.accent,
+                                                "aspect-[9/16] flex flex-col items-center justify-center gap-3 px-6 bg-gradient-to-b",
+                                                data.screenGrad,
                                             )}
                                         >
-                                            <MonitorUp className="size-7" />
+                                            <div
+                                                className={cn(
+                                                    "w-14 h-14 rounded-2xl flex items-center justify-center",
+                                                    data.iconBg,
+                                                )}
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        "text-xl font-bold",
+                                                        data.initialsClr,
+                                                    )}
+                                                >
+                                                    {data.initials}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                                                アプリ画面
+                                                <br />
+                                                スクリーンショット
+                                            </p>
                                         </div>
-                                        <p className="text-lg font-bold text-black">
-                                            実アプリ画面の差し込み枠
-                                        </p>
-                                        <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                                            スクリーンショットや操作デモ動画が用意でき次第、この領域に配置できます。
-                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </AnimatePresence>
             </div>
         </section>
     );
-};
-
-export default KarynosIntroSection;
+}
