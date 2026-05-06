@@ -1,6 +1,8 @@
 import { TopSection, MissionSection, PositionSection, MeritSection, ApplicationFormSection } from "@/components/section/join";
 import type { Metadata } from "next";
-import ToHomePageButton from "@/components/parts/ToHomePageButton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { IoHomeOutline } from "react-icons/io5";
 
 export const metadata: Metadata = {
   title: "参加募集",
@@ -15,7 +17,11 @@ const JoinPage = () => {
       <PositionSection />
       <MeritSection />
       <ApplicationFormSection />
-      <ToHomePageButton />
+      <div className="flex justify-end my-10 md:my-15">
+        <Button variant="outline" asChild>
+          <Link href="/#join">ホームに戻る<IoHomeOutline /></Link>
+        </Button>
+      </div>  
     </main>
   )
 }

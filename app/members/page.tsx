@@ -1,7 +1,9 @@
 import data from "@/data/membersData.json";
 import { Role } from "@/lib/types";
 import MemberCardList from "@/components/parts/member/MemberCardList";
-import ToHomePageButton from "@/components/parts/ToHomePageButton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { IoHomeOutline } from "react-icons/io5";
 
 const MembersPage = () => {
   const roles: Role[] = data.roles;
@@ -12,7 +14,11 @@ const MembersPage = () => {
         <p className="text-muted-foreground">Propositio AI では、大学生を中心に、多様なバックグラウンドを持つメンバーが集まっています。<br className="hidden md:block" />ほとんどのメンバーが初心者からのスタートですが、互いに学び合いながら挑戦を続けています。</p>
       </div>
       <MemberCardList roles={roles} />
-      <ToHomePageButton />
+      <div className="flex justify-end my-10 md:my-15">
+        <Button variant="outline" asChild>
+          <Link href="/#members">ホームに戻る<IoHomeOutline /></Link>
+        </Button>
+      </div>
     </main>
   )
 }
