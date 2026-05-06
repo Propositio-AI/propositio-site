@@ -17,7 +17,7 @@ const JoinPage = () => {
       <PositionSection />
       <MeritSection />
       <ApplicationFormSection />
-      <div className="flex justify-end my-10 md:my-15">
+      <div className="flex justify-end my-10 md:my-15 px-4 md:px-16">
         <Button variant="outline" asChild>
           <Link href="/#join">ホームに戻る<IoHomeOutline /></Link>
         </Button>
