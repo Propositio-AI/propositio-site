@@ -14,11 +14,11 @@ const AboutSection = () => {
         <h3 className="text-3xl md:text-6xl font-semibold mb-2 md:mb-4">
           誰もが夢を持ち、自由に追いかけられる世界
         </h3>
-        <p className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-8">
+        <p className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-12">
           <span className="block leading-tight">- DREAM FREELY, CHASE BOLDLY -</span>
         </p>
-        <div className="container mx-auto flex flex-col-reverse gap-10 md:flex-row md:justify-around md:mb-18">
-          <div className="mb-10 md:mb-0 md:w-1/2 space-y-6 md:space-y-0">
+        <div className="container mx-auto flex flex-col-reverse gap-10 md:flex-row md:justify-around md:mb-20">
+          <div className="mb-10 md:mb-0 md:w-3/7 space-y-6 md:space-y-0">
             <p className="text-base md:text-xl text-muted-foreground leading-relaxed md:mt-10 mb-5">
               <span className="block mb-2 font-medium text-foreground">
                 「夢を持つことに、一体どんな価値があるのか？」
@@ -65,7 +65,7 @@ const AboutSection = () => {
               </Link>
             </div>
           </div>
-          <Image src="/images/history.png" alt="History" width={600} height={400} className="w-full h-auto object-contain md:w-3/7 md:pl-8 my-8 md:my-0" />
+          <Image src="/images/history.png" alt="History" width={600} height={400} className="w-full h-auto object-contain md:w-2/5 md:pl-8 my-8 md:my-0" />
         </div>
       </div>
       <div className="my-10">

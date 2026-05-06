@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import ToHomePageButton from "@/components/parts/ToHomePageButton";
 import ContactForm from "@/components/parts/contact/ContactForm";
 import ContactInfo from "@/components/parts/contact/ContactInfo";
 import FAQ from "@/components/parts/contact/FAQ";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { IoHomeOutline } from "react-icons/io5";
 
 export const metadata: Metadata = {
   title: "お問い合わせ",
@@ -25,8 +27,11 @@ const ContactPage = () => {
           <FAQ />
         </div>
       </div>
-
-      <ToHomePageButton />
+      <div className="flex justify-end my-10 md:my-15">
+        <Button variant="outline" asChild>
+          <Link href="/">ホームに戻る<IoHomeOutline /></Link>
+        </Button>
+      </div>
     </main>
   )
 }

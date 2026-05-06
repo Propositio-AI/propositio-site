@@ -45,7 +45,7 @@ const JoinSection = () => {
             src="/images/join.png"
             alt="Join Image"
             fill
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 100vw, 30vw"
             className="object-contain"
           />
         </div>
