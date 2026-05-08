@@ -4,15 +4,23 @@ import Link from "next/link";
 
 type NavigationForMobileProps = {
   onNavigate?: () => void;
+  isOpen?: boolean;
 };
 
-const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
+const NavigationForMobile = ({ onNavigate, isOpen }: NavigationForMobileProps) => {
   return (
     <nav className="h-screen flex flex-col mt-10 px-6">
       <div className="flex flex-col mb-20">
         <Link
           href="/#products"
-          className="flex justify-between text-2xl font-bold py-3"
+          className={`
+            flex justify-between text-2xl font-bold py-3
+            transition-all duration-500
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           Products
@@ -20,7 +28,14 @@ const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
         </Link>
         <Link
           href="/#about"
-          className="flex justify-between text-2xl font-bold py-3"
+          className={`
+            flex justify-between text-2xl font-bold py-3
+            transition-all duration-500
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           About
@@ -28,7 +43,14 @@ const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
         </Link>
         <Link
           href="/#blog"
-          className="flex justify-between text-2xl font-bold py-3"
+          className={`
+            flex justify-between text-2xl font-bold py-3
+            transition-all duration-500
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           Blog
@@ -36,7 +58,14 @@ const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
         </Link>
         <Link
           href="/#members"
-          className="flex justify-between text-2xl font-bold py-3"
+          className={`
+            flex justify-between text-2xl font-bold py-3
+            transition-all duration-500
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           Members
@@ -44,7 +73,14 @@ const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
         </Link>
         <Link
           href="/#join"
-          className="flex justify-between text-2xl font-bold py-3"
+          className={`
+            flex justify-between text-2xl font-bold py-3
+            transition-all duration-500
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           Join
@@ -54,12 +90,29 @@ const NavigationForMobile = ({ onNavigate }: NavigationForMobileProps) => {
       <div>
         <Link
           href="/contact"
-          className="flex justify-between text-base mb-4"
+          className={`
+            flex justify-between text-base mb-4
+            transition-all duration-1000
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}
           onClick={onNavigate}
         >
           お問い合わせ
         </Link>
-        <SocialLinks />
+        <div
+          className={`
+            flex justify-between text-base mb-4
+            transition-all duration-1000
+            ${isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-10 opacity-0"
+            }
+          `}>
+          <SocialLinks />
+        </div>
       </div>
     </nav>
   )

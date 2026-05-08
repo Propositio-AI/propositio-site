@@ -50,7 +50,7 @@ const Header = () => {
           <div
             className={`absolute left-0 top-full w-full bg-white md:hidden transition-all duration-300 ease-in-out
             ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-            <NavigationForMobile onNavigate={() => setIsOpen(false)} />
+            <NavigationForMobile isOpen={isOpen} onNavigate={() => setIsOpen(false)} />
           </div>
         </div>
       </header>
