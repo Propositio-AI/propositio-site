@@ -1,5 +1,8 @@
 'use server';
 import { supabase_anon, supabase_role } from "@/lib/supabase";
+import { Resend } from "resend";
+import { render } from "@react-email/render";
+import ContactThanksEmail from "@/components/email/ContactThanksEmail";
 
 type ContactFormData = {
   email: string;
@@ -25,16 +28,33 @@ export async function insertContact(data: ContactFormData) {
       新しいお問い合わせが来ました！
       
 【件名】
-　${data.title}
+${data.title}
 
 【メールアドレス】
-　${data.email}
+${data.email}
 
 【内容】
-　${data.content}
+${data.content}
       `,
     }),
   });
+
+  // 自動返信メール
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+  const emailHtml = await render(
+    ContactThanksEmail({
+      email: data.email,
+      title: data.title,
+      content: data.content,
+    })
+  );
+
+  await resend.emails.send({
+    from: "Propositio AI <onboarding@resend.dev>",
+    to: data.email,
+    subject: "お問い合わせありがとうございます",
+    html: emailHtml,
+  })
 
 
   return { success: true };

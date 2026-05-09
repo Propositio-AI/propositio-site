@@ -1,5 +1,8 @@
 'use server';
 import { supabase_anon, supabase_role } from "@/lib/supabase";
+import { Resend } from "resend";
+import { render } from "@react-email/render";
+import ApplicationThanksEmail from "@/components/email/ApplicationThanksEmail";
 
 type ApplicationFormData = {
   email: string;
@@ -12,35 +15,55 @@ type ApplicationFormData = {
 export async function insertApplication(data: ApplicationFormData) {
   const { error } = await supabase_anon.from("join_applications").insert([data]);
 
-  if(error) {
+  if (error) {
     throw new Error(error.message);
   }
 
+  // Slack通知
   await fetch(process.env.SLACK_WEBHOOK_URL!, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      text:`
+      text: `
       新しい参加応募が来ました！
       
 【名前】
-　${data.name}
+${data.name}
 
 【メールアドレス】
-　${data.email}
+${data.email}
 
 【大学学部】
-　${data.school_info}
+${data.school_info}
 
 【希望ポジション】
-　${data.position} 
+${data.position}
 
 【志望理由】
-　${data.motivation}
+${data.motivation}
       `,
     }),
+  });
+
+  // 自動返信メール
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+  const emailHtml = await render(
+    ApplicationThanksEmail({
+      email: data.email,
+      name: data.name,
+      school_info: data.school_info,
+      position: data.position,
+      motivation: data.motivation,
+    })
+  );
+
+  await resend.emails.send({
+    from: "Propositio AI <onboarding@resend.dev>",
+    to: data.email,
+    subject: "参加応募ありがとうございます",
+    html: emailHtml,
   });
 
   return { success: true };
