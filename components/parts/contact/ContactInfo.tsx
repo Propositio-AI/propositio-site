@@ -9,8 +9,8 @@ const ContactInfo = () => {
           <MdOutlineEmail  className="mt-1 w-5 h-5" />
         </div>
         <div>
-          <h4 className="text-sm font-bold">メール</h4>
-          <p className="text-xs md:text-sm text-muted-foreground">info@propositio.com</p>
+          <h4 className="text-sm md:text-lg font-bold">メール</h4>
+          <p className="text-xs md:text-base text-muted-foreground">info@propositio.com</p>
         </div>
       </div>
       <div className="flex gap-1">
@@ -18,8 +18,8 @@ const ContactInfo = () => {
           <MdOutlinePlace className="mt-1 w-5 h-5" />
         </div>
         <div>
-          <h4 className="text-sm font-bold">住所</h4>
-          <p className="text-xs md:text-sm text-muted-foreground">〒610-0394<br />京田辺市多々羅都谷1-3<br />同志社ローム記念館 RM208</p>
+          <h4 className="text-sm md:text-lg font-bold">住所</h4>
+          <p className="text-xs md:text-base text-muted-foreground">〒610-0394<br />京田辺市多々羅都谷1-3<br />同志社ローム記念館 RM208</p>
         </div>
       </div>
     </div>
