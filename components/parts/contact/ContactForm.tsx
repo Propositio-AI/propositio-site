@@ -76,8 +76,8 @@ const ContactForm = () => {
   return (
     <Card className="w-full sm:max-w-md md:max-w-xl">
       <CardHeader>
-        <CardTitle>お問い合わせフォーム</CardTitle>
-        <CardDescription>
+        <CardTitle className="md:text-xl">お問い合わせフォーム</CardTitle>
+        <CardDescription className="md:text-base">
           ご質問やご相談は、こちらのフォームからお寄せください。
         </CardDescription>
       </CardHeader>
@@ -89,7 +89,7 @@ const ContactForm = () => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="contact_form-email">
+                  <FieldLabel htmlFor="contact_form-email" className="md:text-base">
                     メールアドレス
                   </FieldLabel>
                   <Input
@@ -111,7 +111,7 @@ const ContactForm = () => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="contact_form-title">
+                  <FieldLabel htmlFor="contact_form-title" className="md:text-base">
                     件名
                   </FieldLabel>
                   <Input
@@ -132,7 +132,7 @@ const ContactForm = () => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="contact_form-description">
+                  <FieldLabel htmlFor="contact_form-description" className="md:text-base">
                     お問い合わせ内容
                   </FieldLabel>
                   <InputGroup>

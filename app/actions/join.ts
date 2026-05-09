@@ -16,6 +16,33 @@ export async function insertApplication(data: ApplicationFormData) {
     throw new Error(error.message);
   }
 
+  await fetch(process.env.SLACK_WEBHOOK_URL!, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text:`
+      新しい参加応募が来ました！
+      
+【名前】
+　${data.name}
+
+【メールアドレス】
+　${data.email}
+
+【大学学部】
+　${data.school_info}
+
+【希望ポジション】
+　${data.position} 
+
+【志望理由】
+　${data.motivation}
+      `,
+    }),
+  });
+
   return { success: true };
 }
 

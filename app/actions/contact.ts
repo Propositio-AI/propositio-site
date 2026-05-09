@@ -14,6 +14,29 @@ export async function insertContact(data: ContactFormData) {
     throw new Error(error.message);
   }
 
+  // slack通知
+  await fetch(process.env.SLACK_WEBHOOK_URL!, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text:`
+      新しいお問い合わせが来ました！
+      
+【件名】
+　${data.title}
+
+【メールアドレス】
+　${data.email}
+
+【内容】
+　${data.content}
+      `,
+    }),
+  });
+
+
   return { success: true };
 }
 
