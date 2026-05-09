@@ -38,13 +38,13 @@ const ContactThanksEmail = ({ email, title, content }: Props) => {
           <Text>{email} 様</Text>
 
           <Text>
-            この度は Propositio AI へお問い合わせいただき，
-            誠にありがとうございます．
+            この度は Propositio AI へお問い合わせいただき、
+            誠にありがとうございます。
           </Text>
 
           <Text>
-            以下の内容でお問い合わせを受け付けました．
-            内容を確認後，担当者よりご連絡いたします．
+            以下の内容でお問い合わせを受け付けました。
+            内容を確認後、担当者よりご連絡いたします。
           </Text>
 
           <Section
@@ -84,12 +84,12 @@ const ContactThanksEmail = ({ email, title, content }: Props) => {
           </Section>
 
           <Text>
-            ※ 通常2〜3日以内にご返信いたします．
+            ※ 通常2〜3日以内にご返信いたします。
           </Text>
 
           <Text>
-            もし心当たりのないメールの場合は，
-            本メールを破棄してください．
+            もし心当たりのないメールの場合は、
+            本メールを破棄してください。
           </Text>
 
           <Hr />
