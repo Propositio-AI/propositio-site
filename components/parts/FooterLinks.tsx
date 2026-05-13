@@ -27,6 +27,7 @@ const FooterLinks = () => {
         <ul className="space-y-4">
           <li><Link href="/#about" className="hover:text-black">会社概要</Link></li>
           <li><Link href="/contact" className="hover:text-black">お問い合わせ</Link></li>
+          <li><a href="https://rohm.doshisha.ac.jp/rohm/project/overview.html" target="_blank" rel="noopener noreferrer" className="hover:text-black">ローム記念館プロジェクト</a></li>
         </ul>
       </div>
       
