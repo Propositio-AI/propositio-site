@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link"
 import Image from "next/image"
 import { FaArrowRightToBracket } from "react-icons/fa6";
+import { motion } from "motion/react";
 
 
 const MemberIntroSection = () => {
@@ -8,7 +10,11 @@ const MemberIntroSection = () => {
     <div id="members" className=" py-16 px-6 md:px-15">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Members</h2>
       <div className="container mx-auto flex flex-col md:flex-row items-center gap-10">
-        <div className="w-full md:w-2/5">
+        <motion.div className="w-full md:w-2/5"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}>
           <Image
             src="/images/members.png"
             alt="Member Introduction"
@@ -16,11 +22,30 @@ const MemberIntroSection = () => {
             height={600}
             className="w-full h-auto object-contain"
           />
-        </div>
+        </motion.div>
         <div className="space-y-3 sm:w-1/2">
-          <h3 className="text-3xl md:text-5xl font-bold leading-tight">私たちは<br /><span className="text-blue-500">学生中心のチーム</span>です</h3>
-          <p className="text-base md:text-lg text-muted-foreground">Propositio AIは、企画から運用までを全て<span className="text-black font-medium">学生のみ</span>で担うチームです。メンバーが主体的に協力しながらプロダクト成長に取り組み、情報系に限らず、多様なバックグラウンドのメンバーが活躍しています。</p>
-          <div className="flex">
+          <motion.h3 className="text-3xl md:text-5xl font-bold leading-tight"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            私たちは<br /><span className="text-blue-500">学生中心のチーム</span>です
+          </motion.h3>
+          <motion.p className="text-base md:text-lg text-muted-foreground"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1.2 }}
+            viewport={{ once: true }}
+          >
+            Propositio AIは、企画から運用までを全て<span className="text-black font-medium">学生のみ</span>で担うチームです。メンバーが主体的に協力しながらプロダクト成長に取り組み、情報系に限らず、多様なバックグラウンドのメンバーが活躍しています。
+          </motion.p>
+          <motion.div className="flex"
+            initial={{ opacity: 0, x: 15 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1.2 }}
+            viewport={{ once: true }}
+          >
             <Link href="/members" className="ml-auto">
               <div className="flex items-center gap-4 pb-2 border-b-2 border-green-500 w-max group group-hover:border-green-600 transition-colors">
                 <p className="font-medium">メンバーを見る</p>
@@ -29,7 +54,7 @@ const MemberIntroSection = () => {
                 </div>
               </div>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
