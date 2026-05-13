@@ -12,7 +12,7 @@ const AboutSection = () => {
       </h2>
       <div className="container mx-auto md:flex md:flex-col md:items-center">
         <h3 className="text-3xl md:text-6xl font-semibold mb-2 md:mb-4">
-          誰もが夢を持ち、自由に追いかけられる世界
+          誰もが<span className="text-blue-500">夢を</span>持ち、自由に<span className="text-blue-500">追いかけられる</span>世界
         </h3>
         <p className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-12">
           <span className="block leading-tight">- DREAM FREELY, CHASE BOLDLY -</span>
