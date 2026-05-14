@@ -9,8 +9,8 @@ const MemberIntroSection = () => {
   return (
     <div id="members" className=" py-16 px-6 md:px-15">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Members</h2>
-      <div className="container mx-auto flex flex-col md:flex-row items-center gap-10">
-        <motion.div className="w-full md:w-2/5"
+      <div className="container mx-auto flex flex-col md:flex-row justify-around items-center gap-10">
+        <motion.div className="w-full md:w-1/3"
           initial={{ opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}

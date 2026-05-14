@@ -95,8 +95,10 @@ const AboutSection = () => {
             <div className="flex">
               <Link href="/about" className="ml-auto">
                 <motion.div
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.97 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                  viewport={{ once: true }}
                   className="flex items-center gap-4 pb-2 border-b-2 border-blue-500 w-max group group-hover:border-blue-600 transition-colors"
                 >
                   <p className="font-medium">
@@ -112,10 +114,10 @@ const AboutSection = () => {
           </motion.div>
 
           <motion.div
-            className="md:w-2/5"
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+            className="px-6"
+            initial={{ opacity: 0}}
+            whileInView={{ opacity: 1}}
+            transition={{ duration: 1.2 }}
             viewport={{ once: true }}
           >
             <Image

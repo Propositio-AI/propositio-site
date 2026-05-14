@@ -58,10 +58,10 @@ const PRODUCT_DATA = {
         iconBg: "bg-blue-100",
         initials: "DM",
         initialsClr: "text-blue-500",
-        borderColor: "border-green-500",
-        borderHover: "group-hover:border-green-600",
-        btnBg: "bg-green-500",
-        bgHover: "group-hover:bg-green-600",
+        borderColor: "border-blue-500",
+        borderHover: "group-hover:border-blue-600",
+        btnBg: "bg-blue-500",
+        bgHover: "group-hover:bg-blue-600",
     },
     action: {
         badge: "Career Realization Platform",
@@ -99,10 +99,10 @@ const PRODUCT_DATA = {
         iconBg: "bg-green-100",
         initials: "DA",
         initialsClr: "text-green-500",
-        borderColor: "border-blue-500",
-        borderHover: "group-hover:border-blue-600",
-        btnBg: "bg-blue-500",
-        bgHover: "group-hover:bg-blue-600",
+        borderColor: "border-green-500",
+        borderHover: "group-hover:border-green-600",
+        btnBg: "bg-green-500",
+        bgHover: "group-hover:bg-green-600",
     },
 };
 
@@ -137,53 +137,56 @@ export default function KarynosIntroSection() {
         <section id="products" className="py-16 bg-gray-50 px-6 md:px-15">
             <div>
                 {/* ── Header ── */}
-                <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
-                        Product
-                    </h2>
-                    <h3
-                        className={cn(
-                            "text-5xl md:text-6xl font-bold transition-colors duration-500 mb-2 md:mb-4",
-                            data.accentText,
-                        )}
-                    >
-                        Karynos
-                    </h3>
-                    <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
-                        Dream Matchingで夢を見つけ、Dream
-                        Actionで夢実現へ。2つのサービスであなたのキャリアを支援します。
-                    </p>
-                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
+                    Product
+                </h2>
+                <div className="md:px-16">
+                    <div className="mb-8">
 
-                {/* ── Tab Switcher ── */}
-                <div className="mb-3">
-                    <div className="inline-flex bg-white border border-gray-200 rounded-full p-1 shadow-sm gap-1">
-                        {TABS.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={cn(
-                                    "px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300",
-                                    activeTab === tab.id
-                                        ? cn(
-                                              PRODUCT_DATA[tab.id].accentBg,
-                                              "text-white shadow-md",
-                                          )
-                                        : "text-gray-500 hover:text-gray-800",
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+                        <h3
+                            className={cn(
+                                "text-5xl md:text-6xl font-bold transition-colors duration-500 mb-2 md:mb-4",
+                                data.accentText,
+                            )}
+                        >
+                            Karynos
+                        </h3>
+                        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                            Dream Matchingで夢を見つけ、Dream
+                            Actionで夢実現へ。2つのサービスであなたのキャリアを支援します。
+                        </p>
                     </div>
-                </div>
 
-                {/* ── Progress bar (auto-switch indicator) ── */}
-                <div className="h-0.5 bg-gray-200 rounded-full mb-10 max-w-xs">
-                    <div
-                        className={cn("h-full rounded-full", data.barColor)}
-                        style={{ width: `${progress}%`, transition: "none" }}
-                    />
+                    {/* ── Tab Switcher ── */}
+                    <div className="mb-3">
+                        <div className="inline-flex bg-white border border-gray-200 rounded-full p-1 shadow-sm gap-1">
+                            {TABS.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={cn(
+                                        "px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300",
+                                        activeTab === tab.id
+                                            ? cn(
+                                                PRODUCT_DATA[tab.id].accentBg,
+                                                "text-white shadow-md",
+                                            )
+                                            : "text-gray-500 hover:text-gray-800",
+                                    )}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* ── Progress bar (auto-switch indicator) ── */}
+                    <div className="h-0.5 bg-gray-200 rounded-full mb-10 max-w-xs">
+                        <div
+                            className={cn("h-full rounded-full", data.barColor)}
+                            style={{ width: `${progress}%`, transition: "none" }}
+                        />
+                    </div>
                 </div>
 
                 {/* ── Content ── */}
@@ -197,7 +200,7 @@ export default function KarynosIntroSection() {
                         className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
                     >
                         {/* Left: Info */}
-                        <div>
+                        <div className="md:px-16">
                             <span
                                 className={cn(
                                     "inline-flex items-center gap-1.5 border rounded-full py-1 px-3 text-sm font-medium mb-4",
