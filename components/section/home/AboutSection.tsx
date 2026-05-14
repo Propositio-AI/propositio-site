@@ -114,10 +114,10 @@ const AboutSection = () => {
           </motion.div>
 
           <motion.div
-            className="md:w-1/3"
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+            className="px-6"
+            initial={{ opacity: 0}}
+            whileInView={{ opacity: 1}}
+            transition={{ duration: 1.2 }}
             viewport={{ once: true }}
           >
             <Image
