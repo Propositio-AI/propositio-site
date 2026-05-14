@@ -50,9 +50,9 @@ const JoinSection = () => {
             transition={{ duration: 1.2 }}
             viewport={{ once: true }}>
             <Link href="/join" className="ml-auto">
-              <div className="flex items-center gap-4 pb-2 border-b-2 border-blue-500 w-max group group-hover:border-blue-600 transition-colors">
+              <div className="flex items-center gap-4 pb-2 border-b-2 border-green-500 w-max group group-hover:border-green-600 transition-colors">
                 <p className="font-medium">メリット・募集詳細を見る</p>
-                <div className="bg-blue-500 text-white py-1.5 px-4 group-hover:bg-blue-600 group-hover:rounded transition-colors">
+                <div className="bg-green-500 text-white py-1.5 px-4 group-hover:bg-green-600 group-hover:rounded transition-colors">
                   <FaArrowRightToBracket className="w-3 h-3" />
                 </div>
               </div>
