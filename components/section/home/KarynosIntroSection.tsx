@@ -104,16 +104,16 @@ export default function KarynosIntroSection() {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-        setProgress(0);
         const start = Date.now();
 
         const barId = setInterval(() => {
             const p = Math.min(((Date.now() - start) / INTERVAL_MS) * 100, 100);
             setProgress(p);
-        }, 100);
+        }, 16);
 
         const switchId = setTimeout(() => {
             setActiveTab((cur) => (cur === "matching" ? "action" : "matching"));
+            setProgress(0);
         }, INTERVAL_MS);
 
         return () => {
