@@ -60,7 +60,7 @@ ${data.motivation}
   );
 
   await resend.emails.send({
-    from: "Propositio AI <onboarding@resend.dev>",
+    from: "Propositio AI <noreply@propositio.com>",
     to: data.email,
     subject: "参加応募ありがとうございます",
     html: emailHtml,

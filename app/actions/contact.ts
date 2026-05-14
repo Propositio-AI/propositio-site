@@ -50,7 +50,7 @@ ${data.content}
   );
 
   await resend.emails.send({
-    from: "Propositio AI <onboarding@resend.dev>",
+    from: "Propositio AI <noreply@propositio.com>",
     to: data.email,
     subject: "お問い合わせありがとうございます",
     html: emailHtml,
@@ -62,11 +62,9 @@ ${data.content}
 
 export async function getAllContacts() {
   const { data, error } = await supabase_role.from("contact_inquiries").select("*").order("created_at", { ascending: false });
-
   if (error) {
     throw new Error(error.message);
   }
-
   return data;
 }
 
