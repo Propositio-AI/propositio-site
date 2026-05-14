@@ -11,7 +11,7 @@ const MemberIntroSection = () => {
       <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">Members</h2>
       <div className="container mx-auto flex flex-col md:flex-row items-center gap-10">
         <motion.div className="w-full md:w-2/5"
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}>
@@ -25,7 +25,7 @@ const MemberIntroSection = () => {
         </motion.div>
         <div className="space-y-3 sm:w-1/2">
           <motion.h3 className="text-3xl md:text-5xl font-bold leading-tight"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
@@ -33,7 +33,7 @@ const MemberIntroSection = () => {
             私たちは<br /><span className="text-blue-500">学生中心のチーム</span>です
           </motion.h3>
           <motion.p className="text-base md:text-lg text-muted-foreground"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1.2 }}
             viewport={{ once: true }}
@@ -41,7 +41,7 @@ const MemberIntroSection = () => {
             Propositio AIは、企画から運用までを全て<span className="text-black font-medium">学生のみ</span>で担うチームです。メンバーが主体的に協力しながらプロダクト成長に取り組み、情報系に限らず、多様なバックグラウンドのメンバーが活躍しています。
           </motion.p>
           <motion.div className="flex"
-            initial={{ opacity: 0, x: 15 }}
+            initial={{ opacity: 0, x: 25 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1.2 }}
             viewport={{ once: true }}
