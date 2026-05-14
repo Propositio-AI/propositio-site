@@ -15,7 +15,7 @@ const JoinSection = () => {
       <div className="grid md:grid-cols-2 gap-10 items-center md:px-16">
         <div>
           <motion.h3 className="text-3xl md:text-5xl font-bold leading-tight mb-3 md:mb-6"
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
@@ -23,7 +23,7 @@ const JoinSection = () => {
             AI開発で、<br /><span className="text-green-500">「実力」と「実績」</span>を手に入れる
           </motion.h3>
           <motion.div className="relative w-full aspect-3/2 md:hidden mb-4"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}>
@@ -36,16 +36,16 @@ const JoinSection = () => {
             />
           </motion.div>
           <motion.p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8"
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1.2 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
             Propositio AIでは、LLMを活用したプロダクト開発を通して、実務レベルの開発経験とチーム開発力を身につけることができます。<br />
             就活で語れるガクチカや、エンジニアとしての実力を伸ばしたい人へ。
           </motion.p>
           <motion.div className="flex"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 1.2 }}
             viewport={{ once: true }}>
@@ -62,7 +62,7 @@ const JoinSection = () => {
         </div>
 
         <motion.div className="relative w-full aspect-3/2 hidden md:block"
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 40 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
