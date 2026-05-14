@@ -11,6 +11,7 @@ import {
     FaRegCalendarCheck,
 } from "react-icons/fa";
 import { FaBook } from "react-icons/fa6";
+import { FaArrowRightToBracket } from "react-icons/fa6";
 import Link from "next/link";
 
 const TABS = [
@@ -57,6 +58,10 @@ const PRODUCT_DATA = {
         iconBg: "bg-blue-100",
         initials: "DM",
         initialsClr: "text-blue-500",
+        borderColor: "border-green-500",
+        borderHover: "group-hover:border-green-600",
+        btnBg: "bg-green-500",
+        bgHover: "group-hover:bg-green-600",
     },
     action: {
         badge: "Career Realization Platform",
@@ -94,6 +99,10 @@ const PRODUCT_DATA = {
         iconBg: "bg-green-100",
         initials: "DA",
         initialsClr: "text-green-500",
+        borderColor: "border-blue-500",
+        borderHover: "group-hover:border-blue-600",
+        btnBg: "bg-blue-500",
+        bgHover: "group-hover:bg-blue-600",
     },
 };
 
@@ -125,22 +134,22 @@ export default function KarynosIntroSection() {
     const data = PRODUCT_DATA[activeTab];
 
     return (
-        <section id="products" className="py-16 bg-gray-50">
-            <div className="max-w-6xl mx-auto px-6 md:px-12">
+        <section id="products" className="py-16 bg-gray-50 px-6 md:px-15">
+            <div>
                 {/* ── Header ── */}
                 <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-500 leading-tight">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-600 mb-4 md:mb-6">
                         Product
-                        <span
-                            className={cn(
-                                "ml-3 text-5xl md:text-6xl transition-colors duration-500",
-                                data.accentText,
-                            )}
-                        >
-                            Karynos
-                        </span>
                     </h2>
-                    <p className="mt-2 text-sm md:text-base text-gray-500 max-w-xl leading-relaxed">
+                    <h3
+                        className={cn(
+                            "text-5xl md:text-6xl font-bold transition-colors duration-500 mb-2 md:mb-4",
+                            data.accentText,
+                        )}
+                    >
+                        Karynos
+                    </h3>
+                    <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
                         Dream Matchingで夢を見つけ、Dream
                         Actionで夢実現へ。2つのサービスであなたのキャリアを支援します。
                     </p>
@@ -191,7 +200,7 @@ export default function KarynosIntroSection() {
                         <div>
                             <span
                                 className={cn(
-                                    "inline-flex items-center gap-1.5 border rounded-full py-1 px-3 text-xs font-medium mb-4",
+                                    "inline-flex items-center gap-1.5 border rounded-full py-1 px-3 text-sm font-medium mb-4",
                                     data.badgeCls,
                                 )}
                             >
@@ -201,17 +210,17 @@ export default function KarynosIntroSection() {
 
                             <h3
                                 className={cn(
-                                    "bg-gradient-to-r bg-clip-text text-transparent text-4xl md:text-5xl font-bold mb-2",
+                                    "bg-gradient-to-r bg-clip-text text-transparent text-4xl md:text-6xl font-bold mb-2",
                                     data.gradient,
                                 )}
                             >
                                 {data.title}
                             </h3>
 
-                            <p className="text-lg font-bold text-gray-700 mb-3">
+                            <p className="text-lg md:text-xl font-bold text-gray-700 mb-3">
                                 {data.tagline}
                             </p>
-                            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-6">
                                 {data.description}
                             </p>
 
@@ -228,10 +237,10 @@ export default function KarynosIntroSection() {
                                                 f.color,
                                             )}
                                         />
-                                        <p className="font-semibold text-xs text-gray-800 mb-1">
+                                        <p className="font-semibold text-sm text-gray-800 mb-1">
                                             {f.label}
                                         </p>
-                                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                                        <p className="text-xs text-gray-400 leading-relaxed">
                                             {f.desc}
                                         </p>
                                     </div>
@@ -239,16 +248,30 @@ export default function KarynosIntroSection() {
                             </div>
 
                             {/* CTA */}
-                            <Link
-                                href="/products"
-                                className={cn(
-                                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-80",
-                                    data.accentBg,
-                                )}
-                            >
-                                詳しく見る
-                                <span aria-hidden>→</span>
-                            </Link>
+                            <div className="flex">
+                                <Link href="/products" className="ml-auto">
+                                    <div
+                                        className={cn(
+                                            "flex items-center gap-4 pb-2 border-b-2 w-max group transition-colors",
+                                            data.borderColor,
+                                            data.borderHover,
+                                        )}
+                                    >
+                                        <p className="font-medium">
+                                            サービスを詳しく見る
+                                        </p>
+                                        <div
+                                            className={cn(
+                                                "text-white py-1.5 px-4 group-hover:rounded transition-colors",
+                                                data.btnBg,
+                                                data.bgHover,
+                                            )}
+                                        >
+                                            <FaArrowRightToBracket className="w-3 h-3" />
+                                        </div>
+                                    </div>
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Right: App screenshot frame */}
@@ -262,7 +285,7 @@ export default function KarynosIntroSection() {
                                     )}
                                 />
                                 {/* Phone frame */}
-                                <div className="bg-gray-900 rounded-[3rem] p-[10px] shadow-2xl w-[220px] md:w-[260px]">
+                                <div className="bg-gray-900 rounded-[3rem] p-[10px] shadow-2xl w-[260px] md:w-[320px]">
                                     <div className="bg-gray-800 rounded-[2.6rem] overflow-hidden">
                                         {/* Notch */}
                                         <div className="flex justify-center py-2">
@@ -290,7 +313,7 @@ export default function KarynosIntroSection() {
                                                     {data.initials}
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                                            <p className="text-xs text-gray-400 text-center leading-relaxed">
                                                 アプリ画面
                                                 <br />
                                                 スクリーンショット
