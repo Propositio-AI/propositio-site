@@ -36,12 +36,9 @@ const ApplicationThanksEmail = ({
           style={{
             maxWidth: "600px",
             margin: "0 auto",
-            padding: "32px 16px",
+            padding: "10px",
           }}
         >
-          <Heading>
-            参加応募ありがとうございます
-          </Heading>
 
           <Text>{name} 様</Text>
 
@@ -58,9 +55,9 @@ const ApplicationThanksEmail = ({
           <Section
             style={{
               backgroundColor: "#f5f5f5",
-              padding: "20px",
+              padding: "14px",
               borderRadius: "8px",
-              marginTop: "24px",
+              marginTop: "20px",
             }}
           >
             <Text>
@@ -94,7 +91,7 @@ const ApplicationThanksEmail = ({
             <Section
               style={{
                 backgroundColor: "#fff",
-                padding: "16px",
+                padding: "12px",
                 borderRadius: "6px",
                 whiteSpace: "pre-wrap",
               }}

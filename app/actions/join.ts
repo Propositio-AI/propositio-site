@@ -1,6 +1,7 @@
 'use server';
 import { supabase_anon, supabase_role } from "@/lib/supabase";
-import { Resend } from "resend";
+import { sesClient } from "@/lib/ses";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
 import { render } from "@react-email/render";
 import ApplicationThanksEmail from "@/components/email/ApplicationThanksEmail";
 
@@ -48,7 +49,6 @@ ${data.motivation}
   });
 
   // 自動返信メール
-  const resend = new Resend(process.env.RESEND_API_KEY!);
   const emailHtml = await render(
     ApplicationThanksEmail({
       email: data.email,
@@ -59,12 +59,26 @@ ${data.motivation}
     })
   );
 
-  await resend.emails.send({
-    from: "Propositio AI <noreply@propositio.com>",
-    to: data.email,
-    subject: "参加応募ありがとうございます",
-    html: emailHtml,
-  });
+  await sesClient.send(
+    new SendEmailCommand({
+      Source: "Propositio AI <no-reply@propositio.com>",
+      Destination: {
+        ToAddresses: [data.email],
+      },
+      Message: {
+        Subject: {
+          Data: "参加応募ありがとうございます",
+          Charset: "UTF-8",
+        },
+        Body: {
+          Html: {
+            Data: emailHtml,
+            Charset: "UTF-8",
+          },
+        }
+      }
+    })
+  )
 
   return { success: true };
 }
