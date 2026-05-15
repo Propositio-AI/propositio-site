@@ -2,7 +2,6 @@ import {
   Html,
   Body,
   Container,
-  Heading,
   Text,
   Section,
   Hr,
@@ -28,13 +27,9 @@ const ContactThanksEmail = ({ email, title, content }: Props) => {
           style={{
             maxWidth: "600px",
             margin: "0 auto",
-            padding: "32px 16px",
+            padding: "10px",
           }}
         >
-          <Heading>
-            お問い合わせありがとうございます
-          </Heading>
-
           <Text>{email} 様</Text>
 
           <Text>
@@ -50,9 +45,9 @@ const ContactThanksEmail = ({ email, title, content }: Props) => {
           <Section
             style={{
               backgroundColor: "#f5f5f5",
-              padding: "20px",
+              padding: "14px",
               borderRadius: "8px",
-              marginTop: "24px",
+              marginTop: "20px",
             }}
           >
             <Text>
@@ -74,7 +69,7 @@ const ContactThanksEmail = ({ email, title, content }: Props) => {
             <Section
               style={{
                 backgroundColor: "#fff",
-                padding: "16px",
+                padding: "12px",
                 borderRadius: "6px",
                 whiteSpace: "pre-wrap",
               }}

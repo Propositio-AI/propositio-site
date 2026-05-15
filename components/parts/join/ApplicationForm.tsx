@@ -115,7 +115,7 @@ const ApplicationForm = () => {
                     type="email"
                     aria-invalid={fieldState.invalid}
                     placeholder="youremail@example.com"
-                    autoComplete="off"
+                    autoComplete="email"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
