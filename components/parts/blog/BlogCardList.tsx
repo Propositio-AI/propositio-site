@@ -25,7 +25,7 @@ const BlogCardList = () => {
     <div className="flex max-w-full gap-4 overflow-x-auto overscroll-x-contain pb-2">
       {
         blogs.map((blog) => (
-          <BlogCard key={blog.id} id = {blog.id} title={blog.title} description={blog.description} published_at={blog.published_at} tags={blog.tags} top_image={blog.top_image} instagram_url={blog.instagram_url} />
+          <BlogCard key={blog.id} id = {blog.id} title={blog.title} description={blog.description} publishedAt={blog.publishedAt} tags={blog.tags} top_image={blog.top_image} instagram_url={blog.instagram_url} />
         ))
       }
     </div>

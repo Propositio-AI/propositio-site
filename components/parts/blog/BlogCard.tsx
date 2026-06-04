@@ -12,7 +12,7 @@ const BlogCard = ({
   id,
   title,
   description,
-  published_at,
+  publishedAt,
   tags,
   top_image,
   instagram_url,
@@ -53,7 +53,7 @@ const BlogCard = ({
           {description}
         </p>
         <div className="flex items-center justify-between">
-          <time className="text-xs text-muted-foreground">公開日: {published_at.slice(0, 10)}</time>
+          <time className="text-xs text-muted-foreground">公開日: {publishedAt.slice(0, 10)}</time>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <FaInstagram className="h-4 w-4" />
             <span>Instagram</span>
