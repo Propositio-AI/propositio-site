@@ -27,7 +27,7 @@ export type Blog = {
   description: string;
   top_image: { url: string };
   instagram_url: string;
-  published_at: string;
+  publishedAt: string;
   tags: { id: string; tag_name: string }[];
 };
 
