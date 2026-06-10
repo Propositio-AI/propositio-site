@@ -1,15 +1,16 @@
 # Propositio Site
 
-Propositio の公式サイトです。Next.js(App Router) + TypeScript + Supabase で構築しています。
+Propositio の公式サイトです。Next.js(App Router) + TypeScript + Supabase + microCMS で構築しています。
 
 - 本番URL: https://propositio.com
 - ローカルURL: http://localhost:3000
 
 ## 主な機能
 
-- トップページ・参加募集ページ・お問い合わせページ・メンバーページ
+- トップページ・About ページ・Products(Karynos)ページ・参加募集ページ・お問い合わせページ・メンバーページ
+- microCMS と連携したブログ一覧表示
 - Supabase 連携による応募/お問い合わせデータ保存
-- ブログ一覧表示
+- お問い合わせ・参加応募受付時の Slack 通知、および AWS SES による自動返信メール送信
 - 管理画面での応募・お問い合わせステータス管理
 - NextAuth(Credentials) を使った管理者ログイン
 
@@ -20,8 +21,10 @@ Propositio の公式サイトです。Next.js(App Router) + TypeScript + Supabas
 - TypeScript
 - Tailwind CSS 4
 - Supabase
+- microCMS
 - NextAuth.js v5(beta)
 - shadcn/ui
+- AWS SES / react-email(自動返信メール送信)
 
 ## セットアップ
 
@@ -36,13 +39,27 @@ npm install
 プロジェクトルートに .env.local を作成し、以下を設定してください。
 
 ```bash
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
+# microCMS
+NEXT_PUBLIC_MICROCMS_SERVICE_DOMAIN=
+NEXT_PUBLIC_MICROCMS_API_KEY=
+
+# 管理者ログイン
 AUTH_SECRET=
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
+
+# Slack通知
+SLACK_WEBHOOK_URL=
+
+# AWS SES(自動返信メール送信)
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 ```
 
 3. 開発サーバーを起動
