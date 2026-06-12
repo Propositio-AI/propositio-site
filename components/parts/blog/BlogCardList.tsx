@@ -22,7 +22,7 @@ const BlogCardList = () => {
 
 
   return (
-    <div className="flex max-w-full gap-4 overflow-x-auto overscroll-x-contain pb-2">
+    <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
       {
         blogs.map((blog) => (
           <BlogCard key={blog.id} id = {blog.id} title={blog.title} description={blog.description} publishedAt={blog.publishedAt} tags={blog.tags} top_image={blog.top_image} instagram_url={blog.instagram_url} />

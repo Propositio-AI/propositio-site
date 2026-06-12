@@ -1,34 +1,55 @@
+import Link from "next/link";
+import Logo from "@/components/parts/Logo";
 import SocialLinks from "@/components/parts/SocialLinks";
-import FooterLinks from "../parts/FooterLinks"
+import { FOOTER_PAGE_LINKS, FOOTER_CONNECT_LINKS, type NavLink } from "@/lib/navigation";
+
+const LinkColumn = ({ heading, links }: { heading: string; links: NavLink[] }) => (
+  <div>
+    <p className="mb-4 font-heading text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+      {heading}
+    </p>
+    <div className="flex flex-col gap-2.5">
+      {links.map(({ href, label }) => (
+        <Link
+          key={href}
+          href={href}
+          className="text-sm text-slate-300 no-underline transition-colors hover:text-white"
+        >
+          {label}
+        </Link>
+      ))}
+    </div>
+  </div>
+);
 
 const Footer = () => {
   return (
-    <div className="bg-gray-100 px-4 py-4 text-gray-600">
-      <div className="container mx-auto text-xs">
-        <div className="sm:flex sm:justify-between sm:gap-4 py-7 border-b border-gray-300">
-          <div className="mb-4 sm:mb-0">
-            <h2 className="text-sm md:text-xl font-bold text-gray-900">Propositio AI</h2>
-            <p className="md:text-sm mt-2 w-120">
-              可能性を全ての人に。
-              <br />
-              学生と教育関係者のための革新的AIプロダクトを開発しています。
-            </p>
-          </div>
-          <div>
-            <FooterLinks />
-          </div>
+    <footer className="mt-auto bg-slate-900 text-slate-300">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-5 pb-10 pt-16 sm:grid-cols-[1.4fr_1fr_1fr] md:px-10 md:pt-20">
+        <div>
+          <Logo inverted />
+          <p className="mt-5 max-w-[300px] text-sm leading-relaxed text-slate-400">
+            キャリアと日々の学習を接続するAIプラットフォーム。生徒の“今”を、未来とつなぐ。
+          </p>
         </div>
-        <div className="py-4 flex items-center justify-between">
-          <div>
-            <small className="text-xs md:text-sm">&copy; 2024 Propositio AI. All rights reserved.</small>
-          </div>
-          <div>
+        <LinkColumn heading="Pages" links={FOOTER_PAGE_LINKS} />
+        <LinkColumn heading="Connect" links={FOOTER_CONNECT_LINKS} />
+      </div>
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 md:px-10">
+          <small className="text-[13px] text-slate-500">
+            &copy; {new Date().getFullYear()} Propositio AI. All rights reserved.
+          </small>
+          <div className="flex items-center gap-4">
             <SocialLinks />
+            <span className="hidden font-heading text-[13px] tracking-wide text-slate-500 sm:inline">
+              Karynos by Propositio AI
+            </span>
           </div>
         </div>
       </div>
-    </div>
-  )
-}
+    </footer>
+  );
+};
 
-export default Footer
+export default Footer;

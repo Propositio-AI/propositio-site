@@ -74,7 +74,7 @@ const ContactForm = () => {
   }
 
   return (
-    <Card className="w-full sm:max-w-md md:max-w-xl">
+    <Card className="w-full rounded-[26px] border-slate-100 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-28px_rgba(15,23,42,0.18)] md:p-4">
       <CardHeader>
         <CardTitle className="md:text-xl">お問い合わせフォーム</CardTitle>
         <CardDescription className="md:text-base">

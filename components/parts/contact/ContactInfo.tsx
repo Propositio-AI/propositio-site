@@ -1,29 +1,33 @@
-import { MdOutlineEmail } from "react-icons/md";
-import { MdOutlinePlace } from "react-icons/md";
+const items = [
+  { heading: "Email", body: <>info@propositio.com</> },
+  {
+    heading: "Address",
+    body: (
+      <>
+        〒610-0394
+        <br />
+        京田辺市多々羅都谷1-3
+        <br />
+        同志社ローム記念館 RM208
+      </>
+    ),
+  },
+  { heading: "Provided by", body: <>Propositio AI</> },
+];
 
 const ContactInfo = () => {
   return (
-    <div className="space-y-3 pb-3 md:border-b md:border-gray-300">
-      <div className="flex gap-1">
-        <div>
-          <MdOutlineEmail  className="mt-1 w-5 h-5" />
+    <div className="flex flex-col gap-5">
+      {items.map(({ heading, body }) => (
+        <div key={heading}>
+          <p className="font-heading text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+            {heading}
+          </p>
+          <p className="mt-1.5 text-base font-semibold leading-relaxed text-slate-900">{body}</p>
         </div>
-        <div>
-          <h4 className="text-sm md:text-lg font-bold">メール</h4>
-          <p className="text-xs md:text-base text-muted-foreground">info@propositio.com</p>
-        </div>
-      </div>
-      <div className="flex gap-1">
-        <div>
-          <MdOutlinePlace className="mt-1 w-5 h-5" />
-        </div>
-        <div>
-          <h4 className="text-sm md:text-lg font-bold">住所</h4>
-          <p className="text-xs md:text-base text-muted-foreground">〒610-0394<br />京田辺市多々羅都谷1-3<br />同志社ローム記念館 RM208</p>
-        </div>
-      </div>
+      ))}
     </div>
-  )
-}
+  );
+};
 
-export default ContactInfo
+export default ContactInfo;

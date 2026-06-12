@@ -1,46 +1,31 @@
-import Link from "next/link"
+'use client';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { NAV_LINKS } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
 const Navigation = () => {
-  return (
-    <nav className="flex flex-row h-full items-stretch">
-      <Link
-        href="/#products"
-        className="c-btn slide flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        Products
-      </Link>
-      <Link
-        href="/#about"
-        className="c-btn slide flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        About
-      </Link>
-      <Link
-        href="/#blog"
-        className="c-btn slide flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        Blog
-      </Link>
-      <Link
-        href="/#members"
-        className="c-btn slide flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        Members
-      </Link>
-      <Link
-        href="/#join"
-        className="c-btn slide flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        Join
-      </Link>
-      <Link
-        href="/contact"
-        className="bg-blue-500 text-white hover:bg-blue-600 flex h-full w-30 min-h-10 items-center px-6 text-lg justify-center"
-      >
-        Contact
-      </Link>
-    </nav>
-  )
-}
+  const pathname = usePathname();
 
-export default Navigation
+  return (
+    <nav className="flex items-center gap-0.5">
+      {NAV_LINKS.map(({ href, label }) => {
+        const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              "rounded-[10px] px-3.5 py-2 font-heading text-sm font-semibold no-underline transition-colors hover:bg-slate-900/5",
+              isActive ? "text-blue-600" : "text-slate-600",
+            )}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+};
+
+export default Navigation;

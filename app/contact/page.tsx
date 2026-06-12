@@ -2,38 +2,38 @@ import type { Metadata } from "next";
 import ContactForm from "@/components/parts/contact/ContactForm";
 import ContactInfo from "@/components/parts/contact/ContactInfo";
 import FAQ from "@/components/parts/contact/FAQ";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { IoHomeOutline } from "react-icons/io5";
+import SectionHeading from "@/components/parts/SectionHeading";
 
 export const metadata: Metadata = {
-  title: "お問い合わせ",
-  description: "Propositio AIのお問い合わせページです。",
+  title: "Contact",
+  description: "Karynosの資料請求・導入のご相談・取材のお問い合わせはこちらから。",
 };
 
 const ContactPage = () => {
   return (
-    <main className="mt-30 md:mt-40 w-full px-4 md:px-15">
-      <div className="text-center px-6 md:px-15 border-b border-gray-200 pb-10 mb-10">
-        <h1 className="font-bold text-2xl md:text-5xl mb-2 md:mb-4">お問い合わせ</h1>
-        <p className="text-muted-foreground text-sm md:text-base">ご質問、ご相談などございましたら、お気軽にお問い合わせください。</p>
-      </div>
-      <div className="flex flex-col gap-4 md:flex-row-reverse">
-        <div className="w-full md:w-1/2">
+    <main className="w-full">
+      <section className="mx-auto max-w-6xl px-5 pb-24 pt-16 md:px-10 md:pb-32 md:pt-24">
+        <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[0.85fr_1.15fr] md:gap-16">
+          <div>
+            <SectionHeading
+              className="animate-k-rise"
+              as="h1"
+              eyebrow="Contact"
+              title="まずは、お気軽に。"
+              lead="資料請求・導入のご相談・取材など、どんなことでもお問い合わせください。学校現場での活用に合わせて、丁寧にご案内します。"
+            />
+            <div className="mt-10">
+              <ContactInfo />
+            </div>
+            <div className="mt-10">
+              <FAQ />
+            </div>
+          </div>
           <ContactForm />
         </div>
-        <div className="w-full p-4 space-y-4 md:w-1/2 md:px-10">
-          <ContactInfo />
-          <FAQ />
-        </div>
-      </div>
-      <div className="flex justify-end my-10 md:my-15">
-        <Button variant="outline" asChild>
-          <Link href="/">ホームに戻る<IoHomeOutline /></Link>
-        </Button>
-      </div>
+      </section>
     </main>
-  )
-}
+  );
+};
 
-export default ContactPage
+export default ContactPage;

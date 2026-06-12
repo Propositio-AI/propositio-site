@@ -1,18 +1,20 @@
-import MemberCard from "@/components/parts/member/MemberCard"
+import MemberCard from "@/components/parts/member/MemberCard";
 import { Role } from "@/lib/types";
 
-type Props ={
+type Props = {
   roles: Role[];
 };
 
 const MemberCardList = ({ roles }: Props) => {
   return (
-    <div className="w-full max-w-full">
+    <div className="w-full space-y-14">
       {roles.map((role) => (
-        <div key={role.role} className="mb-10">
-          <h3 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">{role.role}</h3>
-          <p className="text-muted-foreground mb-4">{role.description}</p>
-          <div className="flex max-w-full gap-4 overflow-x-auto overscroll-x-contain pb-2 md:flex-wrap md:gap-6 md:overflow-visible">
+        <div key={role.role}>
+          <h2 className="font-heading text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
+            {role.role}
+          </h2>
+          <p className="mt-1.5 text-[15px] text-slate-500">{role.description}</p>
+          <div className="mt-6 flex max-w-full gap-5 overflow-x-auto overscroll-x-contain pb-2 md:grid md:grid-cols-3 md:gap-7 md:overflow-visible">
             {role.members.map((member) => (
               <MemberCard key={member.name} member={member} />
             ))}
@@ -20,7 +22,7 @@ const MemberCardList = ({ roles }: Props) => {
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default MemberCardList
+export default MemberCardList;

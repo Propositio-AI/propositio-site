@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-noto-sans-jp);
   --font-mono: var(--font-noto-sans-jp);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-jakarta), var(--font-noto-sans-jp);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,24 +49,25 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Karynos light theme — slate ink on cool gray, #2563eb blue accent */
+  --background: oklch(0.967 0.003 264.542);
+  --foreground: oklch(0.208 0.042 265.755);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.208 0.042 265.755);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.546 0.215 262.881);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.984 0.003 247.858);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.932 0.032 255.585);
+  --accent-foreground: oklch(0.424 0.199 265.638);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.546 0.215 262.881);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -133,34 +134,57 @@
   }
 }
 
-/* Slide Button */
-.c-btn.slide {
-  background: #fff;
-  color: #000;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-.c-btn.slide::after {
-  background: #3B82F6;
-  position: absolute;
-  top: 0;
-  left: 0;
-  content: '';
-  width: 100%;
-  height: 100%;
-
-  transform: scale(1, 0);
-  transform-origin: top;
-
-  transition: .2s cubic-bezier(0.45, 0, 0.55, 1);
-  z-index: -1;
+@utility font-heading {
+  font-family: var(--font-heading);
 }
 
-
-.c-btn.slide:hover {
-  color: #fff;
+/* Striped placeholder surface for upcoming screenshots / covers */
+@utility bg-placeholder {
+  background: repeating-linear-gradient(
+    135deg,
+    #eef2f7,
+    #eef2f7 11px,
+    #e7ecf3 11px,
+    #e7ecf3 22px
+  );
 }
-.c-btn.slide:hover::after {
-  transform: scale(1, 1);
+
+@keyframes k-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@utility animate-k-float {
+  animation: k-float 5s ease-in-out infinite;
+}
+
+/* 「未来の設計図」モチーフの淡いブループリント方眼 */
+@utility bg-blueprint-grid {
+  background-image:
+    linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 75%);
+}
+
+/* カードのホバーリフト */
+@utility hover-lift {
+  transition: transform 0.3s cubic-bezier(0.21, 0.47, 0.32, 0.98), box-shadow 0.3s ease, border-color 0.3s ease;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -18px rgba(15, 23, 42, 0.18);
+  }
+}
+
+@keyframes k-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-k-rise {
+  animation: k-rise 0.7s ease-out both;
+}
+
+::selection {
+  background: #bfdbfe;
 }

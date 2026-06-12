@@ -18,7 +18,7 @@ const BlogCard = ({
   instagram_url,
 }: Blog) => {
   return (
-    <Card className="group w-72 shrink-0 overflow-hidden transition-all duration-300 hover:shadow-lg md:w-full md:max-w-sm">
+    <Card className="group w-full overflow-hidden rounded-[22px] border-slate-100 py-0 transition-all duration-300 hover:border-slate-300 hover:shadow-lg">
     <a
       href={instagram_url}
       target="_blank"
@@ -40,7 +40,7 @@ const BlogCard = ({
             <Badge
               key={tag.id}
               variant="secondary"
-              className="text-xs font-medium bg-blue-500 text-white"
+              className="bg-blue-600 text-xs font-medium text-white"
             >
               {tag.tag_name}
             </Badge>

@@ -1,6 +1,6 @@
 export { default as HeroSection } from "./HeroSection";
-export { default as AboutSection } from "./AboutSection";
-export { default as KarynosIntroSection } from "./KarynosIntroSection";
-export { default as BlogSection } from "./BlogSection";
-export { default as MemberIntroSection } from "./MemberIntroSection";
-export { default as JoinSection } from "./JoinSection";
+export { default as ProblemSection } from "./ProblemSection";
+export { default as EvidenceSection } from "./EvidenceSection";
+export { default as SolutionSection } from "./SolutionSection";
+export { default as ValueSection } from "./ValueSection";
+export { default as CtaSection } from "./CtaSection";

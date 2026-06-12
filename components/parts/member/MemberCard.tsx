@@ -1,14 +1,5 @@
-import { Badge } from "@/components/ui/badge"
-import Image from "next/image"
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Member } from "@/lib/types" 
+import Image from "next/image";
+import { Member } from "@/lib/types";
 
 type Props = {
   member: Member;
@@ -16,34 +7,40 @@ type Props = {
 
 const MemberCard = ({ member }: Props) => {
   return (
-    <Card className="relative w-64 shrink-0 overflow-hidden pt-0 border border-gray-300">
-      <div className="p-4 pb-0">
+    <div className="w-64 shrink-0 overflow-hidden rounded-3xl border border-slate-100 bg-white md:w-full md:shrink">
+      <div className="h-44 overflow-hidden bg-placeholder">
         <Image
-          src={`${member.image}`}
+          src={member.image}
           alt={member.name}
           width={600}
           height={400}
-          className="relative z-20 aspect-video h-40 w-full rounded-md object-cover"
+          className="h-full w-full object-cover"
         />
       </div>
-      <CardHeader className="w-full">
-        <div className="mb-3 flex items-center gap-4">
-          <CardTitle className="text-xl font-bold">{member.name}</CardTitle>
-          <Badge variant="secondary">{member.position}</Badge>
-        </div>
-        <CardDescription>
-          <dl>
-            <dt>学年</dt>
-            <dd className="text-base text-black font-medium mb-2">{member.grade}</dd>
-            <dt>趣味</dt>
-            <dd className="text-base text-black font-medium mb-2">{member.hobby}</dd>
-            <dt>コメント</dt>
-            <dd className="text-base text-black font-medium mb-2">{member.comment}</dd>
-          </dl>
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  )
-}
+      <div className="p-7">
+        <span className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-blue-600">
+          {member.position}
+        </span>
+        <h3 className="mt-2 font-heading text-[21px] font-extrabold tracking-tight text-slate-900">
+          {member.name}
+        </h3>
+        <dl className="mt-3 space-y-1.5 text-sm leading-relaxed text-slate-500">
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-medium text-slate-400">学年</dt>
+            <dd>{member.grade}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-medium text-slate-400">趣味</dt>
+            <dd>{member.hobby}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-medium text-slate-400">一言</dt>
+            <dd>{member.comment}</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  );
+};
 
-export default MemberCard
+export default MemberCard;

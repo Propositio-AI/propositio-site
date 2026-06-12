@@ -1,29 +1,41 @@
-import { TopSection, MissionSection, PositionSection, MeritSection, ApplicationFormSection } from "@/components/section/join";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { IoHomeOutline } from "react-icons/io5";
+import SectionHeading from "@/components/parts/SectionHeading";
+import {
+  ValuesSection,
+  PositionsSection,
+  ApplicationFormSection,
+} from "@/components/section/join";
 
 export const metadata: Metadata = {
-  title: "参加募集",
-  description: "Propositio AIのメンバー募集ページです。",
+  title: "Join",
+  description: "Karynosを共につくる仲間を募集しています。",
 };
 
 const JoinPage = () => {
   return (
-    <main className="mt-30 md:mt-40 w-full">
-      <TopSection />
-      <MissionSection />
-      <PositionSection />
-      <MeritSection />
-      <ApplicationFormSection />
-      <div className="flex justify-end my-10 md:my-15 px-4 md:px-16">
-        <Button variant="outline" asChild>
-          <Link href="/#join">ホームに戻る<IoHomeOutline /></Link>
-        </Button>
-      </div>  
+    <main className="w-full">
+      <section className="mx-auto max-w-6xl px-5 pb-14 pt-16 md:px-10 md:pt-24">
+        <SectionHeading
+          className="animate-k-rise"
+          as="h1"
+          eyebrow="Join Us"
+          title={
+            <>
+              「やらされる学び」を、
+              <br />
+              終わらせにいく。
+            </>
+          }
+          lead="教育を、テクノロジーで本気で変える。Karynosは、生徒の“今”と未来をつなぐプロダクトを共につくる仲間を探しています。"
+        />
+      </section>
+      <ValuesSection />
+      <PositionsSection />
+      <div id="application" className="pb-24 md:pb-32">
+        <ApplicationFormSection />
+      </div>
     </main>
-  )
-}
+  );
+};
 
-export default JoinPage
+export default JoinPage;

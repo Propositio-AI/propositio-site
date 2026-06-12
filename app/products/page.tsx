@@ -41,7 +41,7 @@ const KarynosPage = () => {
                     variant="outline"
                     className="h-10 border-gray-300 bg-white"
                 >
-                    <Link href="/#products">
+                    <Link href="/">
                         <ArrowLeft className="size-4" />
                         トップへ戻る
                     </Link>
