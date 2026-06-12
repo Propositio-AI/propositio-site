@@ -1,15 +1,9 @@
-import {
-  Card,
-  CardContent
-} from "@/components/ui/card"
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { FaInstagram } from "react-icons/fa";
 import { Blog } from "@/lib/types";
 
-
+/** Instagram投稿のカード。ArticleCardとデザインを揃えている */
 const BlogCard = ({
-  id,
   title,
   description,
   publishedAt,
@@ -18,51 +12,50 @@ const BlogCard = ({
   instagram_url,
 }: Blog) => {
   return (
-    <Card className="group w-full overflow-hidden rounded-[22px] border-slate-100 py-0 transition-all duration-300 hover:border-slate-300 hover:shadow-lg">
     <a
       href={instagram_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block"
+      className="hover-lift block overflow-hidden rounded-[22px] border border-slate-100 bg-white no-underline"
     >
-      <div className="relative aspect-video overflow-hidden">
+      <div className="relative aspect-video overflow-hidden bg-placeholder">
         <Image
           src={top_image.url}
           alt={title}
           fill
-          sizes="(max-width: 640px) 50vw, 33vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover"
         />
       </div>
-      <CardContent className="p-4">
-        <div className="mb-3 flex flex-wrap gap-2">
+      <div className="p-7">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
           {tags.map((tag) => (
-            <Badge
+            <span
               key={tag.id}
-              variant="secondary"
-              className="bg-blue-600 text-xs font-medium text-white"
+              className="font-heading text-[11px] font-bold uppercase tracking-[0.12em] text-blue-600"
             >
               {tag.tag_name}
-            </Badge>
+            </span>
           ))}
         </div>
-        <h3 className="mb-2 line-clamp-2 min-h-12 text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+        <h3 className="mt-3 line-clamp-2 text-lg font-bold leading-relaxed text-slate-900 text-balance">
           {title}
         </h3>
-        <p className="mb-4 line-clamp-2 min-h-12 text-sm text-muted-foreground leading-relaxed">
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">
           {description}
         </p>
-        <div className="flex items-center justify-between">
-          <time className="text-xs text-muted-foreground">公開日: {publishedAt.slice(0, 10)}</time>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <FaInstagram className="h-4 w-4" />
-            <span>Instagram</span>
-          </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p className="font-heading text-[13px] text-slate-400">
+            {publishedAt.slice(0, 10).replaceAll("-", ".")}
+          </p>
+          <span className="flex items-center gap-1.5 text-xs text-slate-400">
+            <FaInstagram className="size-4" />
+            Instagram
+          </span>
         </div>
-      </CardContent>
+      </div>
     </a>
-    </Card>
-  )
-}
+  );
+};
 
-export default BlogCard
+export default BlogCard;

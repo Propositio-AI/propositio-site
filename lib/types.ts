@@ -21,6 +21,22 @@ export type Role = {
   members: Member[];
 }
 
+export type BlogTag = {
+  id: string;
+  tag_name: string;
+};
+
+/** microCMS `blog` エンドポイントの記事 */
+export type BlogPost = {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  top_image?: { url: string; width?: number; height?: number };
+  tags: BlogTag[];
+  publishedAt: string;
+};
+
 export type Blog = {
   id: string;
   title: string;

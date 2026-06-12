@@ -188,3 +188,74 @@
 ::selection {
   background: #bfdbfe;
 }
+
+/* ブログ詳細: microCMSリッチエディタHTMLのタイポグラフィ */
+.blog-content {
+  color: var(--color-slate-600);
+  font-size: 16px;
+  line-height: 2;
+}
+.blog-content h2 {
+  margin: 2.5em 0 0.8em;
+  font-family: var(--font-heading);
+  font-size: 1.5em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: var(--color-slate-900);
+}
+.blog-content h3 {
+  margin: 2.2em 0 0.7em;
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-slate-900);
+}
+.blog-content p {
+  margin: 1.1em 0;
+}
+.blog-content ul,
+.blog-content ol {
+  margin: 1.1em 0;
+  padding-left: 1.5em;
+}
+.blog-content ul {
+  list-style: disc;
+}
+.blog-content ol {
+  list-style: decimal;
+}
+.blog-content li {
+  margin: 0.4em 0;
+}
+.blog-content li > ul,
+.blog-content li > ol {
+  margin: 0.4em 0;
+}
+.blog-content strong {
+  font-weight: 700;
+  color: var(--color-slate-900);
+}
+.blog-content a {
+  color: var(--color-blue-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.blog-content a:hover {
+  color: var(--color-blue-700);
+}
+.blog-content img {
+  margin: 1.8em 0;
+  border-radius: 18px;
+  border: 1px solid var(--color-slate-200);
+}
+.blog-content blockquote {
+  margin: 1.6em 0;
+  padding: 0.2em 1.4em;
+  border-left: 3px solid var(--color-blue-600);
+  color: var(--color-slate-500);
+}
+.blog-content hr {
+  margin: 2.5em 0;
+  border-color: var(--color-slate-200);
+}
