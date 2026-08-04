@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TaskResponse } from '@/api/generated/models';
@@ -18,7 +19,11 @@ describe('TaskItem', () => {
     it('チェックボックス操作でonToggleDoneが呼ばれる', async () => {
         const user = userEvent.setup();
         const onToggleDone = vi.fn();
-        render(<TaskItem task={task} onToggleDone={onToggleDone} onDelete={vi.fn()} />);
+        render(
+            <MemoryRouter>
+                <TaskItem task={task} onToggleDone={onToggleDone} onDelete={vi.fn()} />
+            </MemoryRouter>,
+        );
 
         await user.click(screen.getByRole('checkbox'));
 
@@ -28,10 +33,27 @@ describe('TaskItem', () => {
     it('削除ボタン操作でonDeleteが呼ばれる', async () => {
         const user = userEvent.setup();
         const onDelete = vi.fn();
-        render(<TaskItem task={task} onToggleDone={vi.fn()} onDelete={onDelete} />);
+        render(
+            <MemoryRouter>
+                <TaskItem task={task} onToggleDone={vi.fn()} onDelete={onDelete} />
+            </MemoryRouter>,
+        );
 
         await user.click(screen.getByRole('button', { name: '洗濯を削除する' }));
 
         expect(onDelete).toHaveBeenCalledWith(task);
+    });
+
+    it('タイトルが詳細ページへのリンクになっている', () => {
+        render(
+            <MemoryRouter>
+                <TaskItem task={task} onToggleDone={vi.fn()} onDelete={vi.fn()} />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByRole('link', { name: '洗濯' })).toHaveAttribute(
+            'href',
+            `/todos/${task.id}`,
+        );
     });
 });

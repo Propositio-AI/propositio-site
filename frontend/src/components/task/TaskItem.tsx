@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import type { TaskResponse } from '@/api/generated/models';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,16 @@ export function TaskItem({ task, onToggleDone, onDelete }: TaskItemProps) {
                 aria-label={`${task.title}を完了にする`}
                 className="size-4"
             />
-            <span className={task.is_done ? 'flex-1 text-muted-foreground line-through' : 'flex-1'}>
+            <Link
+                to={`/todos/${task.id}`}
+                className={
+                    task.is_done
+                        ? 'flex-1 text-muted-foreground line-through hover:underline'
+                        : 'flex-1 hover:underline'
+                }
+            >
                 {task.title}
-            </span>
+            </Link>
             <Button
                 type="button"
                 variant="ghost"

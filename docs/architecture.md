@@ -57,6 +57,7 @@ frontend/
 │   │   └── task/                 # 機能ごとの「UI」コンポーネント
 │   ├── hooks/                      # 機能ごとの「Hooks」（API呼び出し・状態管理）
 │   ├── pages/                        # hooksとUIを組み合わせるだけの層
+│   ├── App.tsx                          # react-router-domのRoutes定義（ページ⇔パスの対応表）
 │   └── lib/utils.ts                    # 汎用ユーティリティ（cnなど）
 ├── orval.config.ts                       # OpenAPI→コード生成の設定
 └── vite.config.ts
@@ -72,6 +73,22 @@ frontend/
 
 `hooks/useTasks.ts` → `components/task/*` → `pages/TasksPage.tsx` が実装例。新機能を追加する際はこの3点セットで作る。
 
+### ルーティング（react-router-dom）
+
+`main.tsx`で`<BrowserRouter>`が全体をラップし、`App.tsx`が唯一のルート定義場所になる。`pages/`配下の各コンポーネントは1つのURLパスに対応する「ルート単位のページ」として扱う。
+
+```typescript
+// App.tsx: ルーティングの唯一の定義場所
+<Routes>
+    <Route path="/" element={<TasksPage />} />
+    <Route path="/todos/:id" element={<TodoDetailPage />} />
+</Routes>
+```
+
+- 新しい画面を追加する場合は、`pages/`に新しいページコンポーネントを作り、`App.tsx`にルートを1行追加する。
+- 詳細ページ等でURLパラメータが必要な場合は`useParams`、ページ遷移は`useNavigate`、リンクは`<Link>`を使う（`pages/TodoDetailPage.tsx`が実装例）。
+- ルート定義を`pages/`以外（`components/`等）に持ち込まない。
+
 ### APIアクセスのルール
 
 フロントエンドはバックエンドAPIを**直接fetchしない**。必ずorvalが生成した関数・TanStack Query Hooks（`src/api/generated/`）を経由する。生成の仕方は [development.md](./development.md#api自動生成openapi--orval) を参照。
@@ -81,6 +98,7 @@ frontend/
 | 領域 | 技術 |
 | --- | --- |
 | フロントエンド | React 19 + TypeScript, Vite, React Compiler |
+| ルーティング | react-router-dom |
 | API通信 | orval（OpenAPIから自動生成） + TanStack Query |
 | スタイリング | TailwindCSS v4 + shadcn/ui |
 | フロントLint/Format | ESLint（flat config） + Prettier + eslint-plugin-import-x |

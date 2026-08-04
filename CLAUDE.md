@@ -9,6 +9,7 @@
 | 領域 | 技術 |
 | --- | --- |
 | フロントエンド | React 19 + TypeScript, Vite, React Compiler |
+| ルーティング | react-router-dom |
 | API通信 | orval（OpenAPIから自動生成） + TanStack Query |
 | スタイリング | TailwindCSS v4 + shadcn/ui |
 | フロントLint/Format | ESLint（flat config） + Prettier + eslint-plugin-import-x |
@@ -127,6 +128,7 @@ class TaskRepository:
 
 - 新機能を追加する場合は `hooks/useXxx.ts` + `components/xxx/`（状態を持たないUI） + `pages/XxxPage.tsx` の3点セットで実装する（`Task`機能を参照）。
 - UIコンポーネントは`onXxx`コールバックをpropsで受け取り、実際の処理（API呼び出しなど）は呼び出し元（Hooksを持つ層）に委譲する。
+- ルーティングは`react-router-dom`を使う。`main.tsx`の`<BrowserRouter>`が全体をラップし、`App.tsx`が唯一のルート定義場所（`pages/`配下の各コンポーネント = 1URLパス）になる。新しい画面を追加する場合は`pages/`にページを作り、`App.tsx`にルートを1行追加するだけにする。ルート定義を`components/`等に持ち込まない。
 
 具体例（`Task`機能を単純化したもの）:
 
