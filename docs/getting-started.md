@@ -4,6 +4,16 @@
 
 - Docker / Docker Compose（開発は基本的にDocker上で完結する）
 - ローカルでコマンドを直接実行したい場合のみ: Node.js 22 / pnpm、Python 3.12 / uv
+- `make`（任意。あるとコマンドが短縮できる）
+
+## Makefileを使う場合（最短ルート）
+
+```bash
+make up      # .envを作成し、ビルドしてコンテナを起動する
+make seed    # 初期データを投入する（初回のみ）
+```
+
+利用可能なコマンド一覧は `make help` で確認できる（テスト・Lint・マイグレーション・シードなど）。以降の説明は`make`を使わない場合の詳細な手順。
 
 ## 1. 環境変数ファイルを用意する
 
@@ -61,12 +71,19 @@ docker compose down -v    # DBデータも含めて完全に削除する場合
 
 ## よくある操作
 
-| やりたいこと | コマンド |
-| --- | --- |
-| ログを見る | `docker compose logs -f backend` / `frontend` |
-| backendコンテナ内でコマンド実行 | `docker compose exec backend uv run <コマンド>` |
-| frontendコンテナ内でコマンド実行 | `docker compose exec frontend pnpm <コマンド>` |
-| 再ビルド | `docker compose up --build` |
+| やりたいこと | `docker compose`コマンド | Makefile |
+| --- | --- | --- |
+| ログを見る | `docker compose logs -f` | `make logs` |
+| 再ビルド | `docker compose up --build` | `make up` |
+| 停止 | `docker compose down` | `make down` |
+| マイグレーション適用 | `docker compose exec backend uv run alembic upgrade head` | `make migrate` |
+| シード投入 | `docker compose exec backend uv run python -m app.seed.seed` | `make seed` |
+| backendテスト | `docker compose exec backend uv run pytest` | `make test-backend` |
+| frontendテスト | `docker compose exec frontend pnpm test` | `make test-frontend` |
+| backend Lint | `docker compose exec backend uv run ruff check .` | `make lint-backend` |
+| frontend Lint | `docker compose exec frontend pnpm lint` | `make lint-frontend` |
+| backendコンテナに入る | `docker compose exec backend bash` | `make shell-backend` |
+| frontendコンテナに入る | `docker compose exec frontend sh` | `make shell-frontend` |
 
 さらに詳しい開発の進め方（新機能の追加手順、API自動生成、マイグレーション、テストなど）は [development.md](./development.md) を参照。
 リポジトリの構成・設計方針は [architecture.md](./architecture.md) を参照。
