@@ -53,22 +53,131 @@ propositio-base/
     └── .env.example                    # VITE_API_BASE_URL
 ```
 
-## アーキテクチャ原則
+## 責務の分割（アーキテクチャ原則）
+
+各層は「自分の責務」だけを持ち、他の層の責務を絶対に肩代わりしない。迷ったら「この処理はどの層の責務か」を先に決めてから書く。層をまたぐ近道（routerで直接クエリを書く、UIでAPIを呼ぶ等）は、たとえ数行で済んでも禁止。
 
 ### バックエンド：router / service / repository の3層分離
 
-- **router**: リクエスト/レスポンスの型付けとHTTPの関心事のみ。DIで受け取った`service`を呼ぶだけで、業務ロジックやDBアクセスを直接書かない。
-- **service**: 業務ロジックのみ。`repository`を組み合わせて処理を行う。DBアクセスの詳細（SQLAlchemyのクエリなど）を知らない。
-- **repository**: DBアクセスのみ。業務ロジックを持たない。
-- 型定義はすべて`schemas/`のPydantic `BaseModel`で行う。SQLAlchemyモデル（`models/`）を直接APIレスポンスに使わない。
+依存の方向は一方向: `router → service → repository → DB`。逆方向の依存（repositoryがserviceを呼ぶ等）や層を飛ばした依存（routerが直接repositoryやDBセッションを操作する）は禁止。
+
+| 層 | 責務 | 持ってよいもの | 持ってはいけないもの |
+| --- | --- | --- | --- |
+| **router**（`routers/`） | HTTPの関心事（パス・メソッド・ステータスコード・DI）とリクエスト/レスポンスの型付け | `service`の呼び出し、例外→HTTPExceptionへの変換 | 業務ロジック（条件分岐・計算）、SQLAlchemyのクエリ、DBセッションの直接操作 |
+| **service**（`services/`） | 業務ロジック（バリデーション、複数repositoryの組み合わせ、ドメイン例外の送出） | `repository`の呼び出しの組み合わせ、業務ルールの判断 | SQLAlchemyのクエリを直接書く、HTTPステータスコードやFastAPI固有の型を知る |
+| **repository**（`repositories/`） | DBアクセス（CRUD）のみ | SQLAlchemyのクエリ、セッション操作 | 業務ルールの判断（「これは完了扱いか」等）、他のrepositoryを呼ぶ |
+
+- 型定義はすべて`schemas/`のPydantic `BaseModel`で行う。SQLAlchemyモデル（`models/`）を直接APIレスポンスとして返さない（`response_model`にはschemaのみを指定する）。
 - 新しいエンティティを追加する場合は、`app/models/task.py` 一式（model → schema → repository → service → router）を雛形としてコピーする。
+
+具体例（`Task`の一部を単純化したもの）:
+
+```python
+# ✅ repository: DBアクセスのみ
+class TaskRepository:
+    def get_by_id(self, task_id: uuid.UUID) -> Task | None:
+        return self.db.get(Task, task_id)
+
+# ✅ service: 業務ロジックのみ。repositoryを組み合わせる
+class TaskService:
+    def get_task(self, task_id: uuid.UUID) -> Task:
+        task = self.repository.get_by_id(task_id)
+        if task is None:
+            raise TaskNotFoundError(f"Task {task_id} not found")
+        return task
+
+# ✅ router: HTTPの関心事のみ。serviceを呼ぶだけ
+@router.get("/{task_id}", response_model=TaskResponse)
+def get_task(task_id: uuid.UUID, service: TaskService = Depends(get_task_service)) -> TaskResponse:
+    try:
+        return service.get_task(task_id)
+    except TaskNotFoundError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+```
+
+NGパターン（絶対に避ける）:
+
+```python
+# ❌ routerの中で直接DBクエリを書く（service層を飛ばしている）
+@router.get("/{task_id}")
+def get_task(task_id: uuid.UUID, db: Session = Depends(get_db)):
+    return db.get(Task, task_id)
+
+# ❌ repositoryの中で業務ロジックを判断する
+class TaskRepository:
+    def get_active_task(self, task_id: uuid.UUID) -> Task | None:
+        task = self.db.get(Task, task_id)
+        if task and not task.is_done:  # ← これは業務ルール。service側の責務
+            return task
+        return None
+
+# ❌ SQLAlchemyモデルをそのままレスポンスとして返す
+@router.get("/{task_id}", response_model=Task)  # ← Taskはmodels/のORMクラス。schemasを使うべき
+```
 
 ### フロントエンド：UIとHooksの完全分離
 
-- **UI（`components/`）**: propsを受け取って描画するだけ。API呼び出しや状態管理を持たない。`onXxx`コールバックをpropsで受け取り、呼び出し元に処理を委譲する。
-- **Hooks（`hooks/`）**: API呼び出し（orval生成hooksのラップ）・状態管理・キャッシュ無効化などのロジックを担う。UIコンポーネントに依存しない。
-- **pages（`pages/`）**: Hooksを呼び出し、その結果をUIコンポーネントにpropsとして渡すだけの composition 層。ロジックを書かない。
-- 新機能を追加する場合は `hooks/useXxx.ts` + `components/xxx/` + `pages/XxxPage.tsx` の3点セットで実装する（`Task`機能を参照）。
+依存の方向: `pages → hooks → 生成されたAPI（orval）` / `pages → components（UI）`。UIコンポーネントが生成APIやTanStack Queryを直接呼ぶこと、Hooksの中でJSXを組み立てることは禁止。
+
+| 層 | 責務 | 持ってよいもの | 持ってはいけないもの |
+| --- | --- | --- | --- |
+| **UI**（`components/`） | propsを受け取って描画するだけ | ローカルなUI状態（入力中のフォーム値など、API状態ではないもの） | API呼び出し、TanStack Queryの直接利用、グローバルな状態管理 |
+| **Hooks**（`hooks/`） | API呼び出し（orval生成Hooksのラップ）、状態管理、キャッシュ無効化 | orval生成Hooksの呼び出し、`queryClient.invalidateQueries`等 | JSXを返す、UIの見た目やCSSクラス名を知る |
+| **pages**（`pages/`） | Hooksの結果をUIコンポーネントにpropsとして渡すだけの composition 層 | Hooksの呼び出し、イベントハンドラの組み立て（Hooksの関数を呼ぶだけの薄いラッパー） | 業務ロジック、直接のAPI呼び出し、複雑な状態管理 |
+
+- 新機能を追加する場合は `hooks/useXxx.ts` + `components/xxx/`（状態を持たないUI） + `pages/XxxPage.tsx` の3点セットで実装する（`Task`機能を参照）。
+- UIコンポーネントは`onXxx`コールバックをpropsで受け取り、実際の処理（API呼び出しなど）は呼び出し元（Hooksを持つ層）に委譲する。
+
+具体例（`Task`機能を単純化したもの）:
+
+```typescript
+// ✅ Hooks: API呼び出しと状態管理のみ。JSXを返さない
+export function useTasks() {
+    const listQuery = useListTasksTasksGet();
+    const updateMutation = useUpdateTaskTasksTaskIdPatch({ mutation: { onSuccess: invalidateList } });
+    return {
+        tasks: listQuery.data?.data ?? [],
+        updateTask: (taskId: string, data: TaskUpdate) => updateMutation.mutateAsync({ taskId, data }),
+    };
+}
+
+// ✅ UI: propsを受け取って描画するだけ。処理は呼び出し元に委譲
+export function TaskItem({ task, onToggleDone }: TaskItemProps) {
+    return <input type="checkbox" checked={task.is_done} onChange={() => onToggleDone(task)} />;
+}
+
+// ✅ pages: Hooksの結果をUIに渡すだけ
+export function TasksPage() {
+    const { tasks, updateTask } = useTasks();
+    const handleToggleDone = (task: TaskResponse) => void updateTask(task.id, { is_done: !task.is_done });
+    return <TaskList tasks={tasks} onToggleDone={handleToggleDone} />;
+}
+```
+
+NGパターン（絶対に避ける）:
+
+```typescript
+// ❌ UIコンポーネントの中で直接APIを呼ぶ（Hooks層を飛ばしている）
+export function TaskItem({ taskId }: { taskId: string }) {
+    const { data } = useGetTaskTasksTaskIdGet(taskId); // ← hooks/を経由すべき
+    return <div>{data?.data.title}</div>;
+}
+
+// ❌ Hooksの中でJSXを返す
+export function useTasks() {
+    const { data } = useListTasksTasksGet();
+    return <ul>{data?.data.map((t) => <li key={t.id}>{t.title}</li>)}</ul>; // ← UIはcomponents/の責務
+}
+
+// ❌ pagesの中で業務ロジックやAPI呼び出しを直接書く
+export function TasksPage() {
+    const [tasks, setTasks] = useState<TaskResponse[]>([]);
+    useEffect(() => {
+        fetch("/tasks").then((res) => res.json()).then(setTasks); // ← 直接fetchせず、hooks/経由にする
+    }, []);
+    ...
+}
+```
 
 ## API連携（OpenAPI自動生成）
 
@@ -92,9 +201,11 @@ propositio-base/
 
 ## コメント規約
 
+**適用範囲**: exportされているかどうかに関わらず、すべての関数・メソッド・クラス・Reactコンポーネント・カスタムフックに付ける。プライベートなヘルパー関数、コンポーネント内部の小さな関数であっても省略しない。`{関数の機能}`には処理のWHAT（何をするか）を日本語で簡潔に書く。既存コードに手を入れて関数のシグネチャや挙動を変えた場合は、コメントも合わせて更新する。
+
 ### TypeScript
 
-クラスと関数には必ず以下の形式でコメントを付ける。
+関数・クラス・Reactコンポーネント・カスタムフックには必ず以下の形式でコメントを付ける。`/**`の直後と`@param`/`@return`の前後には指定通り空行を入れ、行頭に`*`は付けない（通常のJSDocとは異なる、このプロジェクト独自の形式）。閉じタグは`*/`ではなく`**/`。
 
 ```typescript
 /**
@@ -107,7 +218,11 @@ propositio-base/
 **/
 ```
 
-例:
+- 引数が無い場合も`@param`の行は残し、右側は空のままにする（例: `@param なし`と書いてもよい）。
+- 戻り値が`void`の場合も`@return`の行は残し、`@return なし`のように書く。
+- 引数が複数ある場合は`@param`を複数行に分けず、`@param name1 説明1、name2 説明2`のように1行にまとめるか、propsオブジェクトの場合は1つの`@param props`にまとめて説明する（下記例を参照）。
+
+通常の関数の例:
 
 ```typescript
 /**
@@ -123,9 +238,60 @@ export function cn(...inputs: ClassValue[]): string {
 }
 ```
 
+Reactコンポーネント（UIコンポーネント）の例。`@param`にはpropsの型ではなく、各propsが何を意味するかを説明する:
+
+```typescript
+/**
+
+タスク1件を表示する純粋なUIコンポーネント。
+完了チェックボックスと削除ボタンの操作はすべて親から渡されたコールバックに委譲する。
+
+@param props task（表示対象のタスク）、onToggleDone（完了切り替え時のコールバック）、onDelete（削除時のコールバック）
+@return タスク1行分のJSX
+
+**/
+export function TaskItem({ task, onToggleDone, onDelete }: TaskItemProps) {
+    // ...
+}
+```
+
+カスタムフックの例。Hooksが「何を扱い、何を返すか」を書く:
+
+```typescript
+/**
+
+タスク一覧の取得・作成・更新・削除をまとめて扱うカスタムフック。
+orvalが生成したTanStack Query Hooksをラップし、更新系操作の成功時に
+一覧クエリを自動的に再検証する。UIコンポーネントはこのフックのみに依存する。
+
+@param なし
+@return タスク一覧の状態と、作成・更新・削除を行う関数群
+
+**/
+export function useTasks() {
+    // ...
+}
+```
+
+クラス（例: エラークラス）の例:
+
+```typescript
+/**
+
+APIリクエストが失敗した場合に送出されるエラー。
+
+@param message エラーメッセージ
+@return なし
+
+**/
+export class ApiRequestError extends Error {
+    // ...
+}
+```
+
 ### Python
 
-クラスと関数には必ず以下の形式でdocstringを付ける。
+関数・メソッド・クラスには必ず以下の形式でdocstringを付ける。クラス自体にもクラスdocstringとして同じ形式を付ける（`Params:`にはコンストラクタ引数を書く）。
 
 ```python
 def something():
@@ -140,7 +306,83 @@ def something():
     """
 ```
 
-引数・戻り値が無い場合も `Params:` / `Returns:` セクション自体は残し、`-` のみを書く。
+- 引数・戻り値が無い場合も `Params:` / `Returns:` セクション自体は残し、`-` のみを書く。
+- `self`はParamsに書かない。
+- 例外を送出しうる場合は、`Returns:`の後に`Raises:`セクションを追加し同じ形式（`- {例外クラス}: {発生条件}`）で書く。
+
+引数・戻り値ともに無い場合の例:
+
+```python
+class TaskNotFoundError(Exception):
+    """
+    指定したタスクが存在しない場合に送出される例外。
+
+    Params:
+        -
+
+    Returns:
+        -
+    """
+```
+
+複数の引数と戻り値がある例（repository層）:
+
+```python
+def get_by_id(self, task_id: uuid.UUID) -> Task | None:
+    """
+    IDを指定してタスクを1件取得する。
+
+    Params:
+        - task_id (uuid.UUID): 取得対象のタスクID
+
+    Returns:
+        - Task | None: 該当タスク。存在しない場合はNone
+    """
+```
+
+例外を送出する場合の例（service層。`Raises:`を追加する）:
+
+```python
+def get_task(self, task_id: uuid.UUID) -> Task:
+    """
+    IDを指定してタスクを1件取得する。
+
+    Params:
+        - task_id (uuid.UUID): 取得対象のタスクID
+
+    Returns:
+        - Task: 該当タスク
+
+    Raises:
+        - TaskNotFoundError: タスクが存在しない場合
+    """
+```
+
+クラスの例（コンストラクタ引数を`Params:`に書く）:
+
+```python
+class TaskService:
+    """
+    タスクに関する業務ロジックを担うサービス層。
+
+    Params:
+        -
+
+    Returns:
+        -
+    """
+
+    def __init__(self, db: Session) -> None:
+        """
+        DBセッションからリポジトリを組み立ててサービスを初期化する。
+
+        Params:
+            - db (Session): SQLAlchemyセッション
+
+        Returns:
+            -
+        """
+```
 
 ## フォーマッター・Lintルール
 

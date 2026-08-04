@@ -10,22 +10,28 @@
 
 ## 起動方法
 
+`make`コマンドが使える場合:
+
+```bash
+make up      # .envを作成し、ビルドしてコンテナを起動する
+make seed    # 初期データを投入する（初回のみ）
+```
+
+`make`が無い場合:
+
 ```bash
 cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
 docker compose up --build
+docker compose exec backend uv run python -m app.seed.seed  # 初期データ投入（初回のみ）
 ```
 
 - フロントエンド: http://localhost:5173
 - バックエンドAPI: http://localhost:8000 （Swagger UI: http://localhost:8000/docs）
 
-初期データを投入する場合（初回のみ）:
-
-```bash
-docker compose exec backend uv run python -m app.seed.seed
-```
+他によく使うコマンドは `make help` で一覧表示できる（テスト・Lint・マイグレーションなど）。
 
 ## ドキュメント
 
