@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.main import app
 
-OUTPUT_PATH = Path(__file__).resolve().parents[2] / "openapi.json"
+OUTPUT_PATH = Path(__file__).resolve().parents[3] / "openapi.json"
 
 
 def export_openapi() -> None:

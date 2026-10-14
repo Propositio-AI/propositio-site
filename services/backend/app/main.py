@@ -1,12 +1,17 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import task
+from app.routers import activity, contact, task
 
 settings = get_settings()
 
-app = FastAPI(title="Propositio Base API", version="0.1.0")
+# アプリのINFOログ（開発用のメール出力など）をuvicornのログと並べて表示する
+logging.basicConfig(level=logging.INFO)
+
+app = FastAPI(title="Karynos API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,6 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(activity.router)
+app.include_router(contact.router)
 app.include_router(task.router)
 
 
