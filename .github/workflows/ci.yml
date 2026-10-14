@@ -1,0 +1,126 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    # web / mobile / api-client（pnpm workspace）
+    # api-clientの生成物（packages/api-client/src/generated）はgitignore対象のため、
+    # backendのOpenAPIスキーマを書き出してからorvalで生成し、その結果に対してLint・型チェック・テスト・ビルドを行う。
+    js:
+        name: JS (lint / typecheck / test / build)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+
+            # pnpmのバージョンはルートpackage.jsonのpackageManagerから読み取られる
+            - uses: pnpm/action-setup@v6
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - uses: astral-sh/setup-uv@v10.2.0
+              with:
+                  python-version: '3.12'
+                  enable-cache: true
+                  cache-dependency-glob: services/backend/uv.lock
+
+            - name: Install backend dependencies
+              working-directory: services/backend
+              run: uv sync --locked
+
+            - name: Export OpenAPI schema
+              working-directory: services/backend
+              run: uv run python -m app.export_openapi
+
+            - name: Install JS dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Generate API client
+              run: |
+                  pnpm generate:api
+                  test -f packages/api-client/src/generated/index.ts
+
+            - name: Lint
+              run: pnpm lint
+
+            - name: Format check
+              run: pnpm format:check
+
+            - name: Typecheck
+              run: pnpm typecheck
+
+            - name: Test
+              run: pnpm test
+
+            - name: Build
+              run: pnpm build
+
+    backend:
+        name: Backend (ruff / pytest)
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: services/backend
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: astral-sh/setup-uv@v10.2.0
+              with:
+                  python-version: '3.12'
+                  enable-cache: true
+                  cache-dependency-glob: services/backend/uv.lock
+
+            - name: Install dependencies
+              run: uv sync --locked
+
+            - name: Lint
+              run: uv run ruff check .
+
+            - name: Format check
+              run: uv run ruff format --check .
+
+            - name: Test
+              run: uv run pytest
+
+    compose:
+        name: Docker Compose config
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+
+            # env_fileで参照する各.envを.env.exampleから作成する
+            - name: Create .env files
+              run: make setup
+
+            - name: Validate app compose (PostgreSQL + FastAPI + Web)
+              run: docker compose config --quiet
+
+            - name: Validate Floci compose
+              run: docker compose -f infra/floci/docker-compose.yml config --quiet
+
+    terraform:
+        name: Terraform (fmt / validate)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: hashicorp/setup-terraform@v4
+              with:
+                  terraform_version: 1.16.5
+                  terraform_wrapper: false
+
+            # fmt -check → init -backend=false → validate（クラウドへの接続・認証情報は不要）
+            - name: Validate
+              run: make infra-validate
