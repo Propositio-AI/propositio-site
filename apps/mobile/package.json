@@ -1,0 +1,42 @@
+{
+    "name": "mobile",
+    "private": true,
+    "version": "0.0.0",
+    "main": "expo-router/entry",
+    "scripts": {
+        "start": "expo start",
+        "ios": "expo start --ios",
+        "android": "expo start --android",
+        "build": "expo export --platform ios --platform android",
+        "lint": "eslint .",
+        "typecheck": "tsc --noEmit",
+        "test": "jest"
+    },
+    "dependencies": {
+        "@repo/api-client": "workspace:*",
+        "@tanstack/react-query": "^5.101.4",
+        "expo": "~57.0.26",
+        "expo-constants": "~57.0.20",
+        "expo-linking": "~57.0.11",
+        "expo-router": "~57.0.24",
+        "expo-status-bar": "~57.0.1",
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "react-native": "0.86.3",
+        "react-native-reanimated": "~4.5.1",
+        "react-native-safe-area-context": "~5.7.0",
+        "react-native-screens": "~4.26.0",
+        "react-native-worklets": "0.10.1"
+    },
+    "devDependencies": {
+        "@react-native/metro-config": "0.86.3",
+        "@testing-library/react-native": "^14.0.1",
+        "@types/jest": "^29.5.14",
+        "@types/react": "~19.2.18",
+        "babel-plugin-react-compiler": "^1.0.0",
+        "jest": "^29.7.0",
+        "jest-expo": "~57.0.5",
+        "test-renderer": "~1.2.0",
+        "typescript": "~6.0.2"
+    }
+}

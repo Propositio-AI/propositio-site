@@ -1,0 +1,17 @@
+{
+    "expo": {
+        "name": "propositio-base",
+        "slug": "propositio-base",
+        "scheme": "propositiobase",
+        "version": "0.1.0",
+        "orientation": "portrait",
+        "userInterfaceStyle": "automatic",
+        "ios": {
+            "supportsTablet": true
+        },
+        "plugins": ["expo-router"],
+        "experiments": {
+            "reactCompiler": true
+        }
+    }
+}

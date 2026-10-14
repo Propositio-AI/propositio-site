@@ -1,0 +1,19 @@
+node_modules
+.expo
+dist
+web-build
+expo-env.d.ts.bak
+
+# Native（Prebuildで生成される）
+ios
+android
+
+# Metro
+.metro-health-check*
+
+# 環境変数
+.env
+.env*.local
+
+*.log
+.DS_Store
