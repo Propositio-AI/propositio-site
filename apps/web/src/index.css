@@ -1,0 +1,256 @@
+@import 'tailwindcss';
+
+/*
+ * ============================================================================
+ * Karynos Design System — Tokens
+ * ----------------------------------------------------------------------------
+ * claude.ai/design の「Karynos」プロジェクト（Modernist デザインシステム）を移植したもの。
+ * 白地 + 濃いインク色の罫線、ブルー（accent）とグリーン（accent-2）の2色アクセント、角丸なし。
+ * ============================================================================
+ */
+
+@theme {
+    --font-sans: 'Archivo', 'Noto Sans JP', system-ui, sans-serif;
+
+    --color-paper: #ffffff;
+    --color-surface: #f3f5f8;
+    --color-ink: #0e1116;
+    --color-divider: color-mix(in srgb, #0e1116 40%, transparent);
+    --color-danger: #d0342c;
+    /* ローディング中の「まだ塗られていない」文字色 */
+    --color-ghost: #d7dbe2;
+
+    --color-neutral-100: #f8f4f4;
+    --color-neutral-200: #eae7e7;
+    --color-neutral-300: #d7d3d3;
+    --color-neutral-400: #bab6b6;
+    --color-neutral-500: #9b9797;
+    --color-neutral-600: #7d7979;
+    --color-neutral-700: #605d5d;
+    --color-neutral-800: #444141;
+    --color-neutral-900: #2d2b2b;
+
+    --color-accent: #2453ff;
+    --color-accent-100: #eef3ff;
+    --color-accent-200: #dbe5ff;
+    --color-accent-300: #bccfff;
+    --color-accent-400: #8aa9ff;
+    --color-accent-500: #4d7bff;
+    --color-accent-600: #1f45e0;
+    --color-accent-700: #1c3fc4;
+    --color-accent-800: #172f8c;
+    --color-accent-900: #13214f;
+
+    --color-accent-2: #14b874;
+    --color-accent-2-100: #eafbf2;
+    --color-accent-2-200: #cff5e1;
+    --color-accent-2-300: #a3eac6;
+    --color-accent-2-400: #5fd6a0;
+    --color-accent-2-500: #1fbf7a;
+    --color-accent-2-600: #10a065;
+    --color-accent-2-700: #0b7a4d;
+    --color-accent-2-800: #0b5738;
+    --color-accent-2-900: #0a3624;
+
+    /* shadcn/ui（components/ui）向けのセマンティックトークン */
+    --color-background: var(--color-paper);
+    --color-foreground: var(--color-ink);
+    --color-primary: var(--color-accent);
+    --color-primary-foreground: #ffffff;
+    --color-secondary: var(--color-surface);
+    --color-secondary-foreground: var(--color-ink);
+    --color-muted: var(--color-surface);
+    --color-muted-foreground: var(--color-neutral-700);
+    --color-card: var(--color-paper);
+    --color-card-foreground: var(--color-ink);
+    --color-destructive: var(--color-danger);
+    --color-border: var(--color-neutral-300);
+    --color-input: var(--color-neutral-300);
+    --color-ring: var(--color-accent);
+    --radius: 0px;
+}
+
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+    }
+
+    ::selection {
+        background: var(--color-accent-200);
+    }
+
+    :focus {
+        outline: none;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-neutral-400);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+/* — Modernist デザインシステムのコンポーネントクラス — */
+@layer components {
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.2;
+        color: var(--color-ink);
+        background: transparent;
+        border: 1px solid transparent;
+        padding: 8px 14px;
+        white-space: nowrap;
+    }
+
+    .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        background: var(--color-accent);
+        color: var(--color-paper);
+    }
+
+    .btn-primary:hover {
+        background: var(--color-accent-600);
+        color: var(--color-paper);
+    }
+
+    .btn-primary:active {
+        background: var(--color-accent-700);
+    }
+
+    .btn-secondary {
+        border-color: var(--color-divider);
+    }
+
+    .btn-secondary:hover {
+        background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+    }
+
+    .btn-secondary:active {
+        background: color-mix(in srgb, var(--color-ink) 14%, transparent);
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        padding: 3px 10px;
+    }
+
+    .tag-outline {
+        border: 1px solid var(--color-accent);
+        color: var(--color-accent);
+    }
+
+    /* microCMSのリッチエディタで入力された記事本文 */
+    .richtext {
+        font-size: 16px;
+        line-height: 2;
+    }
+
+    .richtext > * {
+        margin: 0 0 1.4em;
+    }
+
+    .richtext h2 {
+        font-size: clamp(22px, 2.2vw, 30px);
+        line-height: 1.5;
+        margin: 2.4em 0 0.8em;
+        padding-top: 0.8em;
+        border-top: 2px solid var(--color-ink);
+    }
+
+    .richtext h3 {
+        font-size: 20px;
+        margin: 2em 0 0.6em;
+    }
+
+    .richtext ul,
+    .richtext ol {
+        padding-left: 1.4em;
+    }
+
+    .richtext ul {
+        list-style: disc;
+    }
+
+    .richtext ol {
+        list-style: decimal;
+    }
+
+    .richtext li {
+        margin: 0.3em 0;
+    }
+
+    .richtext blockquote {
+        margin: 2em 0;
+        padding: 4px 0 4px 20px;
+        border-left: 2px solid var(--color-ink);
+        color: var(--color-neutral-700);
+    }
+
+    .richtext img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .richtext a {
+        color: var(--color-accent-700);
+        text-decoration: underline;
+    }
+
+    .richtext a:hover {
+        color: var(--color-accent-2-700);
+    }
+}
+
+/* ページ左右の余白（デザインの clamp(20px,4vw,56px)）。px-gutter / left-gutter などで使う */
+@theme {
+    --spacing-gutter: clamp(20px, 4vw, 56px);
+}
