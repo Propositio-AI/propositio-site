@@ -1,0 +1,26 @@
+# Floci（ローカルのAWS互換エミュレータ）。infra/terraform をこのFlociへ適用して、
+# 実AWSと同じTerraformコードでCognito / S3 / DynamoDBを手元に再現する（AWS互換開発）。
+# 通常のアプリ開発（ルートのdocker-compose.yml: PostgreSQL + FastAPI + Web）とは独立して起動・停止する。
+#
+# 起動: make floci-up（= docker compose -p <プロジェクト名>-floci -f infra/floci/docker-compose.yml up -d）
+# 公式ドキュメント: https://floci.io/floci/configuration/docker-compose/
+services:
+    floci:
+        # 再現性のためバージョンを固定する。更新時はリリースノートを確認してから上げる。
+        image: floci/floci:2.1.0
+        ports:
+            - '4566:4566'
+        environment:
+            # Terraform（envs/floci.tfvars の aws_region）と揃える
+            FLOCI_DEFAULT_REGION: ${FLOCI_DEFAULT_REGION:-ap-northeast-1}
+            # docker compose down しても作成したリソースを保持する（完全に消すには make floci-down-v）
+            FLOCI_STORAGE_MODE: persistent
+            FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+        volumes:
+            - floci_data:/app/data
+        # イメージ同梱のヘルスチェック（/usr/local/bin/healthcheck.sh）をそのまま使う。
+        # ホストからの確認は curl http://localhost:4566/_localstack/health
+        # Lambda / RDS等のコンテナを起動するサービスは使わないため、Dockerソケットはマウントしない。
+
+volumes:
+    floci_data:

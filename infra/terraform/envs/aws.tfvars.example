@@ -1,0 +1,22 @@
+# 実AWS向け設定のひな形。コピーして使う（*.tfvars はgitignore対象）:
+#   cp infra/terraform/envs/aws.tfvars.example infra/terraform/envs/dev.tfvars
+# 認証情報はここに書かず、AWS_PROFILE / aws sso login などの標準の認証チェーンで渡す。
+project_name = "my-app"
+environment  = "dev"
+aws_region   = "ap-northeast-1"
+
+# aws_endpoint_url は指定しない（null = 実AWS）
+
+# 本番相当の環境では既定値（削除保護あり・PITR有効・force_destroyなし）のままにする
+# s3_force_destroy                = false
+# dynamodb_point_in_time_recovery = true
+# dynamodb_deletion_protection    = true
+# cognito_deletion_protection     = true
+
+# OAuth（Hosted UI / 外部IdP）を使う場合のみ指定する
+# cognito_callback_urls = ["https://app.example.com/auth/callback", "myapp://auth/callback"]
+# cognito_logout_urls   = ["https://app.example.com/"]
+
+# extra_tags = {
+#   Owner = "team-name"
+# }

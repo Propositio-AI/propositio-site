@@ -1,0 +1,8 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+# 実環境のtfvarsはコミットしない（秘密を含まないFloci用と、ひな形の.exampleのみ管理する）
+*.tfvars
+!envs/floci.tfvars
