@@ -1,12 +1,14 @@
 # 開発の進め方
 
-前提として、リポジトリの構成・設計方針は [architecture.md](./architecture.md)、起動方法は [getting-started.md](./getting-started.md) を参照。
+前提として、リポジトリの構成・設計方針は [architecture.md](./architecture.md)、起動方法は [getting-started.md](./getting-started.md)、AWS基盤は [infrastructure.md](./infrastructure.md) を参照。
+
+TypeScriptのコマンド（`pnpm ...`）は特記がない限りリポジトリルートで実行する。
 
 ## 新しいエンティティを追加する
 
-`Task`エンティティ（backend/frontend双方）が、以下すべての手順を実装したサンプルなので、そのままコピーして作るのが早い。
+新しいエンティティは以下の手順で追加する。
 
-### バックエンド
+### バックエンド（`services/backend`）
 
 1. `app/models/xxx.py` — SQLAlchemyモデル（テーブル定義）を追加し、`app/models/__init__.py` にimportを追記する
 2. `app/schemas/xxx.py` — リクエスト/レスポンス用のPydantic `BaseModel` を追加する
@@ -16,43 +18,53 @@
 6. マイグレーションを作成する（下記「マイグレーション」参照）
 7. 必要なら初期データを追加する（下記「初期データ（シード）」参照）
 
-### フロントエンド
+### Web / モバイル
 
-バックエンドのエンドポイントを追加・変更したら、まずAPIクライアントを再生成する（下記「API自動生成」参照）。そのうえで:
+バックエンドのエンドポイントを追加・変更したら、まずAPIクライアントを再生成する（下記「API自動生成」参照）。そのうえで各アプリに次の3点セットを追加する。
 
-1. `src/hooks/useXxx.ts` — 生成されたTanStack Query Hooksをラップし、一覧の再検証などのロジックを書く
-2. `src/components/xxx/` — propsを受け取って描画するだけのUIコンポーネントを追加する
-3. `src/pages/XxxPage.tsx` — Hooksの結果をUIコンポーネントに渡すだけのpageを追加する
+| | Web（`apps/web/src`） | モバイル（`apps/mobile/src`） |
+| --- | --- | --- |
+| Hooks | `hooks/useXxx.ts` | `hooks/useXxx.ts` |
+| UI | `components/xxx/`（shadcn/ui + TailwindCSS） | `components/xxx/`（React Nativeのネイティブコンポーネント + `StyleSheet`） |
+| ページ | `pages/XxxPage.tsx` + `App.tsx`に`<Route>`を1行追加 | `app/xxx.tsx`（ファイルを置くとルートになる。タイトル等は`app/_layout.tsx`） |
+
+1. Hooks — `@repo/api-client`の生成TanStack Query Hooksをラップし、一覧の再検証などのロジックを書く
+2. UI — propsを受け取って描画するだけのコンポーネントを追加する
+3. ページ — Hooksの結果をUIコンポーネントに渡すだけにする
+
+モバイルでWebViewやExpo DOMコンポーネント（`'use dom'`）を使ってWeb版を埋め込むことは禁止（ESLintでエラーになる）。
 
 ## API自動生成（OpenAPI → orval）
 
-フロントエンドはバックエンドAPIを直接fetchせず、必ずorvalが生成したコードを経由する。バックエンドのrouter/schemasを変更したら、以下の2ステップを再実行する。
+Web / モバイルはバックエンドAPIを直接fetchせず、必ず`@repo/api-client`（`packages/api-client`）の生成コードを経由する。バックエンドのrouter/schemasを変更したら、以下の2ステップを再実行する。
 
 ```bash
 # 1. バックエンドのOpenAPIスキーマをJSONに書き出す
-cd backend
-uv run python -m app.export_openapi
+(cd services/backend && uv run python -m app.export_openapi)
 # → リポジトリルートに openapi.json が生成される（gitignore対象、都度再生成する）
 
-# 2. フロントエンドでAPIクライアント/Hooksを生成する
-cd frontend
+# 2. APIクライアント/Hooksを生成する
 pnpm generate:api
-# → src/api/generated/ にfetchクライアント + TanStack Query Hooksが生成される（gitignore対象）
+# → packages/api-client/src/generated/ にfetchクライアント + TanStack Query Hooksが生成される（gitignore対象）
 ```
 
-`src/api/custom-fetch.ts` 以外の `src/api/` 配下は自動生成物なので手で編集しない。Docker上で作業している場合は `docker compose exec backend ...` / `docker compose exec frontend ...` で同じコマンドを実行できる。
+Docker上のbackend / webで行う場合は `make generate-api`（= `docker compose exec -T backend uv run python -m app.export_openapi - > openapi.json` と `docker compose exec web pnpm --workspace-root generate:api`）。
+
+- `packages/api-client/src/custom-fetch.ts` と `src/index.ts` 以外（`src/generated/`）は自動生成物なので手で編集しない。
+- 生成物はgitに含まれない。クローン直後やブランチ切り替え後に型エラーになる場合は、まず再生成する。
+- APIのベースURLは`configureApiClient({ baseUrl })`で注入する（Web: `apps/web/src/main.tsx`、モバイル: `apps/mobile/src/app/_layout.tsx`）。
 
 ## マイグレーション（Alembic）
 
 ```bash
-cd backend
+cd services/backend
 uv run alembic revision --autogenerate -m "変更内容の説明"
 uv run alembic upgrade head
 ```
 
 - `app/models/` にモデルを追加したときは、`app/models/__init__.py` に忘れずimportを追記する（`alembic/env.py` がここ経由でモデルを認識するため）
 - backendコンテナは起動時に自動で `alembic upgrade head` を実行する（`docker-compose.yml` の `command` を参照）ので、`docker compose up` するだけで最新化される
-- Docker上で作成する場合は `docker compose exec backend uv run alembic revision --autogenerate -m "..."`
+- Docker上で作成する場合は `docker compose exec backend uv run alembic revision --autogenerate -m "..."`（`make makemigration MESSAGE="..."`）
 
 ## 初期データ（シード）
 
@@ -64,42 +76,75 @@ uv run alembic upgrade head
 docker compose exec backend uv run python -m app.seed.seed
 ```
 
-すでにテーブルにデータがある場合はスキップされる（`Task`の実装を参照）。
+すでにテーブルにデータがある場合はスキップするようにする（`seed_xxx`関数内で判定する）。
 
 ## テスト
 
 ```bash
 # backend（pytest）
-cd backend && uv run pytest
-# or: docker compose exec backend uv run pytest
+cd services/backend && uv run pytest
+# or: docker compose exec backend uv run pytest（make test-backend）
 
-# frontend（Vitest + React Testing Library）
-cd frontend && pnpm test
-# or: docker compose exec frontend pnpm test
+# web / api-client（Vitest）・mobile（Jest）をまとめて
+pnpm test
+
+# 個別に
+pnpm --filter web test                # Vitest + React Testing Library（make test-web はDocker上で実行）
+pnpm --filter @repo/api-client test   # Vitest（make test-api-client）
+pnpm --filter mobile test             # Jest（jest-expo） + React Native Testing Library（make test-mobile）
 ```
 
-- backend: `repository` → SQLite（インメモリ）、`service`/`router` → `TestClient` を使った統合テストの例がある（`backend/tests/`）
-- frontend: Hooksのテスト（生成されたAPI Hooksをモック）とコンポーネントのテスト例がある（各ファイルに隣接する `*.test.tsx`）
+- backend: `TestClient` を使ったAPIテストの例がある（`services/backend/tests/`）。DBはSQLite（インメモリ）に差し替える`db_session`フィクスチャを`conftest.py`に用意している
+- api-client: `custom-fetch.ts`のテスト（`fetch`をモック）がある
+- mobile: Hooksのテスト（`@repo/api-client`の生成Hooksを`jest.mock`）とUIコンポーネントのテストの例がある（各ファイルに隣接する `*.test.ts(x)`）
+- web: ページのテストの例がある（`apps/web/src/pages/*.test.tsx`）
 
-## Lint / Format
+## Lint / 型チェック / Format
 
 ```bash
-# frontend
-cd frontend
+# TypeScript（web / mobile / api-client。ルートの設定を全パッケージで共有）
 pnpm lint          # ESLint
+pnpm typecheck     # 全パッケージの型チェック（tsc）
 pnpm format        # Prettier --write
 pnpm format:check  # 差分があればCIで落とす用
 
 # backend
-cd backend
+cd services/backend
 uv run ruff check .
 uv run ruff format .
+
+# Terraform
+make infra-fmt       # terraform fmt -recursive
+make infra-validate  # fmt -check + init -backend=false + validate
 ```
 
-- フロントエンド: インデントは4スペース固定（Prettier `tabWidth: 4`）。importの順序は `eslint-plugin-import-x` の `import-x/order` ルールで強制される（builtin → external → internal(`@/*`) → parent/sibling → type の順、グループ間は空行必須、グループ内はアルファベット順）。
+- TypeScript: インデントは4スペース固定（Prettier `tabWidth: 4`）。importの順序は `eslint-plugin-import-x` の `import-x/order` ルールで強制される（builtin → external → internal(`@/*`) → parent/sibling → type の順、グループ間は空行必須、グループ内はアルファベット順）。React Hooks / React Compilerのルールは `eslint-plugin-react-hooks` の recommended で検査する。
+- shadcn/uiが生成する`apps/web/src/components/ui/`は、variants（cva）を同じファイルからexportする規約のため`react-refresh/only-export-components`の対象外にしている。
 - バックエンド: ruffがLint/Formatを兼ねる。インデント4スペース、import順序はisort相当のルールで強制される。
+- Terraform: `terraform fmt`で整形する（Prettierの対象外）。
+
+## ビルド
+
+```bash
+pnpm build   # web: tsc -b && vite build / mobile: expo export（iOS・Android） をまとめて実行
+```
+
+## CI（GitHub Actions）
+
+`.github/workflows/ci.yml` が main へのpushとpull requestで実行される。
+
+| ジョブ | 内容 |
+| --- | --- |
+| JS | Node.js 22 + pnpm（`packageManager`）+ uv をセットアップ → `uv run python -m app.export_openapi` → `pnpm install --frozen-lockfile` → `pnpm generate:api` → `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` / `pnpm build` |
+| Backend | `uv sync --locked` → `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest` |
+| Docker Compose | `make setup` → `docker compose config`（通常開発） / `docker compose -f infra/floci/docker-compose.yml config` |
+| Terraform | Terraform 1.16.5 → `make infra-validate`（クラウドへの接続・認証情報は不要） |
+
+CIで落ちないよう、コミット前に上記と同じコマンドをローカルで実行する。
 
 ## コメント・docstringの書き方
+
+コメントの適用範囲・書式の詳細は [`CLAUDE.md`](../CLAUDE.md) の「コメント規約」を参照。すべての関数・クラス・Reactコンポーネント・カスタムフック（JSの設定ファイル内の関数を含む）に付ける。
 
 ### TypeScript
 
@@ -152,8 +197,20 @@ def something():
 | ファイル | 変数 | 説明 |
 | --- | --- | --- |
 | `.env` | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | PostgreSQLの初期化に使う |
-| `backend/.env` | `DATABASE_URL` | backendが接続するDB（docker-compose経由の場合は自動で上書きされる） |
-| `backend/.env` | `CORS_ORIGINS` | 許可するフロントエンドのオリジン（カンマ区切りで複数指定可） |
-| `frontend/.env` | `VITE_API_BASE_URL` | フロントエンドから見たバックエンドAPIのURL |
+| `services/backend/.env` | `DATABASE_URL` | backendが接続するDB（docker compose経由の場合は自動で上書きされる） |
+| `services/backend/.env` | `CORS_ORIGINS` | 許可するWebのオリジン（カンマ区切りで複数指定可） |
+| `apps/web/.env` | `VITE_API_BASE_URL` | WebからみたバックエンドAPIのURL |
+| `apps/mobile/.env` | `EXPO_PUBLIC_API_BASE_URL` | モバイルからみたバックエンドAPIのURL（iOSシミュレータ: `http://localhost:8000`、Androidエミュレータ: `http://10.0.2.2:8000`、実機: LAN内IP） |
+| シェル（任意） | `FLOCI_DEFAULT_REGION` | Flociの既定リージョン（既定: `ap-northeast-1`。`envs/floci.tfvars`の`aws_region`と揃える） |
 
-各`.env`は`.env.example`をコピーして作成し、gitにはコミットしない。
+各`.env`は`.env.example`をコピーして作成し、gitにはコミットしない。`EXPO_PUBLIC_`で始まる変数はアプリのバンドルに埋め込まれるため、秘密値を入れない。
+
+Makefileの変数（`make <target> VAR=...`で上書き可）:
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `TF_VERSION` | `1.16.5` | ホストにterraformが無い場合に使う`hashicorp/terraform`イメージのタグ |
+| `FLOCI_URL` | `http://localhost:4566` | ホストから見たFlociのURL |
+| `FLOCI_PROJECT_NAME` | `<ディレクトリ名>-floci` | FlociのComposeプロジェクト名 |
+| `ARGS` | （空） | `plan-floci` / `apply-floci` / `destroy-floci` で terraform に追加で渡す引数 |
+| `MESSAGE` | （空） | `makemigration` のマイグレーション名 |

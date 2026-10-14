@@ -1,57 +1,83 @@
 # propositio-base
 
-全プロジェクトのベースとなるリポジトリ。React (Vite) + FastAPI + PostgreSQLを、それぞれ独立したDockerコンテナで起動する。
+全プロジェクトのベースとなるリポジトリ。pnpm workspace + uvのモノレポで、Web（React + Vite）・モバイル（Expo / React Native）・バックエンド（FastAPI + PostgreSQL）と、AWS基盤（Terraform。ローカルではFlociで再現）をまとめて持つ。
 
-人間向けの使用方法・開発ガイドは [`docs/`](./docs) にまとまっている（[getting-started.md](./docs/getting-started.md)、[architecture.md](./docs/architecture.md)、[development.md](./docs/development.md)）。このファイルはAIエージェント向けの規約サマリ。
+人間向けの使用方法・開発ガイドは [`docs/`](./docs) にまとまっている（[getting-started.md](./docs/getting-started.md)、[architecture.md](./docs/architecture.md)、[development.md](./docs/development.md)、[infrastructure.md](./docs/infrastructure.md)、[new-project.md](./docs/new-project.md)、[karynos-site.md](./docs/karynos-site.md)）。このファイルはAIエージェント向けの規約サマリ。
 
 ## 技術スタック
 
 | 領域 | 技術 |
 | --- | --- |
-| フロントエンド | React 19 + TypeScript, Vite, React Compiler |
-| ルーティング | react-router-dom |
-| API通信 | orval（OpenAPIから自動生成） + TanStack Query |
-| スタイリング | TailwindCSS v4 + shadcn/ui |
-| フロントLint/Format | ESLint（flat config） + Prettier + eslint-plugin-import-x |
-| フロントテスト | Vitest + React Testing Library |
-| バックエンド | FastAPI, Python 3.12 |
+| Web（`apps/web`） | React 19 + TypeScript, Vite, React Compiler |
+| Webルーティング | react-router-dom |
+| Webスタイリング | TailwindCSS v4 + shadcn/ui |
+| モバイル（`apps/mobile`） | Expo SDK 57 + React Native 0.86, Expo Router, React Compiler（WebView不使用のネイティブUI） |
+| API通信（`packages/api-client`） | orval（OpenAPIから自動生成） + TanStack Query。Web / モバイル共通 |
+| TS Lint/Format | ESLint（flat config, ルート共通） + Prettier + eslint-plugin-import-x + eslint-plugin-react-hooks |
+| TSテスト | Vitest + React Testing Library（web / api-client）、Jest（jest-expo） + React Native Testing Library（mobile） |
+| バックエンド（`services/backend`） | FastAPI, Python 3.12 |
 | DBアクセス | SQLAlchemy 2.0（Mapped宣言スタイル） |
 | マイグレーション | Alembic |
 | バックエンドLint/Format | ruff |
 | バックエンドテスト | pytest |
 | DB | PostgreSQL 16 |
-| パッケージ管理 | pnpm（フロント） / uv（バックエンド） |
+| インフラ（`infra/`） | Terraform（AWS provider） / Cognito・S3・DynamoDB。ローカルはFloci（AWS互換エミュレータ） |
+| CI | GitHub Actions（`.github/workflows/ci.yml`） |
+| パッケージ管理 | pnpm workspace（TS） / uv（Python） |
 
 ## ディレクトリ構成
 
 ```
 propositio-base/
-├── docker-compose.yml
-├── .env.example              # POSTGRES_USER / PASSWORD / DB
-├── backend/
-│   ├── app/
-│   │   ├── core/              # config, database（DBセッション・Base）
-│   │   ├── models/            # SQLAlchemyモデル（テーブル定義）
-│   │   ├── schemas/           # Pydantic BaseModel（リクエスト/レスポンス型）
-│   │   ├── repositories/      # DBアクセスのみ
-│   │   ├── services/          # 業務ロジック
-│   │   ├── routers/           # FastAPIエンドポイント（DIでserviceを呼ぶだけ）
-│   │   ├── seed/               # 初期データ定義・投入スクリプト
-│   │   └── main.py
-│   ├── alembic/                # マイグレーション
-│   ├── tests/                  # pytest
-│   └── .env.example             # DATABASE_URL / CORS_ORIGINS
-└── frontend/
-    ├── src/
-    │   ├── api/
-    │   │   ├── custom-fetch.ts   # orvalが呼ぶ共通fetchラッパー（手書きはここだけ）
-    │   │   └── generated/         # orval生成コード（gitignore対象・手で編集しない）
-    │   ├── components/
-    │   │   ├── ui/                 # shadcn/uiコンポーネント
-    │   │   └── task/                # 機能ごとの「UI」コンポーネント（状態を持たない）
-    │   ├── hooks/                    # 機能ごとの「Hooks」（API呼び出し・状態管理）
-    │   └── pages/                     # hooksとUIを組み合わせるだけの層
-    └── .env.example                    # VITE_API_BASE_URL
+├── package.json / pnpm-workspace.yaml   # pnpm workspace（apps/* と packages/*）
+├── eslint.config.js / .prettierrc.json  # TS全体で共有するLint/Format設定
+├── tsconfig.base.json                    # TS共通のcompilerOptions
+├── docker-compose.yml                    # 通常開発: db / backend / web
+├── .env.example                          # POSTGRES_USER / PASSWORD / DB
+├── Makefile                              # よく使うコマンド（make help）
+├── .github/workflows/ci.yml              # CI
+├── apps/
+│   ├── web/                              # React (Vite)
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   ├── ui/                   # shadcn/uiコンポーネント
+│   │   │   │   └── xxx/                  # 機能ごとの「UI」コンポーネント（状態を持たない）
+│   │   │   ├── hooks/                    # 機能ごとの「Hooks」（API呼び出し・状態管理）
+│   │   │   ├── pages/                    # hooksとUIを組み合わせるだけの層
+│   │   │   ├── App.tsx                   # ルート定義（react-router-dom）
+│   │   │   └── main.tsx                  # エントリポイント（configureApiClient / Provider）
+│   │   └── .env.example                  # VITE_API_BASE_URL
+│   └── mobile/                           # Expo (React Native)
+│       ├── src/
+│       │   ├── app/                      # Expo Routerのルート（= pages層。1ファイル = 1画面）
+│       │   ├── components/xxx/           # 機能ごとの「UI」コンポーネント（状態を持たない）
+│       │   └── hooks/                    # 機能ごとの「Hooks」（API呼び出し・状態管理）
+│       └── .env.example                  # EXPO_PUBLIC_API_BASE_URL
+├── packages/
+│   └── api-client/                       # @repo/api-client（Web / モバイル共通のAPIクライアント）
+│       ├── src/custom-fetch.ts           # orvalが呼ぶ共通fetchラッパー（手書きはこことindex.tsだけ）
+│       ├── src/generated/                # orval生成コード（gitignore対象・手で編集しない）
+│       └── orval.config.ts               # 入力はリポジトリルートのopenapi.json
+├── services/
+│   └── backend/                          # FastAPI
+│       ├── app/
+│       │   ├── core/                     # config, database（DBセッション・Base）
+│       │   ├── models/                   # SQLAlchemyモデル（テーブル定義）
+│       │   ├── schemas/                  # Pydantic BaseModel（リクエスト/レスポンス型）
+│       │   ├── repositories/             # DBアクセスのみ
+│       │   ├── services/                 # 業務ロジック
+│       │   ├── routers/                  # FastAPIエンドポイント（DIでserviceを呼ぶだけ）
+│       │   ├── seed/                     # 初期データ定義・投入スクリプト
+│       │   ├── export_openapi.py         # OpenAPIスキーマの書き出し
+│       │   └── main.py
+│       ├── alembic/                      # マイグレーション
+│       ├── tests/                        # pytest
+│       └── .env.example                  # DATABASE_URL / CORS_ORIGINS
+├── infra/
+│   ├── terraform/                        # AWS基盤（実AWS / Floci共通のコード）
+│   │   └── envs/                         # floci.tfvars（秘密なし） / aws.tfvars.example
+│   └── floci/docker-compose.yml          # AWS互換開発用のFloci（通常開発とは独立）
+└── docs/
 ```
 
 ## 責務の分割（アーキテクチャ原則）
@@ -69,7 +95,7 @@ propositio-base/
 | **repository**（`repositories/`） | DBアクセス（CRUD）のみ | SQLAlchemyのクエリ、セッション操作 | 業務ルールの判断（「これは完了扱いか」等）、他のrepositoryを呼ぶ |
 
 - 型定義はすべて`schemas/`のPydantic `BaseModel`で行う。SQLAlchemyモデル（`models/`）を直接APIレスポンスとして返さない（`response_model`にはschemaのみを指定する）。
-- 新しいエンティティを追加する場合は、`app/models/task.py` 一式（model → schema → repository → service → router）を雛形としてコピーする。
+- 新しいエンティティを追加する場合は、`model → schema → repository → service → router` の各ファイルを`app/`配下の対応ディレクトリに追加する（下記の実装例を参照）。
 
 具体例（`Task`の一部を単純化したもの）:
 
@@ -116,19 +142,22 @@ class TaskRepository:
 @router.get("/{task_id}", response_model=Task)  # ← Taskはmodels/のORMクラス。schemasを使うべき
 ```
 
-### フロントエンド：UIとHooksの完全分離
+### フロントエンド（Web / モバイル共通）：UIとHooksの完全分離
 
-依存の方向: `pages → hooks → 生成されたAPI（orval）` / `pages → components（UI）`。UIコンポーネントが生成APIやTanStack Queryを直接呼ぶこと、Hooksの中でJSXを組み立てることは禁止。
+`apps/web`と`apps/mobile`は同じ層構成をとる。依存の方向: `pages → hooks → @repo/api-client（orval生成）` / `pages → components（UI）`。UIコンポーネントが生成APIやTanStack Queryを直接呼ぶこと、Hooksの中でJSXを組み立てることは禁止。
 
 | 層 | 責務 | 持ってよいもの | 持ってはいけないもの |
 | --- | --- | --- | --- |
 | **UI**（`components/`） | propsを受け取って描画するだけ | ローカルなUI状態（入力中のフォーム値など、API状態ではないもの） | API呼び出し、TanStack Queryの直接利用、グローバルな状態管理 |
-| **Hooks**（`hooks/`） | API呼び出し（orval生成Hooksのラップ）、状態管理、キャッシュ無効化 | orval生成Hooksの呼び出し、`queryClient.invalidateQueries`等 | JSXを返す、UIの見た目やCSSクラス名を知る |
-| **pages**（`pages/`） | Hooksの結果をUIコンポーネントにpropsとして渡すだけの composition 層 | Hooksの呼び出し、イベントハンドラの組み立て（Hooksの関数を呼ぶだけの薄いラッパー） | 業務ロジック、直接のAPI呼び出し、複雑な状態管理 |
+| **Hooks**（`hooks/`） | API呼び出し（`@repo/api-client`の生成Hooksのラップ）、状態管理、キャッシュ無効化 | 生成Hooksの呼び出し、`queryClient.invalidateQueries`等 | JSXを返す、UIの見た目やCSSクラス名・スタイルを知る |
+| **pages**（Web: `pages/` / モバイル: `app/`） | Hooksの結果をUIコンポーネントにpropsとして渡すだけの composition 層 | Hooksの呼び出し、イベントハンドラの組み立て（Hooksの関数を呼ぶだけの薄いラッパー） | 業務ロジック、直接のAPI呼び出し、複雑な状態管理 |
 
-- 新機能を追加する場合は `hooks/useXxx.ts` + `components/xxx/`（状態を持たないUI） + `pages/XxxPage.tsx` の3点セットで実装する（`Task`機能を参照）。
+- 新機能を追加する場合は `hooks/useXxx.ts` + `components/xxx/`（状態を持たないUI） + ページ（Web: `pages/XxxPage.tsx` / モバイル: `app/xxx.tsx`）の3点セットで実装する（下記の実装例を参照）。
 - UIコンポーネントは`onXxx`コールバックをpropsで受け取り、実際の処理（API呼び出しなど）は呼び出し元（Hooksを持つ層）に委譲する。
-- ルーティングは`react-router-dom`を使う。`main.tsx`の`<BrowserRouter>`が全体をラップし、`App.tsx`が唯一のルート定義場所（`pages/`配下の各コンポーネント = 1URLパス）になる。新しい画面を追加する場合は`pages/`にページを作り、`App.tsx`にルートを1行追加するだけにする。ルート定義を`components/`等に持ち込まない。
+- Web: ルーティングは`react-router-dom`を使う。`main.tsx`の`<BrowserRouter>`が全体をラップし、`App.tsx`が唯一のルート定義場所（`pages/`配下の各コンポーネント = 1URLパス）になる。新しい画面を追加する場合は`pages/`にページを作り、`App.tsx`にルートを1行追加するだけにする。ルート定義を`components/`等に持ち込まない。
+- モバイル: ルーティングはExpo Router（ファイルベース）。`src/app/`配下の1ファイルが1画面で、`src/app/_layout.tsx`がProviderとナビゲーションを持つ。`src/app/`には画面（pages層）以外を置かない。
+- モバイルの画面はReact Nativeのネイティブコンポーネントで実装する。WebView（`react-native-webview` / `@expo/dom-webview`）やExpo DOMコンポーネント（`'use dom'`）でWeb版を埋め込むことはESLintで禁止している。
+- Web版のUI（shadcn/ui・TailwindCSS）はモバイルでは使えない。Web / モバイルで共有するのは`@repo/api-client`（API型・Hooks）までで、UIはそれぞれ実装する。
 
 具体例（`Task`機能を単純化したもの）:
 
@@ -183,23 +212,25 @@ export function TasksPage() {
 
 ## API連携（OpenAPI自動生成）
 
-フロントエンドはバックエンドのAPIを**直接fetchしない**。必ずorvalが生成した関数・Hooksを経由する。
+Web / モバイルはバックエンドのAPIを**直接fetchしない**。必ず`@repo/api-client`（`packages/api-client`）がorvalで生成した関数・Hooksを経由する。
 
 1. バックエンドのOpenAPIスキーマを書き出す:
    ```
-   cd backend && uv run python -m app.export_openapi
+   cd services/backend && uv run python -m app.export_openapi
    ```
    → リポジトリルートに `openapi.json` が生成される（gitignore対象、都度再生成する）。
 
-2. フロントエンドでAPIクライアントを生成する:
+2. APIクライアントを生成する（リポジトリルートで実行）:
    ```
-   cd frontend && pnpm generate:api
+   pnpm generate:api
    ```
-   → `src/api/generated/` にfetchクライアント + TanStack Query Hooksが生成される（gitignore対象）。
+   → `packages/api-client/src/generated/` にfetchクライアント + TanStack Query Hooksが生成される（gitignore対象）。
 
-3. バックエンドのエンドポイント（router/schemas）を変更したら、上記2ステップを再実行する。
+3. バックエンドのエンドポイント（router/schemas）を変更したら、上記2ステップを再実行する。Docker上のbackendから行う場合は `make generate-api` で同じことができる。
 
-`src/api/custom-fetch.ts` 以外の `src/api/` 配下のファイルは自動生成物なので手で編集しない。
+- `packages/api-client/src/custom-fetch.ts` と `src/index.ts` 以外の `src/generated/` 配下は自動生成物なので手で編集しない。
+- 生成物はgitに含まれないため、クローン直後・CIでは必ず1→2を実行してから型チェック・テスト・ビルドする（CIは自動で実行する）。
+- 接続先のベースURLは各アプリのエントリポイント（Web: `src/main.tsx`、モバイル: `src/app/_layout.tsx`）で`configureApiClient({ baseUrl })`により注入する。環境変数はWebが`VITE_API_BASE_URL`、モバイルが`EXPO_PUBLIC_API_BASE_URL`。
 
 ## コメント規約
 
@@ -388,29 +419,39 @@ class TaskService:
 
 ## フォーマッター・Lintルール
 
-- フロントエンド: インデント4スペース固定（Prettier `tabWidth: 4`）。import順序は `eslint-plugin-import-x` の `import-x/order` で強制（builtin → external → internal(`@/*`) → parent/sibling → type、グループ間は空行必須、グループ内はアルファベット順）。
+- TypeScript（web / mobile / api-client）: インデント4スペース固定（Prettier `tabWidth: 4`）。import順序は `eslint-plugin-import-x` の `import-x/order` で強制（builtin → external → internal(`@/*`) → parent/sibling → type、グループ間は空行必須、グループ内はアルファベット順）。React Hooks / React Compilerのルールは`eslint-plugin-react-hooks`（recommended）で検査する。ESLint・Prettierの設定はリポジトリルートの1つを全パッケージで共有する。
 - バックエンド: ruffでLint/Format。インデント4スペース、import順序はisort相当のルールで強制。
+- Terraform: `terraform fmt`で整形する（Prettierの対象外）。
 
 コマンド:
 ```
-# frontend
-pnpm lint         # ESLint
-pnpm format       # Prettier --write
+# TypeScript（リポジトリルートで実行）
+pnpm lint          # ESLint
+pnpm typecheck     # 全パッケージの型チェック
+pnpm format        # Prettier --write
 pnpm format:check
 
 # backend
+cd services/backend
 uv run ruff check .
 uv run ruff format .
+
+# Terraform
+make infra-fmt       # terraform fmt -recursive
+make infra-validate  # fmt -check + init -backend=false + validate
 ```
 
 ## セットアップ・起動方法
 
-```
-cp .env.example .env
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+開発環境は「通常開発」と「AWS互換開発」の2つに分かれており、互いに独立して起動する。
 
-docker compose up --build
+### 通常開発（PostgreSQL + FastAPI + Web）
+
+```
+make setup     # .env.exampleから .env / services/backend/.env / apps/web/.env / apps/mobile/.env を作成
+make install   # ホストにpnpm workspaceの依存をインストール（mobile・Lint・型チェックに必要）
+make up        # docker compose up --build（db / backend / web）
+make dev-mobile  # Expo開発サーバーをホストで起動（シミュレータ/実機から接続するため）
 ```
 
 - backend起動時に `alembic upgrade head` が自動実行される（`docker-compose.yml`のcommand参照）。
@@ -420,9 +461,25 @@ docker compose up --build
   ```
 
 アクセス先:
-- フロントエンド: http://localhost:5173
+- Web: http://localhost:5173
 - バックエンドAPI: http://localhost:8000 （Swagger UI: http://localhost:8000/docs）
 - PostgreSQL: localhost:5432
+- モバイル: Expo開発サーバー（`make dev-mobile`の表示に従いシミュレータ/Expo Goで開く）
+
+### AWS互換開発（Floci + Terraform）
+
+```
+make floci-up                         # Floci（:4566）を起動（infra/floci/docker-compose.yml）
+make plan-floci                       # infra/terraformをFlociに対してplan
+make apply-floci                      # Flociへapply（Cognito / S3 / DynamoDB）
+make infra-output                     # User Pool ID・バケット名などを表示
+make destroy-floci                    # Flociから削除
+make floci-down                       # Flociを停止（データは保持。完全削除は floci-down-v）
+```
+
+- ホストに`terraform`が無い場合、Makefileは公式Dockerイメージ（`hashicorp/terraform`）で実行する。
+- 実AWSへの適用はMakefileに用意していない（誤適用防止）。`infra/terraform/envs/aws.tfvars.example`をコピーして手動で行う（[docs/infrastructure.md](./docs/infrastructure.md)参照）。
+- Terraformのリソース定義は実AWS / Floci共通。Floci向けの差分は`providers.tf`（エンドポイント上書き等）と`local.is_floci`による最小限の切り替えに閉じ込め、本番向け定義を弱めない。秘密値はtfvarsに書かずコミットしない。
 
 ## 新しいエンティティ追加の初期データ
 
@@ -431,7 +488,7 @@ docker compose up --build
 ## マイグレーション
 
 ```
-cd backend
+cd services/backend
 uv run alembic revision --autogenerate -m "説明"
 uv run alembic upgrade head
 ```
@@ -442,11 +499,25 @@ uv run alembic upgrade head
 
 ```
 # backend
-cd backend && uv run pytest
+cd services/backend && uv run pytest
 
-# frontend
-cd frontend && pnpm test
+# web / api-client（Vitest）・mobile（Jest）をまとめて実行（リポジトリルート）
+pnpm test
+
+# 個別に実行する場合
+pnpm --filter web test
+pnpm --filter mobile test
+pnpm --filter @repo/api-client test
 ```
+
+## CI
+
+`.github/workflows/ci.yml` が push（main）/ pull_request で以下を実行する。ローカルで同じ確認をしてからコミットする。
+
+- JS: OpenAPI書き出し → `pnpm generate:api` → `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` / `pnpm build`
+- backend: `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest`
+- compose: `docker compose config`（通常開発・Floci）
+- Terraform: `make infra-validate`
 
 ## 不明点があれば
 
