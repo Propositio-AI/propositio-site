@@ -1,0 +1,15 @@
+dist
+node_modules
+pnpm-lock.yaml
+packages/api-client/src/generated
+apps/mobile/.expo
+apps/mobile/ios
+apps/mobile/android
+services
+openapi.json
+
+# Terraform（コードは terraform fmt で整形する。stateや.terraform/も対象外）
+infra/terraform
+
+# ドキュメントはPrettierの対象外
+*.md

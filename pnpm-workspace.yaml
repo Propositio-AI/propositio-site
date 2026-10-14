@@ -1,0 +1,20 @@
+packages:
+    - apps/*
+    - packages/*
+
+allowBuilds:
+    esbuild: true
+    unrs-resolver: true
+
+# react-native-workletsのBabelプラグインは@babel/generator / @babel/traverseを未宣言のまま使うため、
+# apps/webが使うBabel 8が巻き上げで解決されてしまう。Babel 7系を明示的に依存として補う。
+packageExtensions:
+    react-native-worklets:
+        dependencies:
+            '@babel/generator': ^7.27.1
+            '@babel/traverse': ^7.27.1
+
+# eslint-plugin-react-hooks@7は`zod-validation-error/v4`をrequireするが、宣言範囲（^3.5.0 || ^4.0.0）のうち
+# 3.x系にはこのサブパスが無い。Expo側の依存と重複排除されて3.x系が選ばれないよう、4.x系に固定する。
+overrides:
+    'eslint-plugin-react-hooks>zod-validation-error': ^4.0.2

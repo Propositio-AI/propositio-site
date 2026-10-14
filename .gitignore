@@ -1,5 +1,7 @@
 .env
 .DS_Store
+node_modules
+.pnpm-store
 
-# Generated OpenAPI schema (regenerate: cd backend && uv run python -m app.export_openapi)
+# Generated OpenAPI schema (regenerate: pnpm generate:api の前に cd services/backend && uv run python -m app.export_openapi)
 /openapi.json
