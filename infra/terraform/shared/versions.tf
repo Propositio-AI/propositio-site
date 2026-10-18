@@ -10,7 +10,7 @@ terraform {
 
   # bucket / region は terraform init -backend-config=../backend.hcl で渡す
   backend "s3" {
-    key = "shared/terraform.tfstate"
+    key = "propositio-site/shared/terraform.tfstate"
   }
 }
 
