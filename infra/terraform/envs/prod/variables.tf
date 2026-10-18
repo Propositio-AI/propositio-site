@@ -31,11 +31,6 @@ variable "microcms_service_domain" {
   type        = string
 }
 
-variable "contact_notify_to" {
-  description = "お問い合わせの通知先（Google Workspaceのアドレス）。"
-  type        = string
-}
-
 variable "alarm_email" {
   description = "アラームの通知先。nullなら通知しない。"
   type        = string

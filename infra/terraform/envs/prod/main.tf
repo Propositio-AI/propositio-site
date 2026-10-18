@@ -71,7 +71,9 @@ module "environment" {
 
   microcms_service_domain = var.microcms_service_domain
   mail_from               = "noreply@${var.domain_name}"
-  contact_notify_to       = var.contact_notify_to
+  # 本番のお問い合わせはGoogle Workspaceの代表窓口へ集約する。
+  # 通知メールのReply-Toは問い合わせ者になるため、Gmailからそのまま返信できる。
+  contact_notify_to = "info@${var.domain_name}"
 
   log_retention_days = 90
   alarm_email        = var.alarm_email

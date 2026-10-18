@@ -203,7 +203,7 @@ def something():
 | `services/backend/.env` | `CORS_ORIGINS` | 許可するWebのオリジン（カンマ区切りで複数指定可） |
 | `apps/web/.env` | `VITE_API_BASE_URL` | WebからみたバックエンドAPIのURL |
 | `apps/mobile/.env` | `EXPO_PUBLIC_API_BASE_URL` | モバイルからみたバックエンドAPIのURL（iOSシミュレータ: `http://localhost:8000`、Androidエミュレータ: `http://10.0.2.2:8000`、実機: LAN内IP） |
-| `services/backend/.env` | `MICROCMS_*`, `MAIL_*`, `CONTACT_NOTIFY_TO`, `TURNSTILE_SECRET_KEY` など | 外部サービスの設定（[karynos-site.md](./karynos-site.md)）。本番ではECSのタスク定義・Secrets Managerから渡される |
+| `services/backend/.env` | `MICROCMS_*`, `MAIL_*`, `CONTACT_NOTIFY_TO`, `TURNSTILE_SECRET_KEY` など | 外部サービスの設定（[karynos-site.md](./karynos-site.md)）。本番ではECSのタスク定義・SSM Parameter Storeから渡される |
 
 各`.env`は`.env.example`をコピーして作成し、gitにはコミットしない。`EXPO_PUBLIC_`で始まる変数はアプリのバンドルに埋め込まれるため、秘密値を入れない。
 
@@ -211,5 +211,5 @@ Makefileの変数（`make <target> VAR=...`で上書き可）:
 
 | 変数 | 既定値 | 説明 |
 | --- | --- | --- |
-| `TF_VERSION` | `1.16.5` | ホストにterraformが無い場合に使う`hashicorp/terraform`イメージのタグ |
+| `TF_VERSION` | `1.14.3` | ホストにterraformが無い場合に使う`hashicorp/terraform`イメージのタグ |
 | `MESSAGE` | （空） | `makemigration` のマイグレーション名 |

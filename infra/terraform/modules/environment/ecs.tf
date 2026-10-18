@@ -17,10 +17,6 @@ locals {
 
   api_environment = {
     CORS_ORIGINS            = "https://${var.web_domain}"
-    DB_HOST                 = aws_db_instance.main.address
-    DB_PORT                 = tostring(aws_db_instance.main.port)
-    DB_NAME                 = local.db_name
-    DB_USER                 = local.db_username
     MICROCMS_SERVICE_DOMAIN = var.microcms_service_domain
     MAIL_BACKEND            = "ses"
     MAIL_FROM               = var.mail_from
@@ -32,9 +28,13 @@ locals {
 
   # Secrets ManagerのJSONのキーを個別の環境変数として注入する（値はタスク起動時に取得される）
   api_secrets = {
-    DB_PASSWORD          = "${aws_secretsmanager_secret.db.arn}:password::"
-    MICROCMS_API_KEY     = "${aws_secretsmanager_secret.app.arn}:MICROCMS_API_KEY::"
-    TURNSTILE_SECRET_KEY = "${aws_secretsmanager_secret.app.arn}:TURNSTILE_SECRET_KEY::"
+    DB_HOST              = aws_ssm_parameter.db_host.arn
+    DB_PORT              = aws_ssm_parameter.db_port.arn
+    DB_NAME              = aws_ssm_parameter.db_name.arn
+    DB_USER              = aws_ssm_parameter.db_user.arn
+    DB_PASSWORD          = aws_ssm_parameter.db_password.arn
+    MICROCMS_API_KEY     = aws_ssm_parameter.microcms_api_key.arn
+    TURNSTILE_SECRET_KEY = aws_ssm_parameter.turnstile_secret_key.arn
   }
 }
 

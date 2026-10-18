@@ -5,9 +5,9 @@
 ## 構成
 
 ```
-                         Route53（example.com）
+                       Route53（propositio.com）
              ┌──────────────────┴──────────────────┐
-   example.com / stg.example.com          api.example.com / api.stg.example.com
+propositio.com / stg.propositio.com   api.propositio.com / api.stg.propositio.com
              │                                      │
         CloudFront（OAC・セキュリティヘッダー）       ALB（HTTPS・ACM）
              │                                      │  public subnet ×2AZ
@@ -92,6 +92,15 @@ DMARC を Google Workspace 側で設定済みでない場合は、`dmarc_record`
 
 作成直後の SES は「サンドボックス」で、認証済みのアドレス（このドメインのアドレス）にしか送れない。自動返信は任意のアドレスに送るため、AWS コンソールの SES →「アカウントダッシュボード」から**本番アクセスをリクエスト**する（用途：Web サイトのお問い合わせへの受付通知、想定通数、バウンス・苦情の対処方法を記載）。通常1日程度で承認される。
 
+本番のメール経路は次のとおり。
+
+- 送信元：`noreply@propositio.com`（SESで送信）
+- 運営通知先：`info@propositio.com`（Google Workspaceで受信）
+- 運営通知のReply-To：フォームに入力されたメールアドレス
+- 自動返信のReply-To：`info@propositio.com`
+
+SESの本番アクセスはリージョン単位であるため、Terraformと同じ `ap-northeast-1` で申請する。申請承認後、任意の外部アドレスへの自動返信が可能になる。
+
 ### 4. 最初のイメージを ECR に push
 
 環境の作成にはイメージが必要なため、一度だけ手元から push する（以降は GitHub Actions が行う）。
@@ -113,12 +122,14 @@ terraform init -backend-config=../../backend.hcl
 terraform apply
 ```
 
-続けて、アプリの秘密値を設定し、API を再起動する（初期値のままだと活動記録が取得できない）。
+続けて、アプリの秘密値をSSM Parameter Storeへ設定し、APIを再起動する（初期値のままだと活動記録が取得できない）。
 
 ```
-aws secretsmanager put-secret-value \
-  --secret-id "$(terraform output -raw app_secret_name)" \
-  --secret-string '{"MICROCMS_API_KEY":"<APIキー>","TURNSTILE_SECRET_KEY":"disabled"}'
+PREFIX="$(terraform output -raw app_parameter_prefix)"
+aws ssm put-parameter --name "$PREFIX/app/microcms-api-key" \
+  --type SecureString --value '<APIキー>' --overwrite
+aws ssm put-parameter --name "$PREFIX/app/turnstile-secret-key" \
+  --type SecureString --value 'disabled' --overwrite
 aws ecs update-service --cluster <project>-stg --service <project>-stg-api --force-new-deployment
 ```
 
@@ -175,7 +186,7 @@ terraform apply
 
 ### 秘密値の変更
 
-`aws secretsmanager put-secret-value` で更新し、`aws ecs update-service ... --force-new-deployment` でタスクを入れ替える（値はタスク起動時に読み込まれる）。
+`aws ssm put-parameter --overwrite` で更新し、`aws ecs update-service ... --force-new-deployment` でタスクを入れ替える（値はタスク起動時に読み込まれる）。
 
 DB パスワードを入れ替える場合は、`envs/<env>/main.tf` の module に `db_password_version = 2` のように値を上げて apply し、その後タスクを入れ替える。
 

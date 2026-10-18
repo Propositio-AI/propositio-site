@@ -5,7 +5,21 @@ TF_DIR := infra/terraform
 # 検証する Terraform のルート（state を持つ単位）
 TF_ROOTS := bootstrap shared envs/stg envs/prod
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
-TF_VERSION ?= 1.16.5
+TF_VERSION ?= 1.14.3
+AWS_PROFILE ?= propositio
+AWS_REGION ?= ap-northeast-1
+AWS_CLI_VERSION ?= 2.31.29
+AWS_SSO_START_URL ?= https://ssoins-77584660547db882.portal.ap-northeast-1.app.aws
+
+# ホストのAWS CLI v2を優先し、無ければ公式コンテナを使う。
+# コンテナ利用時も ~/.aws を共有するため、SSO設定と短期セッションはホスト側にだけ保存される。
+ifneq ($(shell command -v aws 2>/dev/null),)
+AWS := aws
+AWS_SSO_LOGIN_FLAGS :=
+else
+AWS := docker run --rm -it -v "$(HOME)/.aws:/root/.aws" -e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) amazon/aws-cli:$(AWS_CLI_VERSION)
+AWS_SSO_LOGIN_FLAGS := --use-device-code
+endif
 
 # ホストのterraformを優先し、無ければDockerで実行する
 ifneq ($(shell command -v terraform 2>/dev/null),)
@@ -26,6 +40,7 @@ endif
 	typecheck \
 	format format-backend format-js \
 	shell-backend shell-web shell-db \
+	aws-configure aws-login aws-whoami aws-logout \
 	infra-fmt infra-validate
 
 help: ## コマンド一覧を表示する
@@ -133,6 +148,29 @@ shell-web: ## webコンテナ内でshellを開く
 
 shell-db: ## psqlでDBに接続する
 	docker compose exec db psql -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-app}
+
+## --- AWS SSO（Google Workspace → IAM Identity Center） ---
+
+aws-configure: ## 初回のみ：AWS IAM Identity Center用のpropositioプロファイルを作成する
+	@mkdir -p "$(HOME)/.aws"
+	@echo "SSO Start URL: $(AWS_SSO_START_URL)"
+	@echo "SSO Region:    $(AWS_REGION)"
+	@echo "Role:          PowerUserAccess"
+	$(AWS) configure sso --profile $(AWS_PROFILE) --use-device-code
+
+aws-login: ## Google Workspace SSOでAWSへログインし、接続先を表示する
+	@mkdir -p "$(HOME)/.aws"
+	@grep -q '^\[profile $(AWS_PROFILE)\]' "$(HOME)/.aws/config" 2>/dev/null || { echo "先に make aws-configure を実行してください。"; exit 1; }
+	$(AWS) sso login --profile $(AWS_PROFILE) $(AWS_SSO_LOGIN_FLAGS)
+	$(MAKE) aws-whoami
+
+aws-whoami: ## 現在のAWSアカウント・ロール・リージョンを確認する
+	@$(AWS) sts get-caller-identity --profile $(AWS_PROFILE) --output table
+	@echo "Profile: $(AWS_PROFILE)"
+	@echo "Region:  $(AWS_REGION)"
+
+aws-logout: ## AWS IAM Identity Centerのキャッシュ済みセッションを削除する
+	$(AWS) sso logout
 
 ## --- インフラ（Terraform）。実AWSへの plan / apply は誤適用を防ぐため手動で行う（docs/infrastructure.md） ---
 

@@ -1,9 +1,8 @@
 # cp terraform.tfvars.example terraform.tfvars
 project_name            = "karynos"
-domain_name             = "example.com"
+domain_name             = "propositio.com"
 github_repository       = "Propositio-AI/propositio-site"
 microcms_service_domain = "your-service"
-contact_notify_to       = "info@example.com"
 # 初回のみ：ECRにpush済みのイメージのタグ（コミットSHA）
 api_image_tag = "0000000000000000000000000000000000000000"
-# alarm_email = "ops@example.com"
+# alarm_email = "info@propositio.com"

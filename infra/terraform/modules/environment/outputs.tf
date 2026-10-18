@@ -8,9 +8,9 @@ output "api_url" {
   value       = "https://${var.api_domain}"
 }
 
-output "app_secret_name" {
-  description = "microCMSのAPIキー等を設定するSecrets Managerのシークレット名"
-  value       = aws_secretsmanager_secret.app.name
+output "app_parameter_prefix" {
+  description = "アプリ用SSM Parameter Storeのパス接頭辞"
+  value       = local.parameter_prefix
 }
 
 output "db_endpoint" {

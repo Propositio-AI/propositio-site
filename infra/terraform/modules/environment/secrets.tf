@@ -1,48 +1,65 @@
-# ---------------------------------------------------------------------------
-# DBパスワード：apply中だけ生成し（ephemeral）、RDSとSecrets Managerへwrite-only属性で渡す。
-# パスワードはTerraformのstateにもplanにも残らない。入れ替えるときは db_password_version を上げる。
-# ---------------------------------------------------------------------------
+# アプリとDBの設定値は、環境ごとのSSM Parameter Storeパスへ集約する。
+# DBパスワードはwrite-only属性で渡すためTerraform stateには保存されない。
+resource "aws_kms_key" "parameters" {
+  description             = "SSM SecureString parameters for ${local.name_prefix}"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_alias" "parameters" {
+  name          = "alias/${local.name_prefix}-parameters"
+  target_key_id = aws_kms_key.parameters.key_id
+}
+
 ephemeral "random_password" "db" {
-  length = 32
-  # RDSが許可しない文字（/ @ " 空白）を含めない
+  length           = 32
   override_special = "!#%^*()-_=+[]{}"
 }
 
-resource "aws_secretsmanager_secret" "db" {
-  name                    = "${local.name_prefix}/db"
-  description             = "RDS master credentials (${local.name_prefix})"
-  recovery_window_in_days = 7
+locals {
+  parameter_prefix = "/propositio/${var.environment}/karynos"
 }
 
-resource "aws_secretsmanager_secret_version" "db" {
-  secret_id = aws_secretsmanager_secret.db.id
-  secret_string_wo = jsonencode({
-    username = local.db_username
-    password = ephemeral.random_password.db.result
-  })
-  secret_string_wo_version = var.db_password_version
+resource "aws_ssm_parameter" "db_host" {
+  name  = "${local.parameter_prefix}/db/host"
+  type  = "String"
+  value = aws_db_instance.main.address
+}
+resource "aws_ssm_parameter" "db_port" {
+  name  = "${local.parameter_prefix}/db/port"
+  type  = "String"
+  value = tostring(aws_db_instance.main.port)
+}
+resource "aws_ssm_parameter" "db_name" {
+  name  = "${local.parameter_prefix}/db/name"
+  type  = "String"
+  value = local.db_name
+}
+resource "aws_ssm_parameter" "db_user" {
+  name  = "${local.parameter_prefix}/db/user"
+  type  = "String"
+  value = local.db_username
+}
+resource "aws_ssm_parameter" "db_password" {
+  name             = "${local.parameter_prefix}/db/password"
+  type             = "SecureString"
+  key_id           = aws_kms_key.parameters.arn
+  value_wo         = ephemeral.random_password.db.result
+  value_wo_version = var.db_password_version
 }
 
-# ---------------------------------------------------------------------------
-# アプリの秘密値（microCMSのAPIキー・Turnstileのシークレット）。
-# 値はTerraformで管理せず、適用後にAWS CLI / コンソールで設定する（docs/infrastructure.md 参照）。
-# ---------------------------------------------------------------------------
-resource "aws_secretsmanager_secret" "app" {
-  name                    = "${local.name_prefix}/app"
-  description             = "Application secrets for the API (${local.name_prefix})"
-  recovery_window_in_days = 7
+resource "aws_ssm_parameter" "microcms_api_key" {
+  name   = "${local.parameter_prefix}/app/microcms-api-key"
+  type   = "SecureString"
+  key_id = aws_kms_key.parameters.arn
+  value  = "CHANGE_ME"
+  lifecycle { ignore_changes = [value] }
 }
 
-resource "aws_secretsmanager_secret_version" "app_placeholder" {
-  secret_id = aws_secretsmanager_secret.app.id
-  secret_string = jsonencode({
-    MICROCMS_API_KEY = "CHANGE_ME"
-    # "disabled" のままならTurnstileの検証を行わない
-    TURNSTILE_SECRET_KEY = "disabled"
-  })
-
-  # 運用者が設定した実際の値をTerraformで上書きしない
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
+resource "aws_ssm_parameter" "turnstile_secret_key" {
+  name   = "${local.parameter_prefix}/app/turnstile-secret-key"
+  type   = "SecureString"
+  key_id = aws_kms_key.parameters.arn
+  value  = "disabled"
+  lifecycle { ignore_changes = [value] }
 }

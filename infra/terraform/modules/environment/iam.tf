@@ -29,8 +29,20 @@ resource "aws_iam_role_policy_attachment" "api_execution_managed" {
 
 data "aws_iam_policy_document" "api_execution_secrets" {
   statement {
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.db.arn, aws_secretsmanager_secret.app.arn]
+    actions = ["ssm:GetParameter", "ssm:GetParameters"]
+    resources = [
+      aws_ssm_parameter.db_host.arn,
+      aws_ssm_parameter.db_port.arn,
+      aws_ssm_parameter.db_name.arn,
+      aws_ssm_parameter.db_user.arn,
+      aws_ssm_parameter.db_password.arn,
+      aws_ssm_parameter.microcms_api_key.arn,
+      aws_ssm_parameter.turnstile_secret_key.arn,
+    ]
+  }
+  statement {
+    actions   = ["kms:Decrypt"]
+    resources = [aws_kms_key.parameters.arn]
   }
 }
 

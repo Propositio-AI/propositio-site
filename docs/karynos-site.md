@@ -35,7 +35,7 @@ API を2つ作成する（どちらも「リスト形式」）。
 
 - 並び順は `publishedAt`（公開日時）の新しい順。
 - コンテンツIDは英数字・`-`・`_` だけにする（記事URL `/activities/{id}` に使うため）。
-- API キーは GET 権限だけあればよい。開発では `services/backend/.env` の `MICROCMS_SERVICE_DOMAIN` と `MICROCMS_API_KEY` に設定する。本番では、サービスドメインは `envs/<env>/terraform.tfvars`、API キーは Secrets Manager に設定する（[infrastructure.md](./infrastructure.md) の初回構築 手順5）。
+- API キーは GET 権限だけあればよい。開発では `services/backend/.env` の `MICROCMS_SERVICE_DOMAIN` と `MICROCMS_API_KEY` に設定する。本番では、サービスドメインは `envs/<env>/terraform.tfvars`、API キーはSSM Parameter StoreのSecureStringに設定する（[infrastructure.md](./infrastructure.md) の初回構築 手順5）。
 
 ## 2. お問い合わせメール（Amazon SES → Google Workspace）
 
@@ -45,7 +45,7 @@ API を2つ作成する（どちらも「リスト形式」）。
 
 | メール | From | To | Reply-To |
 | --- | --- | --- | --- |
-| 運営への通知 | `noreply@<domain>` | `CONTACT_NOTIFY_TO`（例: `info@<domain>`） | 送信者 → Gmail で「返信」すると送信者へ直接届く |
+| 運営への通知 | `noreply@propositio.com` | `info@propositio.com` | 送信者 → Gmail で「返信」すると送信者へ直接届く |
 | 送信者への自動返信 | `noreply@<domain>` | 送信者 | 運営のアドレス → 送信者が返信しても Gmail に届く |
 
 - 自動返信には、受付の連絡だけを入れる。第三者のアドレス宛てに迷惑メールを送る踏み台にされないよう、お問い合わせ本文は含めない。
@@ -57,7 +57,9 @@ API を2つ作成する（どちらも「リスト形式」）。
 SES のドメイン認証（DKIM・MAIL FROM）、送信権限、送信元・通知先の環境変数は Terraform が設定する（[infrastructure.md](./infrastructure.md)）。手動で必要なのは次の2つだけ。
 
 1. **SES の本番利用申請**（サンドボックスの解除）。解除前は、自分のドメインのアドレス（通知）にしか送れず、自動返信が届かない。
-2. **通知先アドレスの用意**：`contact_notify_to` に指定するアドレス（Google グループでも可）を Google Workspace に作る。
+2. **通知先アドレスの用意**：`info@propositio.com` を Google Workspace のユーザーまたはGoogleグループとして作り、外部から受信できる状態にする。
+
+本番環境では通知先を `info@propositio.com` に固定している。フォーム通知の `Reply-To` は問い合わせ者のアドレス、自動返信の `Reply-To` は `info@propositio.com` になるため、双方が受信したメールへそのまま返信できる。
 
 DNS は、既存の Google Workspace 用のレコード（MX・ルートドメインの SPF）を変更しない。SES の SPF は MAIL FROM 用のサブドメイン（`mail.<domain>`）に閉じ込め、DMARC は DKIM の署名で満たす。
 
