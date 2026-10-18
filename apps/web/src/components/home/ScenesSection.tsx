@@ -2,24 +2,24 @@ import { Eyebrow } from '@/components/common/Eyebrow';
 
 const SCENES = [
     {
+        word: '文理',
+        label: 'SCENE 01 — 文理選択',
+        body: '自分はどちらに進むべきなのか。得意な教科だけで決めてしまってよいのか。早い段階で迫られる選択だからこそ、自分が本当に学びたいことを言葉にする必要があります。',
+    },
+    {
         word: '進学',
-        label: 'SCENE 01 — 大学進学',
-        body: '周りに流されたまま、進学できてしまう時代になりつつあります。けれど大学は、自分の意志を持って進む場所。自分の意志とは何か、大学に何を求めるのか。それを理解するには、言語化が欠かせません。',
+        label: 'SCENE 02 — 進学',
+        body: '本当に学びたいのはこれなのか。大学名や偏差値だけではなく、その先で何を学び、どんな経験をしたいのかを、自分の言葉で確かめます。',
     },
     {
         word: '就活',
-        label: 'SCENE 02 — 就職活動',
-        body: '自分の気持ちややりたいこと、目指す将来像。それを自分でも理解し、うまく話せる人は多くありません。自分の大事にしたいことを理解して伝えるのは、とても難しいことです。',
-    },
-    {
-        word: '生活',
-        label: 'SCENE 03 — 日々の生活',
-        body: '毎日の小さな選択も、何を大切にしたいのかが分からないまま、周りに合わせて決めてしまうことがあります。その積み重ねが、自分らしさをつくっていきます。',
+        label: 'SCENE 03 — 就職活動',
+        body: '私はこの仕事を本当にしたいのか。自分に合っているのか。職種や条件を選ぶ前に、働くことで何を実現したいのかを考えます。',
     },
     {
         word: '人生',
-        label: 'SCENE 04 — その先の人生',
-        body: '進学も就職も、人生の一場面です。自分が大事にしたいことを言葉にできていれば、迷ったときも、自分の意志で選び直すことができます。',
+        label: 'SCENE 04 — 人生',
+        body: '私は将来、何をしていきたいのか。進路や仕事に限らず、どのように生きたいのか。自分の中にある答えを、自分だけの形にしていきます。',
     },
 ];
 
@@ -39,7 +39,7 @@ export function ScenesSection() {
             className="grid h-screen grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] content-center gap-[clamp(24px,4vw,64px)] bg-surface px-gutter pt-[clamp(90px,11vh,120px)] pb-[clamp(40px,6vh,64px)]"
         >
             <div className="flex flex-col justify-between gap-6">
-                <Eyebrow>03 — 言語化が必要になる場面</Eyebrow>
+                <Eyebrow>03 — 言葉にする場面</Eyebrow>
                 <div
                     aria-hidden="true"
                     className="relative h-[clamp(110px,17vw,260px)] overflow-hidden"

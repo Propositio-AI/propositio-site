@@ -63,7 +63,7 @@ export function HeroSection() {
                     data-hero-tag=""
                     className="m-0 max-w-[18em] text-[clamp(20px,2.8vw,40px)] leading-[1.5] font-medium text-pretty"
                 >
-                    <SplitChars text="自分の思いを知り、自分の意志で未来を選ぶ。" />
+                    <SplitChars text="誰もが、夢を実現できる世界へ。" />
                 </p>
                 <h1
                     data-hero-title=""
@@ -78,8 +78,7 @@ export function HeroSection() {
                     data-hero-fade=""
                     className="m-0 max-w-[600px] text-[15px] leading-[1.9] text-pretty"
                 >
-                    Karynosは、Propositio
-                    AIが取り組む、まだ言葉になっていない思いを整理する「言語化」を支える事業です。
+                    Karynosは、自分の中にある思いを対話によって言葉にし、自分だけの夢の形を見つけるためのプロジェクトです。
                 </p>
                 <div
                     data-hero-fade=""

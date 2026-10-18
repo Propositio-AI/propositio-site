@@ -4,21 +4,21 @@ import { SplitChars } from '@/components/motion/SplitChars';
 const COLUMNS = [
     {
         num: '01',
-        en: 'PROBLEM',
-        title: '課題',
-        body: '自分が何を大切にしたいのか分からないまま、周りの期待や流れで、進学や就職を決めてしまうことがあります。',
+        en: 'ISSUE',
+        title: '答えは、自分の中にある',
+        body: '将来どうなりたいか。何を大切にしたいか。考えていないのではなく、答えがまだ自分の言葉になっていないことが課題だと考えています。',
     },
     {
         num: '02',
         en: 'APPROACH',
-        title: '取り組み',
-        body: 'まだ言葉になっていない思いを、対話を通じて整理する「言語化」。その支え方を研究・開発しています。',
+        title: '対話から、言葉を見つける',
+        body: '一方的に答えを与えるのではなく、対話を通じて、その人の中にある思いや価値観を言葉にすることを目指します。',
     },
     {
         num: '03',
-        en: 'GOAL',
-        title: '目指す姿',
-        body: '一人ひとりが自分の大切にしたいことに気づき、自分の意志で未来を選べる社会をつくります。',
+        en: 'OUTCOME',
+        title: '自分だけの形にする',
+        body: '曖昧だった思いを、自分が納得できる言葉と選択へ。誰もが夢を実現できる世界を目指しています。',
     },
 ];
 
@@ -45,7 +45,7 @@ export function AboutSection() {
                     className="m-0 text-[clamp(36px,5.4vw,88px)] leading-[1.2] tracking-[-.03em]"
                 >
                     <SplitChars
-                        text={['思いを言葉にできないまま、', '大切な選択をしていませんか。']}
+                        text={['夢がないのではなく、', 'まだ言葉になっていない。']}
                     />
                 </h2>
             </div>
@@ -76,10 +76,9 @@ export function AboutSection() {
                 data-reveal=""
                 className="flex flex-wrap items-center gap-4 border-t border-neutral-300 pt-5"
             >
-                <span className="tag tag-outline">採択</span>
+                <span className="tag tag-outline">公認団体</span>
                 <span className="text-[15px] leading-[1.7] font-semibold">
-                    Propositio AIは「2026年度
-                    同志社大学ローム記念館プロジェクト」として活動しています。
+                    プロジェクトKarynosは、チームPropositio AIが運営する同志社大学ローム記念館プロジェクトであり、学校法人同志社の公認団体として活動しています。
                 </span>
             </div>
         </section>

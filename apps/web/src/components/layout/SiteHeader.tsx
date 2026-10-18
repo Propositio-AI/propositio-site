@@ -13,17 +13,17 @@ type SiteHeaderProps = {
 };
 
 const HOME_ANCHORS = [
-    { href: '#about', label: 'About' },
-    { href: '#scenes', label: 'Scenes' },
-    { href: '#mission', label: 'Mission' },
-    { href: '#principles', label: 'Principles' },
-    { href: '#activities', label: 'Activities' },
+    { href: '#about', label: 'Karynosについて' },
+    { href: '#scenes', label: '言葉にする場面' },
+    { href: '#mission', label: 'アプローチ' },
+    { href: '#principles', label: '現在の活動' },
+    { href: '#activities', label: '活動記録' },
 ];
 
 const PAGE_LINKS: { to: string; label: string; key?: HeaderCurrent }[] = [
-    { to: '/', label: 'Top' },
-    { to: '/activities', label: 'Activities', key: 'activities' },
-    { to: '/privacy', label: 'Privacy', key: 'privacy' },
+    { to: '/', label: 'トップ' },
+    { to: '/activities', label: '活動記録', key: 'activities' },
+    { to: '/privacy', label: 'プライバシー', key: 'privacy' },
 ];
 
 const NAV_LINK_CLASS = 'text-ink no-underline transition-colors hover:text-accent';

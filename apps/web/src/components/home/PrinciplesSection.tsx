@@ -3,29 +3,34 @@ import { Eyebrow } from '@/components/common/Eyebrow';
 const PRINCIPLES = [
     {
         num: '01',
-        title: '当事者の声から、課題を確かめる',
-        body: '私たち自身の経験を出発点にしながら、それだけを答えにしません。利用する人や現場の声を聞き、どんな場面で、何に困っているのかを確かめます。',
+        title: '調査',
+        body: '関連する論文を検索し、すでに明らかになっている知見や議論を調べています。',
     },
     {
         num: '02',
-        title: '技術より先に、届けたい価値を考える',
-        body: 'AIを使うこと自体を目的にせず、その人が自分の思いを理解し、選択するうえで何が役立つのかを考えます。対話や人の関わりも含めて、適した方法を探ります。',
+        title: 'ヒアリング',
+        body: '専門家、大学生、社会人をはじめ、幅広い立場の人から実際の声を聞いています。',
     },
     {
         num: '03',
-        title: '仮説を小さく試し、学びからつくり直す',
-        body: '私たちがよいと思うものが、本当に役立つとは限りません。実際に使ってもらい、何が助けになり、何が負担になったのかを確かめながら改善します。',
+        title: '検証',
+        body: '調査とヒアリングから仮説を立て、その仮説が正しいかを確かめています。',
     },
     {
         num: '04',
-        title: '自分たちにも「なぜ？」を問い続ける',
-        body: 'なぜこの機能が必要なのか。誰の、どんな時間をよくするのか。つくる側も問い続け、得られた学びに応じて考えを更新します。',
+        title: '開発',
+        body: 'チームの技術力を活かし、私たちにしかできないサービスの開発に取り組んでいます。',
+    },
+    {
+        num: '05',
+        title: '情報発信',
+        body: 'Instagramとこのウェブサイトを通じて、活動や検証の過程を発信しています。',
     },
 ];
 
 /**
 
-「05 — PRINCIPLES」セクション。画面に固定され、縦スクロールに合わせて4枚のカードが横に流れる。
+「05 — CURRENT WORK」セクション。画面に固定され、縦スクロールに合わせて5枚の活動カードが横に流れる。
 
 @param なし
 @return プロダクトづくりの原則セクションのJSX
@@ -43,15 +48,13 @@ export function PrinciplesSection() {
                 className="flex h-full w-max items-stretch gap-[clamp(20px,3vw,40px)] px-gutter pt-[clamp(90px,10vh,120px)] pb-[clamp(60px,8vh,90px)]"
             >
                 <div className="flex w-[min(82vw,460px)] flex-col justify-between gap-6">
-                    <Eyebrow>05 — PRINCIPLES</Eyebrow>
+                    <Eyebrow>05 — CURRENT WORK</Eyebrow>
                     <h2 className="m-0 text-[clamp(40px,5.4vw,84px)] leading-[1.12] tracking-[-.03em]">
-                        プロダクト
+                        いま、
                         <br />
-                        づくりで
+                        取り組んで
                         <br />
-                        大切に
-                        <br />
-                        していること
+                        いること
                     </h2>
                     <div aria-hidden="true" className="text-xs font-semibold tracking-[.16em]">
                         SCROLL →
