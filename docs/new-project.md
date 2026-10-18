@@ -55,7 +55,7 @@ git push -u origin main
 | `apps/web/src/pages/WelcomePage.tsx` / `apps/mobile/src/components/welcome/WelcomeView.tsx` | 表示しているプロジェクト名・説明（最初の画面を作るときに置き換える） |
 | `services/backend/app/main.py` | `FastAPI(title=...)`（OpenAPIのタイトル） |
 | `services/backend/pyproject.toml` | 必要であれば`name` / `description` |
-| `infra/terraform/envs/floci.tfvars` / `envs/aws.tfvars.example` | `project_name`（AWSリソース名の接頭辞） |
+| `infra/terraform/*/terraform.tfvars.example` | `project_name`（AWSリソース名の接頭辞）・ドメイン・GitHubリポジトリ |
 
 `docs/`配下（このファイルを除く `getting-started.md` / `architecture.md` / `development.md` / `infrastructure.md`）は、このベースリポジトリの構成・規約に関する説明であり、プロジェクト名に依存する記述はほぼ無いためそのまま使い続けてよい。プロジェクト固有のドメイン知識（機能一覧・仕様など）が増えてきたら、別ファイルとして追加していく。
 
@@ -72,13 +72,13 @@ cp apps/web/.env.example apps/web/.env
 cp apps/mobile/.env.example apps/mobile/.env
 ```
 
-複数のプロジェクト（`propositio-base`から作った別プロジェクト同士、または`propositio-base`自体）を同じマシンで同時に起動する場合、`docker-compose.yml`が公開しているポート（`5173` / `8000` / `5432`）、Expo（`8081`）、Floci（`4566`）が競合する。同時起動しないか、新プロジェクト側でホスト側ポートを変更する。
+複数のプロジェクト（`propositio-base`から作った別プロジェクト同士、または`propositio-base`自体）を同じマシンで同時に起動する場合、`docker-compose.yml`が公開しているポート（`5173` / `8000` / `5432`）、Expo（`8081`）が競合する。同時起動しないか、新プロジェクト側でホスト側ポートを変更する。
 
 ### 3. 不要なサンプルコードを削除する
 
 `propositio-base`には最小限のサンプル（backendの`/health`、Webの`WelcomePage`、モバイルの`useHealth` + `components/welcome/`）だけが含まれている。新規プロジェクトの最初の機能実装時に置き換える（実装方法自体は[development.md](./development.md)の「新しいエンティティを追加する」を参考にできる）。
 
-AWS基盤（`infra/`）を使わないプロジェクトでは、`infra/`ディレクトリ、Makefileの「AWS互換開発」セクション、`.github/workflows/ci.yml`の`terraform`ジョブとcomposeジョブのFloci検証、`docs/infrastructure.md`を削除してよい。
+AWS基盤（`infra/`）を使わないプロジェクトでは、`infra/`ディレクトリ、Makefileの「インフラ（Terraform）」セクション、`.github/workflows/ci.yml`の`terraform`ジョブ、`.github/workflows/deploy.yml`、`docs/infrastructure.md`を削除してよい。
 
 ### 4. 初回起動して動作確認する
 
@@ -89,7 +89,7 @@ make seed          # 初期データが必要な場合
 make install && make dev-mobile   # モバイルを確認する場合
 ```
 
-[getting-started.md](./getting-started.md)の手順どおりに起動し、Web（http://localhost:5173 ）とバックエンドAPI（http://localhost:8000/docs ）、モバイル（Expo）にアクセスできることを確認する。AWS基盤を使う場合は`make floci-up && make apply-floci`でFloci上に作成できることも確認する。
+[getting-started.md](./getting-started.md)の手順どおりに起動し、Web（http://localhost:5173 ）とバックエンドAPI（http://localhost:8000/docs ）、モバイル（Expo）にアクセスできることを確認する。AWS基盤を使う場合は、[infrastructure.md](./infrastructure.md)の「初回構築」に従って stg を作成する。
 
 ### 5. CIを有効にする
 

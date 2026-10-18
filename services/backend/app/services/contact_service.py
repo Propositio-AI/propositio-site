@@ -158,8 +158,10 @@ class ContactService:
         Returns:
             -
         """
-        notify_to = get_settings().contact_notify_to
-        mails = [build_auto_reply_mail(contact)]
+        settings = get_settings()
+        notify_to = settings.contact_notify_to
+        # 自動返信に送信者が返信したときは、運営の受信箱（Google Workspace）へ届くようにする
+        mails = [build_auto_reply_mail(contact, settings.mail_reply_to or notify_to or None)]
         if notify_to:
             mails.insert(0, build_notify_mail(contact, notify_to))
         for mail in mails:
@@ -206,13 +208,14 @@ def build_notify_mail(contact: Contact, notify_to: str) -> MailMessage:
     )
 
 
-def build_auto_reply_mail(contact: Contact) -> MailMessage:
+def build_auto_reply_mail(contact: Contact, reply_to: str | None = None) -> MailMessage:
     """
     送信者宛ての自動返信メールを組み立てる。
     第三者のアドレスへの迷惑メール送信に悪用されないよう、お問い合わせ本文は含めない。
 
     Params:
         - contact (Contact): 保存済みのお問い合わせ
+        - reply_to (str | None): 送信者が返信したときの宛先（運営のアドレス）。Noneなら指定しない
 
     Returns:
         - MailMessage: 自動返信メール
@@ -225,7 +228,7 @@ def build_auto_reply_mail(contact: Contact) -> MailMessage:
             f"「{INQUIRY_TYPE_LABELS[contact.inquiry_type]}」について、お問い合わせを受け付けました。",
             "内容を確認のうえ、担当者よりご連絡いたします。",
             "",
-            "※このメールは自動返信です。",
+            "※このメールは自動返信です。ご返信いただいた内容は担当者に届きます。",
             "※お心当たりのない場合は、お手数ですが本メールを破棄してください。",
             "",
             "----",
@@ -236,4 +239,5 @@ def build_auto_reply_mail(contact: Contact) -> MailMessage:
         to=contact.email,
         subject="【Propositio AI】お問い合わせを受け付けました",
         body=body,
+        reply_to=reply_to,
     )

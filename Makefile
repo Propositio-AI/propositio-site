@@ -1,29 +1,21 @@
 .DEFAULT_GOAL := help
 
-# --- AWS互換開発（Floci + Terraform）用の設定 ---
+# --- インフラ（Terraform）用の設定 ---
 TF_DIR := infra/terraform
+# 検証する Terraform のルート（state を持つ単位）
+TF_ROOTS := bootstrap shared envs/stg envs/prod
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
 TF_VERSION ?= 1.16.5
-# FlociのComposeプロジェクト名（チェックアウトしたディレクトリ名から作り、複数プロジェクトでボリュームを共有しない）
-FLOCI_PROJECT_NAME ?= $(shell basename "$(CURDIR)" | tr '[:upper:].' '[:lower:]-')-floci
-FLOCI := docker compose -p $(FLOCI_PROJECT_NAME) -f infra/floci/docker-compose.yml
-FLOCI_URL ?= http://localhost:4566
-# terraform plan / apply / destroy に追加で渡す引数（例: make apply-floci ARGS=-auto-approve）
-ARGS ?=
 
-# ホストのterraformを優先し、無ければDockerで実行する（DockerからはホストのFlociへhost.docker.internal経由で接続する）
+# ホストのterraformを優先し、無ければDockerで実行する
 ifneq ($(shell command -v terraform 2>/dev/null),)
-TERRAFORM := terraform -chdir=$(TF_DIR)
-TF_FLOCI_ENDPOINT := $(FLOCI_URL)
+TERRAFORM := cd "$(CURDIR)/$(TF_DIR)" && terraform
 else
 TERRAFORM := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
-	--add-host=host.docker.internal:host-gateway \
 	-v "$(CURDIR)/$(TF_DIR):/workspace" -w /workspace \
 	hashicorp/terraform:$(TF_VERSION)
-TF_FLOCI_ENDPOINT := $(subst localhost,host.docker.internal,$(FLOCI_URL))
 endif
-TF_FLOCI_VARS := -var-file=envs/floci.tfvars -var="aws_endpoint_url=$(TF_FLOCI_ENDPOINT)"
 
 .PHONY: help setup install up up-d down down-v build restart logs ps \
 	dev-mobile \
@@ -34,8 +26,7 @@ TF_FLOCI_VARS := -var-file=envs/floci.tfvars -var="aws_endpoint_url=$(TF_FLOCI_E
 	typecheck \
 	format format-backend format-js \
 	shell-backend shell-web shell-db \
-	floci-up floci-down floci-down-v floci-logs floci-health \
-	infra-fmt infra-init infra-validate infra-output plan-floci apply-floci destroy-floci
+	infra-fmt infra-validate
 
 help: ## コマンド一覧を表示する
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -143,43 +134,15 @@ shell-web: ## webコンテナ内でshellを開く
 shell-db: ## psqlでDBに接続する
 	docker compose exec db psql -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-app}
 
-## --- AWS互換開発（Floci + Terraform。通常開発のコンテナとは独立して動く） ---
-
-floci-up: ## Floci（AWS互換エミュレータ, :4566）を起動し、ヘルスチェックが通るまで待つ
-	$(FLOCI) up -d --wait
-
-floci-down: ## Flociを停止する（作成したリソースはボリュームに保持される）
-	$(FLOCI) down
-
-floci-down-v: ## Flociを停止し、保持していたリソースも含めて削除する
-	$(FLOCI) down -v
-
-floci-logs: ## Flociのログを追跡表示する
-	$(FLOCI) logs -f
-
-floci-health: ## Flociのヘルスチェック（サービスごとの状態）を表示する
-	curl -fsS $(FLOCI_URL)/_localstack/health
-	@echo
+## --- インフラ（Terraform）。実AWSへの plan / apply は誤適用を防ぐため手動で行う（docs/infrastructure.md） ---
 
 infra-fmt: ## Terraformコードを整形する
 	$(TERRAFORM) fmt -recursive
 
-infra-init: ## Floci用stateでTerraformを初期化する（stateは infra/terraform/floci.tfstate）
-	$(TERRAFORM) init -input=false -reconfigure -backend-config=path=floci.tfstate
-
-infra-validate: ## Terraformのfmtチェックと構文検証を行う（backend・クラウド接続なし）
+infra-validate: ## Terraformのfmtチェックと、全ルートの構文検証を行う（backend・クラウド接続なし）
 	$(TERRAFORM) fmt -check -recursive
-	$(TERRAFORM) init -input=false -backend=false
-	$(TERRAFORM) validate
-
-infra-output: ## Terraformの出力（User Pool ID・バケット名など）を表示する
-	$(TERRAFORM) output
-
-plan-floci: floci-health infra-init ## Flociへの変更内容を確認する
-	$(TERRAFORM) plan -input=false $(TF_FLOCI_VARS) $(ARGS)
-
-apply-floci: floci-health infra-init ## Flociへ適用する（確認プロンプトを省くには ARGS=-auto-approve）
-	$(TERRAFORM) apply -input=false $(TF_FLOCI_VARS) $(ARGS)
-
-destroy-floci: floci-health infra-init ## Flociに作成したリソースを削除する
-	$(TERRAFORM) destroy -input=false $(TF_FLOCI_VARS) $(ARGS)
+	@for root in $(TF_ROOTS); do \
+		echo "==> $$root"; \
+		$(TERRAFORM) -chdir=$$root init -input=false -backend=false >/dev/null && \
+		$(TERRAFORM) -chdir=$$root validate || exit 1; \
+	done

@@ -1,22 +1,14 @@
-import base64
-from email.message import EmailMessage
 from email.utils import formataddr
 from functools import lru_cache
-import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
-from google.auth.transport.requests import AuthorizedSession
-from google.oauth2 import service_account
+import boto3
 
 from app.core.config import get_settings
 from app.schemas.mail import MailMessage
 
 logger = logging.getLogger(__name__)
-
-GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
-GMAIL_SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
-MAIL_FROM_NAME = "Propositio AI"
 
 
 class MailRepository(Protocol):
@@ -73,39 +65,47 @@ class ConsoleMailRepository:
         )
 
 
-class GmailMailRepository:
+class SesMailRepository:
     """
-    Google WorkspaceのGmail APIでメールを送信する実装。
-    ドメイン全体の委任を設定したサービスアカウントが、送信元ユーザーとして送信する。
+    Amazon SES（v2 API）でメールを送信する実装。
+    認証情報はboto3の標準の認証チェーン（ECSではタスクロール）から取得する。
 
     Params:
-        - sender (str): 送信元のWorkspaceユーザーのメールアドレス
-        - service_account_info (dict): サービスアカウント鍵（JSONをパースしたもの）
+        - sender (str): 送信元（表示名付き。例: "Propositio AI <noreply@example.com>"）
+        - region (str): SESのリージョン
+        - configuration_set (str): SESの設定セット名。空なら指定しない
+        - client (Any | None): テスト用に差し替えるSESクライアント。Noneならboto3で生成する
 
     Returns:
         -
     """
 
-    def __init__(self, sender: str, service_account_info: dict) -> None:
+    def __init__(
+        self,
+        sender: str,
+        region: str,
+        configuration_set: str = "",
+        client: Any | None = None,
+    ) -> None:
         """
-        サービスアカウントの認証情報から、Gmail API用の認証済みセッションを組み立てる。
+        送信元と設定セットを保持し、SESクライアントを組み立てる。
 
         Params:
-            - sender (str): 送信元のWorkspaceユーザーのメールアドレス
-            - service_account_info (dict): サービスアカウント鍵（JSONをパースしたもの）
+            - sender (str): 送信元（表示名付き）
+            - region (str): SESのリージョン
+            - configuration_set (str): SESの設定セット名。空なら指定しない
+            - client (Any | None): テスト用に差し替えるSESクライアント
 
         Returns:
             -
         """
         self.sender = sender
-        credentials = service_account.Credentials.from_service_account_info(
-            service_account_info, scopes=[GMAIL_SEND_SCOPE], subject=sender
-        )
-        self.session = AuthorizedSession(credentials)
+        self.configuration_set = configuration_set
+        self.client = client or boto3.client("sesv2", region_name=region)
 
     def send(self, message: MailMessage) -> None:
         """
-        メールをMIME形式に組み立て、Gmail APIで送信する。
+        プレーンテキストのメールをSESで送信する。
 
         Params:
             - message (MailMessage): 送信するメール
@@ -114,26 +114,29 @@ class GmailMailRepository:
             -
 
         Raises:
-            - requests.HTTPError: Gmail APIがエラーを返した場合
+            - botocore.exceptions.ClientError: SESがエラーを返した場合（未認証の宛先・送信上限など）
         """
-        mime = EmailMessage()
-        mime["From"] = formataddr((MAIL_FROM_NAME, self.sender))
-        mime["To"] = message.to
-        mime["Subject"] = message.subject
+        params: dict[str, Any] = {
+            "FromEmailAddress": self.sender,
+            "Destination": {"ToAddresses": [message.to]},
+            "Content": {
+                "Simple": {
+                    "Subject": {"Data": message.subject, "Charset": "UTF-8"},
+                    "Body": {"Text": {"Data": message.body, "Charset": "UTF-8"}},
+                }
+            },
+        }
         if message.reply_to:
-            mime["Reply-To"] = message.reply_to
-        mime.set_content(message.body)
-
-        raw = base64.urlsafe_b64encode(mime.as_bytes()).decode("ascii")
-        response = self.session.post(GMAIL_SEND_URL, json={"raw": raw}, timeout=15)
-        response.raise_for_status()
+            params["ReplyToAddresses"] = [message.reply_to]
+        if self.configuration_set:
+            params["ConfigurationSetName"] = self.configuration_set
+        self.client.send_email(**params)
 
 
 @lru_cache
 def get_mail_repository() -> MailRepository:
     """
-    設定（MAIL_BACKEND）に応じたメール送信の実装を返す。
-    認証済みセッション（アクセストークン）を使い回すため、インスタンスはキャッシュする。
+    設定（MAIL_BACKEND）に応じたメール送信の実装を返す。クライアントを使い回すためキャッシュする。
 
     Params:
         -
@@ -142,9 +145,10 @@ def get_mail_repository() -> MailRepository:
         - MailRepository: メール送信の実装
     """
     settings = get_settings()
-    if settings.mail_backend == "gmail":
-        return GmailMailRepository(
-            sender=settings.gmail_sender,
-            service_account_info=json.loads(settings.gmail_service_account_json),
+    if settings.mail_backend == "ses":
+        return SesMailRepository(
+            sender=formataddr((settings.mail_from_name, settings.mail_from)),
+            region=settings.aws_region,
+            configuration_set=settings.ses_configuration_set,
         )
     return ConsoleMailRepository()

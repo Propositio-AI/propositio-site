@@ -1,0 +1,6 @@
+# shared / envs/* の terraform init で -backend-config=../backend.hcl（envsは ../../backend.hcl）として渡す。
+# cp backend.hcl.example backend.hcl し、bootstrap の出力 state_bucket を記入する。
+bucket       = "karynos-tfstate-123456789012"
+region       = "ap-northeast-1"
+encrypt      = true
+use_lockfile = true

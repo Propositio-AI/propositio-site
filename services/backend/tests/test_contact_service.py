@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
+from app.core.config import Settings
 from app.models.contact import ContactStatus, InquiryType
 from app.schemas.contact import ContactCreate
 from app.services.contact_service import (
@@ -92,7 +93,7 @@ def test_submit_contact_sends_notify_and_auto_reply(
     """
     monkeypatch.setattr(
         "app.services.contact_service.get_settings",
-        lambda: type("S", (), {"contact_notify_to": "info@example.com"})(),
+        lambda: Settings(contact_notify_to="info@example.com", mail_reply_to=""),
     )
     mail = FakeMailRepository()
 
@@ -105,6 +106,8 @@ def test_submit_contact_sends_notify_and_auto_reply(
     assert "連携についてご相談させてください。" in notify.body
     # 自動返信には本文を含めない（第三者宛ての迷惑メールに悪用されないため）
     assert "連携についてご相談させてください。" not in auto_reply.body
+    # 自動返信への返信は運営の受信箱へ届く
+    assert auto_reply.reply_to == "info@example.com"
 
 
 def test_submit_contact_succeeds_even_if_mail_fails(db_session: Session) -> None:

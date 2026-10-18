@@ -1,142 +1,218 @@
-# インフラ（Terraform / Floci）
+# インフラ（AWS / Terraform）とデプロイ
 
-`infra/terraform`はAWS基盤の土台。**同じTerraformコードを実AWSとFloci（ローカルのAWS互換エミュレータ）の両方に適用する**ため、ローカルで確認した構成をそのまま実AWSへ持っていける。
+本番・ステージングは AWS 上で動かす。インフラは `infra/terraform` の Terraform で管理し、アプリのデプロイは GitHub Actions（`.github/workflows/deploy.yml`）が行う。
 
-通常のアプリ開発（`docker-compose.yml`: PostgreSQL + FastAPI + Web）とは独立している。backendは現時点でAWSに接続しないため、ここで作るリソースはアプリからAWSを使う機能（認証・ファイル保存など）を追加するときの土台になる。
+## 構成
 
-## 作成するリソース
+```
+                         Route53（example.com）
+             ┌──────────────────┴──────────────────┐
+   example.com / stg.example.com          api.example.com / api.stg.example.com
+             │                                      │
+        CloudFront（OAC・セキュリティヘッダー）       ALB（HTTPS・ACM）
+             │                                      │  public subnet ×2AZ
+        S3（非公開。apps/web のビルド成果物）     ECS Fargate（FastAPI）── SES（送信のみ）
+                                                    │  private subnet ×2AZ
+                                                 RDS PostgreSQL 16
 
-| ファイル | リソース | 内容 |
+   運営の受信・返信：Google Workspace（Gmail）。MX は Google のまま
+```
+
+| 役割 | サービス | 補足 |
 | --- | --- | --- |
-| `auth.tf` | Cognito User Pool | メールアドレスでサインイン、メール確認コード（`CONFIRM_WITH_CODE`）で検証、MFAはTOTP（認証アプリ）を任意（`OPTIONAL`）、パスワードポリシー、メールでのアカウント復旧、削除保護（実AWS） |
-| `auth.tf` | User Pool Client × 2（`web` / `mobile`） | client secretなしのpublic client。認証フローはSRP + リフレッシュトークンのみ、トークン失効を有効化。`cognito_callback_urls`を渡したときだけOAuth（Authorization Code）を有効化 |
-| `storage.tf` | S3バケット | 非公開（Public Access Block全有効）、バージョニング有効、SSE-S3（AES256）暗号化、ACL無効化（`BucketOwnerEnforced`） |
-| `storage.tf` | DynamoDBテーブル | `pk` / `sk`の汎用キー、オンデマンド（`PAY_PER_REQUEST`）、AWSマネージドKMSキーで暗号化、PITRは変数で切り替え、削除保護（実AWS） |
-| `locals.tf` | `random_id` | S3バケット名の衝突を避ける8桁の16進接尾辞 |
+| Web 配信 | S3 + CloudFront | 非公開バケットを OAC で配信。SPA のルーティングは CloudFront Function で `index.html` に書き換える。HSTS・CSP などのセキュリティヘッダーを付与 |
+| API | ECS（Fargate）+ ALB | タスクはパブリックサブネットに置き、パブリック IP で外部 API（microCMS・SES・Turnstile）へ出る。受信はセキュリティグループで ALB からのみ許可（NAT Gateway なし） |
+| DB | RDS PostgreSQL 16 | インターネットへの経路がないプライベートサブネット。TLS 必須、暗号化、自動バックアップ |
+| 秘密値 | Secrets Manager | DB パスワード（Terraform がstateに残さず生成）と、アプリの秘密値（microCMS・Turnstile） |
+| メール送信 | SES | DKIM・カスタム MAIL FROM で認証。タスクロールで「決められた送信元アドレスでの送信」だけを許可 |
+| DNS・証明書 | Route53 + ACM | 証明書は DNS 検証で自動発行・自動更新 |
+| CI/CD | GitHub Actions（OIDC） | 長期のアクセスキーを GitHub に置かない |
+| 監視 | CloudWatch Alarms + SNS | API の 5xx・異常タスク、RDS の CPU・空き容量、SES のバウンス率・苦情率 |
 
-命名は`<project_name>-<environment>`（例: `app-local`）を接頭辞にする。S3バケットは`<接頭辞>-app-<random suffix>`、DynamoDBテーブルは`<接頭辞>-app`。
+### 環境
 
-すべてのリソースにproviderの`default_tags`で`Project` / `Environment` / `ManagedBy=terraform`（と`extra_tags`）が付く。
-
-## 変数
-
-| 変数 | 既定値 | 説明 |
+| | stg | prod |
 | --- | --- | --- |
-| `project_name` | （必須） | リソース名の接頭辞。小文字英字で始まる3〜24文字の小文字英数字・ハイフン |
-| `environment` | （必須） | 環境名（`local` / `dev` / `prod`など）。小文字英字で始まる2〜10文字の小文字英数字 |
-| `aws_region` | `ap-northeast-1` | リージョン |
-| `aws_endpoint_url` | `null` | Flociのエンドポイント。`null`なら実AWS |
-| `extra_tags` | `{}` | 追加のタグ |
-| `cognito_callback_urls` / `cognito_logout_urls` | `[]` | OAuth（Hosted UI / 外部IdP）を使うときのURL。空ならOAuthは無効 |
-| `cognito_deletion_protection` | `true` | User Poolの削除保護（Flociでは常に無効） |
-| `s3_force_destroy` | `false` | オブジェクトが残っていてもバケットを削除できるようにするか |
-| `dynamodb_point_in_time_recovery` | `true` | DynamoDBのPITR |
-| `dynamodb_deletion_protection` | `true` | DynamoDBの削除保護（Flociでは常に無効） |
+| Web | `stg.<domain>`（`noindex`） | `<domain>` |
+| API | `api.stg.<domain>` | `api.<domain>` |
+| API タスク | 1〜2 | 2〜4（2AZに分散） |
+| RDS | db.t4g.micro、バックアップ1日、削除保護なし | db.t4g.micro、バックアップ7日、削除保護・最終スナップショットあり |
+| ログ保持 | 30日 | 90日 |
+| デプロイ | main へのマージで自動 | 手動実行＋承認（stg で検証済みのイメージを昇格） |
 
-出力（`make infra-output` / `terraform output`）: `aws_region`、`aws_endpoint_url`、`name_prefix`、`cognito_user_pool_id`、`cognito_user_pool_arn`、`cognito_web_client_id`、`cognito_mobile_client_id`、`s3_bucket_name`、`s3_bucket_arn`、`dynamodb_table_name`、`dynamodb_table_arn`。
+サイズを変えるときは `envs/<env>/main.tf` を編集する。RDS をマルチAZにする場合は prod の `db_multi_az = true`（費用は約2倍）。
 
-## ローカル（Floci）で動かす
+## ディレクトリ
 
-[Floci](https://floci.io/)はAWS APIを再現するオープンソースのエミュレータ（LocalStack互換のエンドポイント・ヘルスチェックを持つ）。`infra/floci/docker-compose.yml`で`floci/floci:2.1.0`を起動する。
-
-```bash
-make floci-up        # Floci（http://localhost:4566）を起動し、ヘルスチェックが通るまで待つ
-make floci-health    # サービスごとの状態（curl http://localhost:4566/_localstack/health）
-make plan-floci      # 差分を確認する
-make apply-floci     # 適用する（確認プロンプトを省く場合: make apply-floci ARGS=-auto-approve）
-make infra-output    # User Pool ID・Client ID・バケット名などを表示する
-make destroy-floci   # 作成したリソースを削除する
-make floci-down      # Flociを停止する（リソースはボリュームに保持される）
-make floci-down-v    # Flociを停止し、ボリュームごと削除する
-make floci-logs      # Flociのログを追跡表示する
+```
+infra/terraform/
+├── backend.hcl.example   # remote state の設定（bucket 名）。backend.hcl にコピーして使う（コミットしない）
+├── bootstrap/            # state 用 S3 バケット（アカウントに1回・ローカル state）
+├── shared/               # ECR・SES（ドメイン認証）・GitHub OIDC プロバイダー（アカウントに1つ）
+├── modules/environment/  # 1環境分の構成（VPC・ALB・ECS・RDS・CloudFront・Route53・IAM・アラーム）
+└── envs/
+    ├── stg/              # module "environment" を stg のサイズで呼ぶ
+    └── prod/             # 同 prod
 ```
 
-- `plan-floci` / `apply-floci` / `destroy-floci`は、`floci-health`（Flociが起動しているか）と`infra-init`を先に実行する。
-- `infra-init`は`terraform init -reconfigure -backend-config=path=floci.tfstate`。Floci用のstateは`infra/terraform/floci.tfstate`（gitignore対象）に保存され、実AWS用のstateとは混ざらない。
-- ホストに`terraform`があればそれを使い、無ければ`hashicorp/terraform:$(TF_VERSION)`のDockerイメージで実行する。Dockerで実行する場合、Flociへは`http://host.docker.internal:4566`で接続する（Makefileが`aws_endpoint_url`を自動で上書きする）。
-- 認証情報はproviderがFloci用のダミー値（`test` / `test`）を使うので、AWSの認証情報は不要。
-- FlociのComposeプロジェクト名は`<リポジトリのディレクトリ名>-floci`（`FLOCI_PROJECT_NAME`で変更可）。ポート4566は固定のため、Flociを使う複数のプロジェクトを同時には起動できない。
+- state は S3 に置き、S3 ネイティブのロック（`use_lockfile`）で同時実行を防ぐ。
+- ドメイン名や GitHub リポジトリ名などアカウント固有の値は、各ルートの `terraform.tfvars`（`.example` をコピー。コミットしない）に書く。
+- 実 AWS への `plan` / `apply` は誤適用を防ぐため Makefile に用意しておらず、手動で実行する。`make infra-fmt` / `make infra-validate` はクラウドに接続しない。
 
-### Flociの設定（`infra/floci/docker-compose.yml`）
+## 初回構築
 
-| 設定 | 値 | 理由 |
+前提：
+
+- AWS CLI で対象アカウントにログインしている（`aws sso login` など）。
+- Terraform 1.11 以上（DB パスワードを state に残さない write-only 属性を使う）。
+- ドメインの Route53 ホストゾーンが存在する（Route53 で登録したドメインなら自動で作られる。他社で登録した場合はホストゾーンを作り、レジストラの NS を向ける）。
+- 既存の DNS レコード（Google Workspace の MX・SPF など）はそのまま残る。Terraform が追加するのは、Web・API の A/AAAA、証明書の検証、SES の DKIM・MAIL FROM（`mail.<domain>`）のレコード。
+
+### 1. state バケット（bootstrap）
+
+```
+cd infra/terraform/bootstrap
+cp terraform.tfvars.example terraform.tfvars   # project_name を編集
+terraform init && terraform apply
+cd .. && cp backend.hcl.example backend.hcl    # 出力された state_bucket を記入
+```
+
+### 2. 共有リソース（shared）
+
+```
+cd infra/terraform/shared
+cp terraform.tfvars.example terraform.tfvars   # domain_name などを編集
+terraform init -backend-config=../backend.hcl
+terraform apply
+```
+
+DMARC を Google Workspace 側で設定済みでない場合は、`dmarc_record` を指定すると作成される。
+
+### 3. SES の本番利用申請
+
+作成直後の SES は「サンドボックス」で、認証済みのアドレス（このドメインのアドレス）にしか送れない。自動返信は任意のアドレスに送るため、AWS コンソールの SES →「アカウントダッシュボード」から**本番アクセスをリクエスト**する（用途：Web サイトのお問い合わせへの受付通知、想定通数、バウンス・苦情の対処方法を記載）。通常1日程度で承認される。
+
+### 4. 最初のイメージを ECR に push
+
+環境の作成にはイメージが必要なため、一度だけ手元から push する（以降は GitHub Actions が行う）。
+
+```
+REPO=$(cd infra/terraform/shared && terraform output -raw ecr_repository_url)
+TAG=$(git rev-parse HEAD)
+aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%%/*}"
+docker build --platform linux/amd64 --target prod -t "$REPO:$TAG" services/backend
+docker push "$REPO:$TAG"
+```
+
+### 5. 環境（stg → prod）
+
+```
+cd infra/terraform/envs/stg
+cp terraform.tfvars.example terraform.tfvars   # api_image_tag に手順4の TAG を記入
+terraform init -backend-config=../../backend.hcl
+terraform apply
+```
+
+続けて、アプリの秘密値を設定し、API を再起動する（初期値のままだと活動記録が取得できない）。
+
+```
+aws secretsmanager put-secret-value \
+  --secret-id "$(terraform output -raw app_secret_name)" \
+  --secret-string '{"MICROCMS_API_KEY":"<APIキー>","TURNSTILE_SECRET_KEY":"disabled"}'
+aws ecs update-service --cluster <project>-stg --service <project>-stg-api --force-new-deployment
+```
+
+`TURNSTILE_SECRET_KEY` は Turnstile を使う場合にシークレットキーを入れる（`disabled` のままなら検証しない）。値はシェルの履歴に残るため、気になる場合はコンソールから設定する。
+
+prod も同じ手順で `envs/prod` に適用する。
+
+### 6. GitHub の設定
+
+1. リポジトリの Settings → Environments で `stg` と `prod` を作る。`prod` には **Required reviewers** を設定する（承認なしに本番へデプロイできないようにする）。
+2. 各 Environment に、`terraform output github_environment_variables` の値を **Variables** として登録する。GitHub CLI なら次でまとめて登録できる。
+
+   ```
+   cd infra/terraform/envs/stg
+   terraform output -json github_environment_variables \
+     | jq -r 'to_entries[] | "\(.key)=\(.value)"' \
+     | while IFS='=' read -r k v; do gh variable set "$k" --env stg --body "$v"; done
+   ```
+
+3. Turnstile を使う場合は、`VITE_TURNSTILE_SITE_KEY`（サイトキー。公開してよい値）も各 Environment の Variables に登録する。
+
+## デプロイ（`.github/workflows/deploy.yml`）
+
+| トリガー | 動作 |
+| --- | --- |
+| main への push で CI が成功 | stg へ自動デプロイ |
+| Actions →「Deploy」→「Run workflow」で `prod` を選択 | 承認後に prod へデプロイ |
+
+1回のデプロイで行うこと：
+
+1. コミット SHA をタグにした API イメージを用意する（stg：無ければビルドして push / prod：stg でビルド済みのものを使う。無ければ失敗）。
+2. タスク定義の最新リビジョンを元に、イメージだけ差し替えた新リビジョンを登録する。
+3. そのリビジョンで一度だけタスクを起動し、`alembic upgrade head` を実行する。失敗したらここで中止する（サービスは旧バージョンのまま）。
+4. ECS サービスをローリング更新する。新しいタスクがヘルスチェックに通らない場合は、ECS のサーキットブレーカーが前のリビジョンへ自動で戻す。
+5. Web をビルドして S3 にアップロードし、CloudFront の `index.html` のキャッシュを無効化する。
+
+マイグレーションは、旧バージョンの API が動いている状態で先に適用される。列の削除・名前変更など旧コードと互換性のない変更は、「追加 → コード切り替え → 削除」のように複数回のデプロイに分ける。
+
+### ロールバック
+
+Actions →「Deploy」→「Run workflow」で、戻したいコミットの SHA を `ref` に指定して実行する（イメージは ECR に直近50件残っている）。DB マイグレーションは自動では戻らないため、必要なら `alembic downgrade` を別途実行する。
+
+## 日々の運用
+
+### インフラの変更
+
+```
+cd infra/terraform/envs/stg
+terraform plan     # 差分を確認してから
+terraform apply
+```
+
+タスク定義の環境変数・秘密値の参照・CPU/メモリを変えた場合、Terraform は新しいリビジョンを登録するだけでサービスには反映しない（タスク定義はデプロイの管理下）。次回のデプロイで反映されるので、すぐに反映したいときは Deploy ワークフローを実行する。
+
+### 秘密値の変更
+
+`aws secretsmanager put-secret-value` で更新し、`aws ecs update-service ... --force-new-deployment` でタスクを入れ替える（値はタスク起動時に読み込まれる）。
+
+DB パスワードを入れ替える場合は、`envs/<env>/main.tf` の module に `db_password_version = 2` のように値を上げて apply し、その後タスクを入れ替える。
+
+### コンテナ・DB の調査
+
+ECS Exec で稼働中のコンテナに入れる（Session Manager プラグインが必要）。
+
+```
+aws ecs execute-command --cluster <project>-stg --task <タスクID> --container api --interactive --command "sh"
+```
+
+DB はプライベートサブネットにあり外から直接は接続できない。調査はコンテナ内から `python` / `alembic` で行う。
+
+### ログ
+
+- API：CloudWatch Logs の `/ecs/<project>-<env>/api`
+- RDS：`/aws/rds/instance/<project>-<env>/postgresql`（1秒以上のクエリ）
+
+### アラーム
+
+`alarm_email` を指定すると、SNS から確認メールが届く（リンクを開くまで通知されない）。
+
+## 費用の目安（東京リージョン・月額・概算）
+
+| リソース | stg | prod |
 | --- | --- | --- |
-| `image` | `floci/floci:2.1.0` | 再現性のため固定。更新時はリリースノートを確認する |
-| `FLOCI_DEFAULT_REGION` | `${FLOCI_DEFAULT_REGION:-ap-northeast-1}` | `envs/floci.tfvars`の`aws_region`と揃える |
-| `FLOCI_STORAGE_MODE` | `persistent` | `docker compose down`してもリソースを保持する |
-| `FLOCI_STORAGE_PERSISTENT_PATH` | `/app/data`（名前付きボリューム`floci_data`） | 公式ドキュメントの推奨パス |
-| ヘルスチェック | イメージ同梱の`healthcheck.sh` | `make floci-up`は`--wait`でhealthyになるまで待つ |
-| Dockerソケット | マウントしない | Lambda / RDSなどコンテナを起動するサービスを使わないため不要 |
+| ALB | 約 $20 | 約 $20 |
+| ECS Fargate（0.25vCPU / 0.5GB） | 約 $10（1タスク） | 約 $20（2タスク） |
+| RDS db.t4g.micro + 20GB | 約 $18 | 約 $18（マルチAZで約2倍） |
+| パブリック IPv4（タスク・ALB） | 約 $10 | 約 $15 |
+| その他（CloudFront・S3・Route53・Secrets Manager・SES・CloudWatch） | 数ドル | 数ドル |
 
-### Flociと実AWSの差分の扱い
+NAT Gateway（約 $45/月）を使わない分を、タスクをパブリックサブネットに置くことで削っている。
 
-本番向けの定義を弱めないことを優先し、Floci向けの切り替えは`providers.tf`と`local.is_floci`に閉じ込めている。
+## まだ入れていないもの（必要になったら追加する）
 
-| 項目 | 実AWS | Floci | 実装 |
-| --- | --- | --- | --- |
-| エンドポイント | AWS既定 | `aws_endpoint_url` | `providers.tf`の`dynamic "endpoints"`（cognitoidp / dynamodb / s3 / sts） |
-| 認証情報・検証 | 標準の認証チェーン | ダミー値、認証情報・リージョン・アカウントIDの検証をskip | `providers.tf`の`skip_*` |
-| S3のアドレス形式 | 仮想ホスト形式 | パス形式 | `s3_use_path_style` |
-| 削除保護（Cognito / DynamoDB） | 変数どおり（既定: 有効） | 常に無効（作り直しやすさのため） | `!local.is_floci && var.xxx_deletion_protection` |
-| `s3_force_destroy` / PITR | 既定: `false` / `true` | `envs/floci.tfvars`で`true` / `false` | tfvars |
-| パスワードポリシーの記号必須 | `true` | Flociは`false`を保存しないため、`true`に統一して差分が出ないようにしている | `auth.tf` |
-
-Floci 2.1.0で `plan → apply → plan（No changes）→ Floci再起動後のplan（No changes。永続化の確認）→ PITR切り替え → destroy` が通ることを確認している。Flociのバージョンを上げたときは同じ流れで確認する。Flociの各サービスの対応範囲は公式ドキュメント（https://floci.io/floci/services/）を参照。
-
-## 実AWSへ適用する
-
-Makefileには実AWS向けのapplyターゲットを用意していない（Floci向けとの取り違えを防ぐため）。以下を手動で実行する。
-
-```bash
-cd infra/terraform
-
-# 1. 変数ファイルを作る（*.tfvars はgitignore対象。秘密値は書かない）
-cp envs/aws.tfvars.example envs/dev.tfvars
-#    project_name / environment / aws_region などを編集する
-
-# 2. 認証（例: IAM Identity Center）
-export AWS_PROFILE=<プロファイル名>
-aws sso login
-
-# 3. 初期化（Floci用とは別のstateを使う）
-terraform init -reconfigure -backend-config=path=dev.tfstate
-
-# 4. 確認して適用
-terraform plan -var-file=envs/dev.tfvars
-terraform apply -var-file=envs/dev.tfvars
-terraform output
-```
-
-- `infra/terraform`ではFloci用と実AWS用で`terraform init -reconfigure`の`path`を切り替えるため、Floci操作（`make plan-floci`等）の後に実AWSを操作するときは必ず`init`をやり直す。
-- チームで運用する実AWS環境では、ローカルstateではなくS3 backend（stateロック付き）を使う。`versions.tf`の`backend "local" {}`を次のように置き換え、`-backend-config`でバケット等を渡す。
-
-  ```hcl
-  backend "s3" {}
-  ```
-
-  ```bash
-  terraform init -reconfigure \
-    -backend-config="bucket=<stateを置くバケット>" \
-    -backend-config="key=<project_name>/<environment>.tfstate" \
-    -backend-config="region=ap-northeast-1" \
-    -backend-config="use_lockfile=true"
-  ```
-
-  この場合、Flociでも同じbackend種別が必要になるため、Floci用のinitもS3 backend（Floci上のバケット）に合わせて変更する。
-- 本番運用ではCognitoのメール送信を`COGNITO_DEFAULT`（送信数に上限あり）からSESへ切り替える（`auth.tf`の`email_configuration`）。
-- `deletion_protection`が有効なリソースを削除するときは、先に変数で無効化してapplyする。
-
-## 検証（CI）
-
-```bash
-make infra-fmt       # terraform fmt -recursive
-make infra-validate  # fmt -check → init -backend=false → validate
-```
-
-CIの`Terraform`ジョブは`make infra-validate`を実行する（クラウドへの接続・認証情報は不要）。providerのバージョンは`infra/terraform/.terraform.lock.hcl`で固定している（linux / darwin / windowsのハッシュを記録済み）。providerを更新したら次でロックファイルを更新してコミットする。
-
-```bash
-cd infra/terraform
-terraform init -upgrade -backend=false
-terraform providers lock -platform=linux_amd64 -platform=linux_arm64 -platform=darwin_amd64 -platform=darwin_arm64 -platform=windows_amd64
-```
+- **ALB・CloudFront のアクセスログ**：S3 にログ用バケットを作って有効にする。
+- **AWS WAF**：フォームへの大量送信などが問題になったら、CloudFront / ALB に付ける。
+- **VPC フローログ・GuardDuty・Security Hub**：組織のセキュリティ基準に合わせて有効にする。
+- **Terraform の CI 実行**：今は人が `plan` / `apply` する。PR で `plan` を自動実行する場合は、読み取り専用のロールを別に作る。

@@ -10,8 +10,7 @@
 | `apps/mobile` | モバイル（Expo SDK 57 + React Native / Expo Router。WebViewを使わないネイティブUI） |
 | `packages/api-client` | Web / モバイル共通のAPIクライアント（orvalでOpenAPIから自動生成 + TanStack Query） |
 | `services/backend` | バックエンド（FastAPI + Python 3.12 / SQLAlchemy 2.0 + Alembic / PostgreSQL 16） |
-| `infra/terraform` | AWS基盤（Cognito / S3 / DynamoDB）。実AWSとFlociで同じコードを使う |
-| `infra/floci` | ローカルでAWSを再現するFloci（AWS互換エミュレータ）のDocker Compose |
+| `infra/terraform` | AWS基盤（ECS・RDS・S3 + CloudFront・SES・Route53）。stg / prod の2環境 |
 
 ## 起動方法
 
@@ -33,18 +32,9 @@ make dev-mobile  # モバイル（Expo）の開発サーバーをホスト上で
 - バックエンドAPI: http://localhost:8000 （Swagger UI: http://localhost:8000/docs）
 - PostgreSQL: localhost:5432
 
-### AWS互換開発（Floci + Terraform）
+### 本番・ステージング（AWS）
 
-```bash
-make floci-up      # Floci（http://localhost:4566）を起動する
-make plan-floci    # infra/terraform をFlociに対してplanする
-make apply-floci   # Flociへapplyする（Cognito / S3 / DynamoDB）
-make infra-output  # 作成したUser Pool ID・バケット名などを表示する
-make destroy-floci # Flociから削除する
-make floci-down    # Flociを停止する
-```
-
-ホストに`terraform`が無くても、Makefileが公式Dockerイメージで実行する。実AWSへの適用手順は [docs/infrastructure.md](./docs/infrastructure.md) を参照。
+main にマージすると GitHub Actions が stg へ自動デプロイし、prod へは承認付きの手動実行でデプロイする。インフラの構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) を参照。
 
 他のコマンド（テスト・Lint・マイグレーションなど）は `make help` で一覧表示できる。
 
@@ -55,7 +45,8 @@ make floci-down    # Flociを停止する
 - [docs/getting-started.md](./docs/getting-started.md) — セットアップ・起動・環境変数の詳細
 - [docs/architecture.md](./docs/architecture.md) — ディレクトリ構成・レイヤー分離の設計方針
 - [docs/development.md](./docs/development.md) — 新機能の追加手順、API自動生成、マイグレーション、テスト、Lint/Format、CI、コメント規約
-- [docs/infrastructure.md](./docs/infrastructure.md) — Terraform / Flociの使い方と実AWSへの適用手順
+- [docs/infrastructure.md](./docs/infrastructure.md) — AWSの構成（Terraform）・初回構築・デプロイ・運用
+- [docs/karynos-site.md](./docs/karynos-site.md) — microCMS・SES（お問い合わせメール）・Turnstileの設定
 - [docs/new-project.md](./docs/new-project.md) — このリポジトリをベースに新しいプロジェクトを作る手順
 
 AIエージェント向けの規約は [`CLAUDE.md`](./CLAUDE.md) を参照。

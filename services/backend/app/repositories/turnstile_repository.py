@@ -32,6 +32,7 @@ class TurnstileRepository:
     def enabled(self) -> bool:
         """
         シークレットキーが設定され、検証が有効かどうか。
+        本番のSecrets Managerの初期値 "disabled" は未設定として扱う。
 
         Params:
             -
@@ -39,7 +40,7 @@ class TurnstileRepository:
         Returns:
             - bool: 検証が有効ならTrue
         """
-        return bool(self.secret_key)
+        return self.secret_key not in ("", "disabled")
 
     def verify(self, token: str, remote_ip: str | None) -> bool:
         """

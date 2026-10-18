@@ -136,9 +136,11 @@ pnpm build   # web: tsc -b && vite build / mobile: expo export（iOS・Android�
 | ジョブ | 内容 |
 | --- | --- |
 | JS | Node.js 22 + pnpm（`packageManager`）+ uv をセットアップ → `uv run python -m app.export_openapi` → `pnpm install --frozen-lockfile` → `pnpm generate:api` → `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` / `pnpm build` |
-| Backend | `uv sync --locked` → `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest` |
-| Docker Compose | `make setup` → `docker compose config`（通常開発） / `docker compose -f infra/floci/docker-compose.yml config` |
-| Terraform | Terraform 1.16.5 → `make infra-validate`（クラウドへの接続・認証情報は不要） |
+| Backend | `uv sync --locked` → `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest` → 本番用イメージのビルド（`docker build --target prod`） |
+| Docker Compose | `make setup` → `docker compose config` |
+| Terraform | Terraform 1.16.5 → `make infra-validate`（bootstrap / shared / envs/stg / envs/prod の fmt・validate。クラウドへの接続・認証情報は不要） |
+
+CIとは別に、`.github/workflows/deploy.yml` が AWS へのデプロイを行う（main で CI が成功したら stg、prod は手動実行＋承認）。詳細は [infrastructure.md](./infrastructure.md#デプロイgithubworkflowsdeployyml) を参照。
 
 CIで落ちないよう、コミット前に上記と同じコマンドをローカルで実行する。
 
@@ -201,7 +203,7 @@ def something():
 | `services/backend/.env` | `CORS_ORIGINS` | 許可するWebのオリジン（カンマ区切りで複数指定可） |
 | `apps/web/.env` | `VITE_API_BASE_URL` | WebからみたバックエンドAPIのURL |
 | `apps/mobile/.env` | `EXPO_PUBLIC_API_BASE_URL` | モバイルからみたバックエンドAPIのURL（iOSシミュレータ: `http://localhost:8000`、Androidエミュレータ: `http://10.0.2.2:8000`、実機: LAN内IP） |
-| シェル（任意） | `FLOCI_DEFAULT_REGION` | Flociの既定リージョン（既定: `ap-northeast-1`。`envs/floci.tfvars`の`aws_region`と揃える） |
+| `services/backend/.env` | `MICROCMS_*`, `MAIL_*`, `CONTACT_NOTIFY_TO`, `TURNSTILE_SECRET_KEY` など | 外部サービスの設定（[karynos-site.md](./karynos-site.md)）。本番ではECSのタスク定義・Secrets Managerから渡される |
 
 各`.env`は`.env.example`をコピーして作成し、gitにはコミットしない。`EXPO_PUBLIC_`で始まる変数はアプリのバンドルに埋め込まれるため、秘密値を入れない。
 
@@ -210,7 +212,4 @@ Makefileの変数（`make <target> VAR=...`で上書き可）:
 | 変数 | 既定値 | 説明 |
 | --- | --- | --- |
 | `TF_VERSION` | `1.16.5` | ホストにterraformが無い場合に使う`hashicorp/terraform`イメージのタグ |
-| `FLOCI_URL` | `http://localhost:4566` | ホストから見たFlociのURL |
-| `FLOCI_PROJECT_NAME` | `<ディレクトリ名>-floci` | FlociのComposeプロジェクト名 |
-| `ARGS` | （空） | `plan-floci` / `apply-floci` / `destroy-floci` で terraform に追加で渡す引数 |
 | `MESSAGE` | （空） | `makemigration` のマイグレーション名 |

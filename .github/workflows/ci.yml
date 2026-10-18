@@ -94,6 +94,10 @@ jobs:
             - name: Test
               run: uv run pytest
 
+            # 本番用イメージ（ECSで動かすもの）がビルドできることを確認する
+            - name: Build production image
+              run: docker build --target prod -t backend:ci .
+
     compose:
         name: Docker Compose config
         runs-on: ubuntu-latest
@@ -106,9 +110,6 @@ jobs:
 
             - name: Validate app compose (PostgreSQL + FastAPI + Web)
               run: docker compose config --quiet
-
-            - name: Validate Floci compose
-              run: docker compose -f infra/floci/docker-compose.yml config --quiet
 
     terraform:
         name: Terraform (fmt / validate)

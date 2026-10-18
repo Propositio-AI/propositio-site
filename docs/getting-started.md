@@ -1,15 +1,10 @@
 # はじめに（セットアップ・起動方法）
 
-このリポジトリの開発環境は、目的の異なる2つに分かれている。互いに独立しているので、必要な方だけ起動すればよい。
-
-| 開発環境 | 起動するもの | 定義ファイル | 用途 |
-| --- | --- | --- | --- |
-| **通常開発** | PostgreSQL / FastAPI / Web（+ ホスト上のExpo） | `docker-compose.yml` | アプリの日常的な開発 |
-| **AWS互換開発** | Floci（AWS互換エミュレータ） + Terraform | `infra/floci/docker-compose.yml` / `infra/terraform/` | Cognito / S3 / DynamoDBなどAWS基盤の確認 |
+ローカルの開発環境は `docker-compose.yml` で PostgreSQL / FastAPI / Web を起動する（モバイルはホスト上のExpo）。本番・ステージング（AWS）の構成とデプロイは [infrastructure.md](./infrastructure.md) を参照。
 
 ## 必要なもの
 
-- Docker / Docker Compose（通常開発のdb / backend / web、Floci、Terraform（ホストに無い場合）はDocker上で動く）
+- Docker / Docker Compose（db / backend / web と、ホストに無い場合のTerraformはDocker上で動く）
 - Node.js 22.18以上 + pnpm 12（`corepack enable`で`package.json`の`packageManager`に従ったpnpmが使える） — モバイル開発・Lint・型チェック・テストをホストで実行するため
 - Python 3.12 + uv — backendのコマンドをホストで直接実行する場合のみ
 - `make`（任意。あるとコマンドが短縮できる）
@@ -122,22 +117,6 @@ docker compose down       # コンテナを停止（DBデータは保持され�
 docker compose down -v    # DBデータも含めて完全に削除する場合
 ```
 
-## AWS互換開発（Floci + Terraform）
-
-`infra/terraform`のAWS基盤（Cognito / S3 / DynamoDB）を、ローカルのFloci上に作って確認する。通常開発のコンテナ（db / backend / web）は起動していなくてよく、backendもFlociには接続しない（アプリからAWSを使う実装を追加するときの土台）。
-
-```bash
-make floci-up        # Flociを起動し、ヘルスチェックが通るまで待つ
-make floci-health    # = curl http://localhost:4566/_localstack/health
-make plan-floci      # 差分を確認する
-make apply-floci     # 適用する（確認プロンプトを省く場合: make apply-floci ARGS=-auto-approve）
-make infra-output    # User Pool ID・Client ID・バケット名・テーブル名を表示する
-make destroy-floci   # 作成したリソースを削除する
-make floci-down      # Flociを停止する（データはボリュームに保持。完全に消すなら make floci-down-v）
-```
-
-詳細（変数・Floci固有の差分・実AWSへの適用手順）は [infrastructure.md](./infrastructure.md) を参照。
-
 ## よくある操作
 
 | やりたいこと | コマンド | Makefile |
@@ -157,7 +136,6 @@ make floci-down      # Flociを停止する（データはボリュームに保�
 | backendコンテナに入る | `docker compose exec backend bash` | `make shell-backend` |
 | webコンテナに入る | `docker compose exec web sh` | `make shell-web` |
 | psqlで接続 | `docker compose exec db psql -U app -d app` | `make shell-db` |
-| Flociのログ | `docker compose -p <プロジェクト名>-floci -f infra/floci/docker-compose.yml logs -f` | `make floci-logs` |
 
 さらに詳しい開発の進め方（新機能の追加手順、API自動生成、マイグレーション、テストなど）は [development.md](./development.md) を参照。
 リポジトリの構成・設計方針は [architecture.md](./architecture.md) を参照。

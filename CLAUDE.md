@@ -1,6 +1,6 @@
 # propositio-base
 
-全プロジェクトのベースとなるリポジトリ。pnpm workspace + uvのモノレポで、Web（React + Vite）・モバイル（Expo / React Native）・バックエンド（FastAPI + PostgreSQL）と、AWS基盤（Terraform。ローカルではFlociで再現）をまとめて持つ。
+全プロジェクトのベースとなるリポジトリ。pnpm workspace + uvのモノレポで、Web（React + Vite）・モバイル（Expo / React Native）・バックエンド（FastAPI + PostgreSQL）と、AWS基盤（Terraform。ECS / RDS / CloudFront / SES / Route53）をまとめて持つ。
 
 人間向けの使用方法・開発ガイドは [`docs/`](./docs) にまとまっている（[getting-started.md](./docs/getting-started.md)、[architecture.md](./docs/architecture.md)、[development.md](./docs/development.md)、[infrastructure.md](./docs/infrastructure.md)、[new-project.md](./docs/new-project.md)、[karynos-site.md](./docs/karynos-site.md)）。このファイルはAIエージェント向けの規約サマリ。
 
@@ -21,7 +21,8 @@
 | バックエンドLint/Format | ruff |
 | バックエンドテスト | pytest |
 | DB | PostgreSQL 16 |
-| インフラ（`infra/`） | Terraform（AWS provider） / Cognito・S3・DynamoDB。ローカルはFloci（AWS互換エミュレータ） |
+| インフラ（`infra/`） | Terraform（AWS provider） / ECS Fargate + ALB（API）・S3 + CloudFront（Web）・RDS PostgreSQL・SES・Route53 |
+| デプロイ | GitHub Actions（`.github/workflows/deploy.yml`、OIDC）。mainで stg に自動、prod は手動＋承認 |
 | CI | GitHub Actions（`.github/workflows/ci.yml`） |
 | パッケージ管理 | pnpm workspace（TS） / uv（Python） |
 
@@ -73,10 +74,11 @@ propositio-base/
 │       ├── alembic/                      # マイグレーション
 │       ├── tests/                        # pytest
 │       └── .env.example                  # DATABASE_URL / CORS_ORIGINS
-├── infra/
-│   ├── terraform/                        # AWS基盤（実AWS / Floci共通のコード）
-│   │   └── envs/                         # floci.tfvars（秘密なし） / aws.tfvars.example
-│   └── floci/docker-compose.yml          # AWS互換開発用のFloci（通常開発とは独立）
+├── infra/terraform/                      # AWS基盤（docs/infrastructure.md）
+│   ├── bootstrap/                        # stateバケット（アカウントに1回）
+│   ├── shared/                           # ECR・SES・GitHub OIDC（アカウントに1つ）
+│   ├── modules/environment/              # 1環境分（VPC・ALB・ECS・RDS・CloudFront・Route53・IAM）
+│   └── envs/stg, envs/prod/              # 環境ごとのルート（サイズの違いだけを書く）
 └── docs/
 ```
 
@@ -466,20 +468,14 @@ make dev-mobile  # Expo開発サーバーをホストで起動（シミュレー
 - PostgreSQL: localhost:5432
 - モバイル: Expo開発サーバー（`make dev-mobile`の表示に従いシミュレータ/Expo Goで開く）
 
-### AWS互換開発（Floci + Terraform）
+### 本番・ステージング（AWS）
 
-```
-make floci-up                         # Floci（:4566）を起動（infra/floci/docker-compose.yml）
-make plan-floci                       # infra/terraformをFlociに対してplan
-make apply-floci                      # Flociへapply（Cognito / S3 / DynamoDB）
-make infra-output                     # User Pool ID・バケット名などを表示
-make destroy-floci                    # Flociから削除
-make floci-down                       # Flociを停止（データは保持。完全削除は floci-down-v）
-```
-
-- ホストに`terraform`が無い場合、Makefileは公式Dockerイメージ（`hashicorp/terraform`）で実行する。
-- 実AWSへの適用はMakefileに用意していない（誤適用防止）。`infra/terraform/envs/aws.tfvars.example`をコピーして手動で行う（[docs/infrastructure.md](./docs/infrastructure.md)参照）。
-- Terraformのリソース定義は実AWS / Floci共通。Floci向けの差分は`providers.tf`（エンドポイント上書き等）と`local.is_floci`による最小限の切り替えに閉じ込め、本番向け定義を弱めない。秘密値はtfvarsに書かずコミットしない。
+- 構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) にまとめている。アプリのデプロイは GitHub Actions が行い、手元から行わない。
+- 実AWSへの`plan` / `apply`はMakefileに用意していない（誤適用防止）。各ルート（`infra/terraform/shared`・`envs/<env>`）で手動で行う。ホストに`terraform`が無い場合、`make infra-fmt` / `make infra-validate`は公式Dockerイメージで実行する。
+- 環境ごとの差（タスク数・DBの保護設定など）は`envs/<env>/main.tf`のmodule引数だけに書き、リソース定義は`modules/environment`に1つだけ持つ。stg用に本番向けの定義を弱めない。
+- 秘密値をtfvars・Terraformのコードに書かない。DBパスワードはephemeral + write-only属性で生成してstateに残さず、アプリの秘密値はSecrets Managerに運用者が設定する。
+- 本番のAPIコンテナは`services/backend/Dockerfile`の`prod`ターゲット。DB接続情報は`DB_HOST`等の個別の環境変数で渡され、`app/core/config.py`がDATABASE_URLを組み立てる。
+- DBマイグレーションはデプロイ時に旧バージョンのAPIが動いたまま先に適用される。旧コードと互換性のない変更（列の削除・名前変更）は複数回のデプロイに分ける。
 
 ## 新しいエンティティ追加の初期データ
 
@@ -516,8 +512,11 @@ pnpm --filter @repo/api-client test
 
 - JS: OpenAPI書き出し → `pnpm generate:api` → `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` / `pnpm build`
 - backend: `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest`
-- compose: `docker compose config`（通常開発・Floci）
-- Terraform: `make infra-validate`
+- backend: 本番用イメージのビルド（`docker build --target prod`）
+- compose: `docker compose config`
+- Terraform: `make infra-validate`（全ルートの fmt / validate）
+
+`.github/workflows/deploy.yml` は main で CI が成功すると stg へデプロイし、prod へは手動実行（GitHub Environment の承認）でデプロイする。
 
 ## 不明点があれば
 

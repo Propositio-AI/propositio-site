@@ -1,5 +1,4 @@
 # 通常開発用（PostgreSQL + FastAPI + Web）。起動: make up
-# AWS互換開発（Floci + Terraform）は infra/floci/docker-compose.yml で別に起動する（make floci-up）。
 services:
     db:
         image: postgres:16-alpine
@@ -20,6 +19,7 @@ services:
     backend:
         build:
             context: ./services/backend
+            target: dev
         env_file:
             - ./services/backend/.env
         environment:

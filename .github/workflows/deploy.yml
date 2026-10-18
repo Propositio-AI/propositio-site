@@ -1,0 +1,196 @@
+name: Deploy
+
+# main で CI が成功したら stg へ自動デプロイする。
+# prod へは Actions 画面から手動で実行する（GitHub Environment「prod」の承認者による承認が必要）。
+# prod は stg で検証済みのイメージ（同じコミットSHAのタグ）を昇格させるだけで、ビルドし直さない。
+on:
+    workflow_run:
+        workflows: [CI]
+        types: [completed]
+        branches: [main]
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: デプロイ先
+                type: choice
+                options: [stg, prod]
+                required: true
+            ref:
+                description: デプロイするコミット（SHA）。空なら選択したブランチの先頭
+                required: false
+
+permissions:
+    contents: read
+    id-token: write # GitHub OIDC で AWS のデプロイロールを引き受ける
+
+concurrency:
+    # 同じ環境へのデプロイは順番に実行する（途中で取り消さない）
+    group: deploy-${{ inputs.environment || 'stg' }}
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        # 自動デプロイは main への push で CI が成功したときだけ（PR の CI では動かさない）
+        if: >-
+            github.event_name == 'workflow_dispatch' ||
+            (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+        name: Deploy (${{ inputs.environment || 'stg' }})
+        runs-on: ubuntu-latest
+        timeout-minutes: 40
+        environment:
+            name: ${{ inputs.environment || 'stg' }}
+            url: ${{ vars.WEB_URL }}
+        env:
+            DEPLOY_ENV: ${{ inputs.environment || 'stg' }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+            ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+            ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+            ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+            ECS_TASK_FAMILY: ${{ vars.ECS_TASK_FAMILY }}
+            ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref || github.event.workflow_run.head_sha || github.sha }}
+
+            - name: Resolve commit
+              run: echo "SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+            - uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+                  aws-region: ${{ vars.AWS_REGION }}
+
+            - id: ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Check API image
+              id: image
+              run: |
+                  IMAGE="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${SHA}"
+                  echo "uri=${IMAGE}" >> "$GITHUB_OUTPUT"
+                  if aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$SHA" >/dev/null 2>&1; then
+                    echo "exists=true" >> "$GITHUB_OUTPUT"
+                  elif [ "$DEPLOY_ENV" = "prod" ]; then
+                    echo "::error::イメージ ${SHA} がありません。先に同じコミットを stg へデプロイしてください。"
+                    exit 1
+                  else
+                    echo "exists=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - if: steps.image.outputs.exists == 'false'
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build and push API image
+              if: steps.image.outputs.exists == 'false'
+              uses: docker/build-push-action@v6
+              with:
+                  context: services/backend
+                  target: prod
+                  platforms: linux/amd64
+                  push: true
+                  tags: ${{ steps.image.outputs.uri }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            # Terraform が登録した最新リビジョン（環境変数・秘密値の設定を含む）を元に、イメージだけを差し替える
+            - name: Register task definition
+              run: |
+                  aws ecs describe-task-definition --task-definition "$ECS_TASK_FAMILY" --query taskDefinition > current.json
+                  jq --arg image "${{ steps.image.outputs.uri }}" --arg name "$ECS_CONTAINER_NAME" '
+                    .containerDefinitions |= map(if .name == $name then .image = $image else . end)
+                    | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
+                  ' current.json > next.json
+                  TASK_DEFINITION=$(aws ecs register-task-definition --cli-input-json file://next.json \
+                    --query taskDefinition.taskDefinitionArn --output text)
+                  echo "TASK_DEFINITION=${TASK_DEFINITION}" >> "$GITHUB_ENV"
+                  echo "LOG_GROUP=$(jq -r --arg name "$ECS_CONTAINER_NAME" '.containerDefinitions[] | select(.name == $name) | .logConfiguration.options["awslogs-group"]' next.json)" >> "$GITHUB_ENV"
+
+            # 新しいイメージで一度だけタスクを起動し、DBマイグレーションを実行する（失敗したらデプロイを中止）
+            - name: Run database migration
+              run: |
+                  TASK_ARN=$(aws ecs run-task \
+                    --cluster "$ECS_CLUSTER" \
+                    --task-definition "$TASK_DEFINITION" \
+                    --launch-type FARGATE \
+                    --started-by "github-${GITHUB_RUN_ID}" \
+                    --network-configuration "awsvpcConfiguration={subnets=[${{ vars.ECS_SUBNETS }}],securityGroups=[${{ vars.ECS_SECURITY_GROUP }}],assignPublicIp=ENABLED}" \
+                    --overrides "{\"containerOverrides\":[{\"name\":\"${ECS_CONTAINER_NAME}\",\"command\":[\"alembic\",\"upgrade\",\"head\"]}]}" \
+                    --query 'tasks[0].taskArn' --output text)
+                  echo "Migration task: ${TASK_ARN}"
+                  aws ecs wait tasks-stopped --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN"
+
+                  aws logs get-log-events --log-group-name "$LOG_GROUP" \
+                    --log-stream-name "${ECS_CONTAINER_NAME}/${ECS_CONTAINER_NAME}/${TASK_ARN##*/}" \
+                    --start-from-head --query 'events[].message' --output text || true
+
+                  EXIT_CODE=$(aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
+                    --query 'tasks[0].containers[0].exitCode' --output text)
+                  if [ "$EXIT_CODE" != "0" ]; then
+                    aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks "$TASK_ARN" \
+                      --query 'tasks[0].{stoppedReason: stoppedReason, container: containers[0].reason}'
+                    echo "::error::マイグレーションに失敗しました（exit code: ${EXIT_CODE}）"
+                    exit 1
+                  fi
+
+            # ローリングデプロイ。失敗するとECSのサーキットブレーカーが前のリビジョンへ自動で戻す
+            - name: Deploy API service
+              run: |
+                  aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" \
+                    --task-definition "$TASK_DEFINITION" --query 'service.serviceName' --output text
+                  for _ in $(seq 1 60); do
+                    read -r ROLLOUT TASKDEF <<< "$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+                      --query 'services[0].deployments[?status==`PRIMARY`] | [0].[rolloutState, taskDefinition]' --output text)"
+                    echo "rollout: ${ROLLOUT}"
+                    if [ "$TASKDEF" != "$TASK_DEFINITION" ]; then
+                      echo "::error::デプロイが失敗し、前のリビジョンへロールバックされました"
+                      exit 1
+                    fi
+                    case "$ROLLOUT" in
+                      COMPLETED) exit 0 ;;
+                      FAILED) echo "::error::デプロイに失敗しました"; exit 1 ;;
+                    esac
+                    sleep 15
+                  done
+                  echo "::error::デプロイが15分以内に完了しませんでした"
+                  exit 1
+
+            # ---- Web（S3 + CloudFront） ----
+            - uses: pnpm/action-setup@v6
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - uses: astral-sh/setup-uv@v10.2.0
+              with:
+                  python-version: '3.12'
+                  enable-cache: true
+                  cache-dependency-glob: services/backend/uv.lock
+
+            - name: Build web
+              env:
+                  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+                  VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+              run: |
+                  (cd services/backend && uv sync --locked && uv run python -m app.export_openapi)
+                  pnpm install --frozen-lockfile
+                  pnpm generate:api
+                  pnpm --filter web build
+
+            # ハッシュ付きのassetsは長期キャッシュ、index.htmlは毎回再検証させる。
+            # 古いassetsは、旧index.htmlを開いたままの利用者のために削除しない
+            - name: Upload web
+              env:
+                  WEB_BUCKET: ${{ vars.WEB_BUCKET }}
+              run: |
+                  aws s3 sync apps/web/dist/assets "s3://${WEB_BUCKET}/assets" \
+                    --cache-control "public,max-age=31536000,immutable"
+                  aws s3 sync apps/web/dist "s3://${WEB_BUCKET}" --delete \
+                    --exclude "assets/*" --exclude "index.html" \
+                    --cache-control "public,max-age=3600"
+                  aws s3 cp apps/web/dist/index.html "s3://${WEB_BUCKET}/index.html" \
+                    --cache-control "no-cache"
+                  aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+                    --paths "/index.html" "/" --query 'Invalidation.Id' --output text
