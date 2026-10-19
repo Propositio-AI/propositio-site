@@ -22,9 +22,11 @@ AWS_PERMISSION_SET ?= $(call default,AWS_PERMISSION_SET)
 # コンテナ利用時も ~/.aws を共有するため、SSO設定と短期セッションはホスト側にだけ保存される。
 ifneq ($(shell command -v aws 2>/dev/null),)
 AWS := aws
+AWS_BATCH := aws
 AWS_SSO_LOGIN_FLAGS :=
 else
 AWS := docker run --rm -i $(shell [ -t 0 ] && echo -t) -v "$(HOME)/.aws:/root/.aws" -e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) amazon/aws-cli:$(AWS_CLI_VERSION)
+AWS_BATCH := docker run --rm -i -v "$(HOME)/.aws:/root/.aws" -e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) amazon/aws-cli:$(AWS_CLI_VERSION)
 AWS_SSO_LOGIN_FLAGS := --use-device-code
 endif
 
@@ -41,6 +43,7 @@ endif
 ifneq ($(shell command -v terraform 2>/dev/null),)
 TERRAFORM_ENV := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/envs/$(ENV)
 TERRAFORM_SHARED := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/shared
+TERRAFORM_SHARED_BATCH := $(TERRAFORM_SHARED)
 else
 TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
@@ -49,6 +52,12 @@ TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
 	-w /repo/$(TF_DIR)/envs/$(ENV) hashicorp/terraform:$(TF_VERSION)
 TERRAFORM_SHARED := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
+	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
+	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
+	-e TF_DATA_DIR=/repo/$(TF_DIR)/shared/.terraform \
+	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
+	-w /repo/$(TF_DIR)/shared hashicorp/terraform:$(TF_VERSION)
+TERRAFORM_SHARED_BATCH := docker run --rm -i \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
 	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
 	-e TF_DATA_DIR=/repo/$(TF_DIR)/shared/.terraform \
@@ -68,6 +77,7 @@ endif
 	aws-configure aws-login aws-whoami aws-logout aws-preflight \
 	infra-fmt infra-validate check-shared-aws check-aws-env check-destroy-confirm \
 	shared-init-aws shared-plan-aws shared-apply-aws shared-output-aws \
+	push-api-image \
 	infra-init-aws plan-aws apply-aws output-aws state-backup-aws destroy-plan-aws destroy-apply-aws
 
 help: ## コマンド一覧を表示する
@@ -240,6 +250,22 @@ shared-apply-aws: check-shared-aws ## 確認済みのsite共有リソースplan�
 
 shared-output-aws: shared-init-aws ## site共有リソースのTerraform outputを表示する
 	$(TERRAFORM_SHARED) output
+
+push-api-image: check-shared-aws ## 現在のコミットの本番APIイメージをECRへ登録する
+	@docker info >/dev/null 2>&1 || { echo "Docker Desktopを起動してください。" >&2; exit 2; }
+	@set -eu; \
+		repository="$$($(TERRAFORM_SHARED_BATCH) output -raw ecr_repository_url)"; \
+		tag="$$(git rev-parse HEAD)"; \
+		if $(AWS_BATCH) ecr describe-images --repository-name "$${repository##*/}" --image-ids "imageTag=$$tag" --profile "$(AWS_PROFILE)" --region "$(AWS_REGION)" >/dev/null 2>&1; then \
+			echo "既に登録済みです: $$repository:$$tag"; \
+			exit 0; \
+		fi; \
+		$(AWS_BATCH) ecr get-login-password --profile "$(AWS_PROFILE)" --region "$(AWS_REGION)" \
+			| docker login --username AWS --password-stdin "$${repository%%/*}"; \
+		docker build --platform linux/amd64 --target prod -t "$$repository:$$tag" services/backend; \
+		docker push "$$repository:$$tag"; \
+		echo "API_IMAGE_TAG=$$tag"; \
+		echo "API_IMAGE_URI=$$repository:$$tag"
 
 check-aws-env:
 	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }

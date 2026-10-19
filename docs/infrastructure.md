@@ -126,13 +126,11 @@ SESの本番アクセスはリージョン単位であるため、Terraformと�
 
 環境の作成にはイメージが必要なため、一度だけ手元から push する（以降は GitHub Actions が行う）。
 
+```bash
+make push-api-image
 ```
-REPO=$(cd infra/terraform/shared && terraform output -raw ecr_repository_url)
-TAG=$(git rev-parse HEAD)
-aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%%/*}"
-docker build --platform linux/amd64 --target prod -t "$REPO:$TAG" services/backend
-docker push "$REPO:$TAG"
-```
+
+このコマンドはsharedのTerraform outputからECR URLを取得し、現在のGitコミットSHAをタグにして`services/backend/Dockerfile`の`prod`ターゲットを`linux/amd64`向けにビルド・pushする。同じSHAが既にECRにあれば再pushしない。最後に表示される`API_IMAGE_TAG`を環境別`terraform.tfvars`へ設定する。
 
 ### 5. 環境（stg → prod）
 
