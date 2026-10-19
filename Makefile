@@ -276,7 +276,9 @@ check-destroy-confirm: check-aws-env
 
 infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化する（ENV=stg|prod）
 	@set -eu; \
-	account_id="$$($(AWS) sts get-caller-identity --profile $(AWS_PROFILE) --query Account --output text)"; \
+	account_id="$$($(AWS_BATCH) sts get-caller-identity --profile $(AWS_PROFILE) --query Account --output text)"; \
+	case "$$account_id" in *[!0-9]*|"") echo "AWSアカウントIDを正しく取得できませんでした: $$account_id" >&2; exit 2;; esac; \
+	[ "$${#account_id}" -eq 12 ] || { echo "AWSアカウントIDが12桁ではありません: $$account_id" >&2; exit 2; }; \
 	$(TERRAFORM_ENV) init -input=false -reconfigure \
 		-backend-config="bucket=$(TF_PLATFORM_PROJECT_NAME)-terraform-state-$$account_id" \
 		-backend-config="key=services/$(TF_PLATFORM_SERVICE_NAME)/$(ENV)/terraform.tfstate" \
