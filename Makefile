@@ -40,6 +40,7 @@ endif
 
 ifneq ($(shell command -v terraform 2>/dev/null),)
 TERRAFORM_ENV := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/envs/$(ENV)
+TERRAFORM_SHARED := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/shared
 else
 TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
@@ -47,6 +48,12 @@ TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	-e TF_DATA_DIR=/repo/$(TF_DIR)/envs/$(ENV)/.terraform \
 	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
 	-w /repo/$(TF_DIR)/envs/$(ENV) hashicorp/terraform:$(TF_VERSION)
+TERRAFORM_SHARED := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
+	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
+	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
+	-e TF_DATA_DIR=/repo/$(TF_DIR)/shared/.terraform \
+	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
+	-w /repo/$(TF_DIR)/shared hashicorp/terraform:$(TF_VERSION)
 endif
 
 .PHONY: help config-show config-value setup install up up-d down down-v build restart logs ps \
@@ -59,7 +66,8 @@ endif
 	format format-backend format-js \
 	shell-backend shell-web shell-db \
 	aws-configure aws-login aws-whoami aws-logout aws-preflight \
-	infra-fmt infra-validate check-aws-env check-destroy-confirm \
+	infra-fmt infra-validate check-shared-aws check-aws-env check-destroy-confirm \
+	shared-init-aws shared-plan-aws shared-apply-aws shared-output-aws \
 	infra-init-aws plan-aws apply-aws output-aws state-backup-aws destroy-plan-aws destroy-apply-aws
 
 help: ## コマンド一覧を表示する
@@ -215,6 +223,23 @@ infra-validate: ## Terraformのfmtチェックと、全ルートの構文検証�
 		fi; \
 		$(TERRAFORM) -chdir=$$root validate || exit 1; \
 	done
+
+check-shared-aws:
+	@test -f "$(TF_DIR)/backend.hcl" || { echo "$(TF_DIR)/backend.hcl がありません。backend.hcl.exampleから作成してください。" >&2; exit 2; }
+	@test -f "$(TF_DIR)/shared/terraform.tfvars" || { echo "$(TF_DIR)/shared/terraform.tfvars がありません。terraform.tfvars.exampleから作成してください。" >&2; exit 2; }
+
+shared-init-aws: check-shared-aws ## site共有リソース用S3 backendを初期化する
+	$(TERRAFORM_SHARED) init -input=false -reconfigure -backend-config=../backend.hcl
+
+shared-plan-aws: shared-init-aws ## site共有リソースの変更planを保存する
+	$(TERRAFORM_SHARED) plan -input=false -out=shared.tfplan
+
+shared-apply-aws: check-shared-aws ## 確認済みのsite共有リソースplanを適用する
+	@test -f "$(TF_DIR)/shared/shared.tfplan" || { echo "先に make shared-plan-aws を実行してください。" >&2; exit 2; }
+	$(TERRAFORM_SHARED) apply -input=false shared.tfplan
+
+shared-output-aws: shared-init-aws ## site共有リソースのTerraform outputを表示する
+	$(TERRAFORM_SHARED) output
 
 check-aws-env:
 	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }

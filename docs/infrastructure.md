@@ -60,7 +60,7 @@ infra/terraform/
 - state は S3 に置き、S3 ネイティブのロック（`use_lockfile`）で同時実行を防ぐ。
 - ドメインは`propositio-infra`へのサービス登録時に確定し、siteのshared/stg/prodは共有remote stateの`service_platform_config` から自動取得する。
 - microCMSドメインや初回イメージタグなどサービス固有の値は、各ルートの`terraform.tfvars`（`.example`をコピー。コミットしない）に書く。
-- 環境ごとの実 AWS 変更は`make plan-aws ENV=stg|prod`で保存planを作り、レビュー後に`make apply-aws ENV=stg|prod`で適用する。削除は確認文字列とstateバックアップを必須にした専用ターゲットを使う。`shared`ルートは環境共通なので初回だけ手動適用する。
+- site共有リソースは`make shared-plan-aws`、環境ごとのリソースは`make plan-aws ENV=stg|prod`で保存planを作る。レビュー後、それぞれ`make shared-apply-aws`、`make apply-aws ENV=stg|prod`で確認済みplanだけを適用する。削除は確認文字列とstateバックアップを必須にした専用ターゲットを使う。
 
 ## 初回構築
 
@@ -97,11 +97,12 @@ cp backend.hcl.example backend.hcl
 
 ### 2. 共有リソース（shared）
 
-```
-cd infra/terraform/shared
-cp terraform.tfvars.example terraform.tfvars   # 必要な場合はDMARC・アラーム宛先を編集
-terraform init -backend-config=../backend.hcl
-terraform apply
+```bash
+cp infra/terraform/shared/terraform.tfvars.example infra/terraform/shared/terraform.tfvars
+# 必要な場合はDMARC・アラーム宛先を編集
+make shared-plan-aws
+# 保存されたplanを確認してから適用
+make shared-apply-aws
 ```
 
 DMARC を既存DNSで設定済みでない場合は、`dmarc_record` を指定すると作成される。
