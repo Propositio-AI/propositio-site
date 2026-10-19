@@ -117,9 +117,13 @@ jobs:
         steps:
             - uses: actions/checkout@v7
 
+            - name: Read repository defaults
+              id: defaults
+              run: echo "terraform_version=$(make -s config-value KEY=TERRAFORM_VERSION)" >> "$GITHUB_OUTPUT"
+
             - uses: hashicorp/setup-terraform@v4
               with:
-                  terraform_version: 1.16.5
+                  terraform_version: ${{ steps.defaults.outputs.terraform_version }}
                   terraform_wrapper: false
 
             # fmt -check → init -backend=false → validate（クラウドへの接続・認証情報は不要）

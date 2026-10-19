@@ -1,13 +1,15 @@
 # インフラ（AWS / Terraform）とデプロイ
 
-本番・ステージングは AWS 上で動かす。インフラは `infra/terraform` の Terraform で管理し、アプリのデプロイは GitHub Actions（`.github/workflows/deploy.yml`）が行う。
+本番・ステージングは AWS 上で動かす。サービス固有インフラは`infra/terraform`、全サービス共通のstateバケット・GitHub OIDC・deploy Role・Cognitoは`propositio-infra`が管理し、アプリのデプロイはGitHub Actions（`.github/workflows/deploy.yml`）が行う。
+
+AWS・Terraform・サイト基盤の既定値は`config/defaults.json`だけで管理する。TerraformはこのJSONを直接読み、Makefile・GitHub Actions・補助スクリプトも同じファイルを参照する。環境固有値、秘密値、backend設定はこのファイルへ混在させない。Web・API・追加エイリアスのドメイン名は`propositio-infra/config/defaults.json`の`TF_SERVICES.<service>.domains.<env>`が正本であり、このリポジトリでは再定義しない。
 
 ## 構成
 
 ```
                        Route53（propositio.com）
              ┌──────────────────┴──────────────────┐
-propositio.com / stg.propositio.com   api.propositio.com / api.stg.propositio.com
+propositio.com / www.propositio.com / stg.propositio.com   api.propositio.com / api.stg.propositio.com
              │                                      │
         CloudFront（OAC・セキュリティヘッダー）       ALB（HTTPS・ACM）
              │                                      │  public subnet ×2AZ
@@ -15,40 +17,40 @@ propositio.com / stg.propositio.com   api.propositio.com / api.stg.propositio.co
                                                     │  private subnet ×2AZ
                                                  RDS PostgreSQL 16
 
-   運営の受信・返信：Google Workspace（Gmail）。MX は Google のまま
+   運営の受信・返信：info@propositio.com。既存のMXは変更しない
 ```
 
 | 役割 | サービス | 補足 |
 | --- | --- | --- |
-| Web 配信 | S3 + CloudFront | 非公開バケットを OAC で配信。SPA のルーティングは CloudFront Function で `index.html` に書き換える。HSTS・CSP などのセキュリティヘッダーを付与 |
+| Web 配信 | S3 + CloudFront | 非公開バケットを OAC で配信。`www.propositio.com`は`propositio.com`へ301リダイレクトし、SPA のルーティングは CloudFront Function で`index.html`に書き換える。HSTS・CSP などのセキュリティヘッダーを付与 |
 | API | ECS（Fargate）+ ALB | タスクはパブリックサブネットに置き、パブリック IP で外部 API（microCMS・SES・Turnstile）へ出る。受信はセキュリティグループで ALB からのみ許可（NAT Gateway なし） |
 | DB | RDS PostgreSQL 16 | インターネットへの経路がないプライベートサブネット。TLS 必須、暗号化、自動バックアップ |
-| 秘密値 | Secrets Manager | DB パスワード（Terraform がstateに残さず生成）と、アプリの秘密値（microCMS・Turnstile） |
+| 秘密値 | サービス固有SSM Parameter Store + KMS | `propositio-site`が環境別KMS keyと`alias/karynos-<env>-parameters`を所有し、`/propositio/<env>/propositio-site/`以下へDB・microCMS・Turnstileの値を分離して保存 |
 | メール送信 | SES | DKIM・カスタム MAIL FROM で認証。タスクロールで「決められた送信元アドレスでの送信」だけを許可 |
 | DNS・証明書 | Route53 + ACM | 証明書は DNS 検証で自動発行・自動更新 |
-| CI/CD | GitHub Actions（OIDC） | 長期のアクセスキーを GitHub に置かない |
+| CI/CD | GitHub Actions（OIDC） | OIDC Providerとdeploy Roleは`propositio-infra`が所有。長期Access Keyは置かない |
 | 監視 | CloudWatch Alarms + SNS | API の 5xx・異常タスク、RDS の CPU・空き容量、SES のバウンス率・苦情率 |
 
 ### 環境
 
 | | stg | prod |
 | --- | --- | --- |
-| Web | `stg.<domain>`（`noindex`） | `<domain>` |
+| Web | `stg.<domain>`（`noindex`） | `<domain>`（正規URL）、`www.<domain>`（301転送） |
 | API | `api.stg.<domain>` | `api.<domain>` |
-| API タスク | 1〜2 | 2〜4（2AZに分散） |
+| API タスク | 1〜2 | 1〜2（可用性が必要になったら下限を2へ上げる） |
 | RDS | db.t4g.micro、バックアップ1日、削除保護なし | db.t4g.micro、バックアップ7日、削除保護・最終スナップショットあり |
 | ログ保持 | 30日 | 90日 |
 | デプロイ | main へのマージで自動 | 手動実行＋承認（stg で検証済みのイメージを昇格） |
 
-サイズを変えるときは `envs/<env>/main.tf` を編集する。RDS をマルチAZにする場合は prod の `db_multi_az = true`（費用は約2倍）。
+全環境共通のサイズを変えるときは`config/defaults.json`、stg/prod固有の台数・保持期間・保護設定を変えるときは`envs/<env>/main.tf`を編集する。RDSをマルチAZにする場合は、prodの`db_multi_az`を環境固有値として上書きする（費用は約2倍）。
 
 ## ディレクトリ
 
 ```
 infra/terraform/
 ├── backend.hcl.example   # remote state の設定（bucket 名）。backend.hcl にコピーして使う（コミットしない）
-├── bootstrap/            # state 用 S3 バケット（アカウントに1回・ローカル state）
-├── shared/               # ECR・SES（ドメイン認証）・GitHub OIDC プロバイダー（アカウントに1つ）
+├── bootstrap/            # propositio-infraの共通stateバケットが存在するか確認（作成しない）
+├── shared/               # propositio-site固有のECR・SES（ドメイン認証）
 ├── modules/environment/  # 1環境分の構成（VPC・ALB・ECS・RDS・CloudFront・Route53・IAM・アラーム）
 └── envs/
     ├── stg/              # module "environment" を stg のサイズで呼ぶ
@@ -56,37 +58,53 @@ infra/terraform/
 ```
 
 - state は S3 に置き、S3 ネイティブのロック（`use_lockfile`）で同時実行を防ぐ。
-- ドメイン名や GitHub リポジトリ名などアカウント固有の値は、各ルートの `terraform.tfvars`（`.example` をコピー。コミットしない）に書く。
-- 実 AWS への `plan` / `apply` は誤適用を防ぐため Makefile に用意しておらず、手動で実行する。`make infra-fmt` / `make infra-validate` はクラウドに接続しない。
+- ドメインは`propositio-infra`へのサービス登録時に確定し、siteのshared/stg/prodは共有remote stateの`service_platform_config` から自動取得する。
+- microCMSドメインや初回イメージタグなどサービス固有の値は、各ルートの`terraform.tfvars`（`.example`をコピー。コミットしない）に書く。
+- 環境ごとの実 AWS 変更は`make plan-aws ENV=stg|prod`で保存planを作り、レビュー後に`make apply-aws ENV=stg|prod`で適用する。削除は確認文字列とstateバックアップを必須にした専用ターゲットを使う。`shared`ルートは環境共通なので初回だけ手動適用する。
 
 ## 初回構築
 
 前提：
 
 - AWS CLI で対象アカウントにログインしている（`aws sso login` など）。
+- `propositio-infra`のsharedが適用済みで、`TF_SERVICES.propositio-site`と`service_platform_config`が存在する。siteのTerraformはこのstateを読むため、先にsiteだけを適用できない。
 - Terraform 1.11 以上（DB パスワードを state に残さない write-only 属性を使う）。
 - ドメインの Route53 ホストゾーンが存在する（Route53 で登録したドメインなら自動で作られる。他社で登録した場合はホストゾーンを作り、レジストラの NS を向ける）。
-- 既存の DNS レコード（Google Workspace の MX・SPF など）はそのまま残る。Terraform が追加するのは、Web・API の A/AAAA、証明書の検証、SES の DKIM・MAIL FROM（`mail.<domain>`）のレコード。
+- 既存のメール受信用 DNS レコード（MX・SPF など）はそのまま残る。Terraform が追加するのは、Web・API の A/AAAA、証明書の検証、SES の DKIM・MAIL FROM（`mail.<domain>`）のレコード。
+- 初回prod適用前に、旧ホスティング用の`www.propositio.com CNAME`を削除する。Terraformが同名のCloudFront Alias A/AAAAを作るため、CNAMEとは共存できない。
 
-### 1. state バケット（bootstrap）
+### 1. 共通基盤の出力を取得する
 
+`propositio-infra`で`propositio-site`の接続情報を確認します。
+
+```bash
+make service-config SERVICE=propositio-site
 ```
+
+このリポジトリではstateバケット、GitHub OIDC Provider、deploy Roleを作成しません。接続確認が必要な場合だけ次を実行します。
+
+```bash
 cd infra/terraform/bootstrap
-cp terraform.tfvars.example terraform.tfvars   # project_name を編集
 terraform init && terraform apply
-cd .. && cp backend.hcl.example backend.hcl    # 出力された state_bucket を記入
+```
+
+`infra/terraform/backend.hcl.example`を`backend.hcl`へコピーし、`service_platform_config.state.bucket`を設定します。
+
+```bash
+cd infra/terraform
+cp backend.hcl.example backend.hcl
 ```
 
 ### 2. 共有リソース（shared）
 
 ```
 cd infra/terraform/shared
-cp terraform.tfvars.example terraform.tfvars   # domain_name などを編集
+cp terraform.tfvars.example terraform.tfvars   # 必要な場合はDMARC・アラーム宛先を編集
 terraform init -backend-config=../backend.hcl
 terraform apply
 ```
 
-DMARC を Google Workspace 側で設定済みでない場合は、`dmarc_record` を指定すると作成される。
+DMARC を既存DNSで設定済みでない場合は、`dmarc_record` を指定すると作成される。
 
 ### 3. SES の本番利用申請
 
@@ -95,11 +113,13 @@ DMARC を Google Workspace 側で設定済みでない場合は、`dmarc_record`
 本番のメール経路は次のとおり。
 
 - 送信元：`noreply@propositio.com`（SESで送信）
-- 運営通知先：`info@propositio.com`（Google Workspaceで受信）
+- 運営通知先：`info@propositio.com`
 - 運営通知のReply-To：フォームに入力されたメールアドレス
 - 自動返信のReply-To：`info@propositio.com`
 
 SESの本番アクセスはリージョン単位であるため、Terraformと同じ `ap-northeast-1` で申請する。申請承認後、任意の外部アドレスへの自動返信が可能になる。
+
+動作確認では`aws sesv2 get-email-identity --email-identity propositio.com`の`VerifiedForSendingStatus`とDKIMの`Status`が成功であることを確認する。DNSレコードが存在しても`FAILED`のままなら、Easy DKIMの検証を再開始し、表示された3件のCNAMEをRoute 53へ反映してから再確認する。送信テストは`noreply@propositio.com`から`info@propositio.com`へ行う。
 
 ### 4. 最初のイメージを ECR に push
 
@@ -115,11 +135,12 @@ docker push "$REPO:$TAG"
 
 ### 5. 環境（stg → prod）
 
-```
-cd infra/terraform/envs/stg
-cp terraform.tfvars.example terraform.tfvars   # api_image_tag に手順4の TAG を記入
-terraform init -backend-config=../../backend.hcl
-terraform apply
+```bash
+cp infra/terraform/envs/stg/terraform.tfvars.example infra/terraform/envs/stg/terraform.tfvars
+# terraform.tfvars の api_image_tag に手順4の TAG を記入
+make plan-aws ENV=stg
+# 保存されたplanを確認してから適用
+make apply-aws ENV=stg
 ```
 
 続けて、アプリの秘密値をSSM Parameter Storeへ設定し、APIを再起動する（初期値のままだと活動記録が取得できない）。
@@ -135,7 +156,7 @@ aws ecs update-service --cluster <project>-stg --service <project>-stg-api --for
 
 `TURNSTILE_SECRET_KEY` は Turnstile を使う場合にシークレットキーを入れる（`disabled` のままなら検証しない）。値はシェルの履歴に残るため、気になる場合はコンソールから設定する。
 
-prod も同じ手順で `envs/prod` に適用する。
+prodも`terraform.tfvars`を作り、`make plan-aws ENV=prod`、`make apply-aws ENV=prod`の順で適用する。
 
 ### 6. GitHub の設定
 
@@ -149,7 +170,22 @@ prod も同じ手順で `envs/prod` に適用する。
      | while IFS='=' read -r k v; do gh variable set "$k" --env stg --body "$v"; done
    ```
 
-3. Turnstile を使う場合は、`VITE_TURNSTILE_SITE_KEY`（サイトキー。公開してよい値）も各 Environment の Variables に登録する。
+3. `propositio-infra`の`service_platform_config.github_deploy_role_arn.stg/prod`を、各Environmentの`AWS_DEPLOY_ROLE_ARN`へ登録する。この値はサイトTerraformのoutputには含めない。
+4. Turnstile を使う場合は、`VITE_TURNSTILE_SITE_KEY`（サイトキー。公開してよい値）も各 Environment の Variables に登録する。
+
+## 旧構成から共通基盤への移行
+
+既存のsite専用stateバケット・OIDC Provider・deploy RoleをAWSへ適用済みの場合、いきなり削除しません。
+
+1. すべてのTerraform stateを`terraform state pull`でバックアップする。
+2. AWSに既存GitHub OIDC Providerがある場合は、先に`propositio-infra`のbootstrap stateへimportする。
+3. `propositio-infra`のsharedを適用し、`propositio-site`用deploy Roleを作る。
+4. GitHubの`AWS_DEPLOY_ROLE_ARN`を新Roleへ切り替え、stgデプロイを確認する。
+5. `terraform init -migrate-state`でsiteのshared/stg/prod stateを共通bucketの`services/propositio-site/...`へ移す。
+6. site側Terraformをplanし、OIDC Providerや旧Role以外の意図しない削除がないことを確認する。
+7. 移行完了後に旧Roleと空になった旧stateバケットを別作業で廃止する。
+
+Terraform内の`removed` blockは旧OIDC Providerと旧Roleを削除せずstateから外します。AWS上の削除は、新Roleでのデプロイとstate移行を確認してから行います。
 
 ## デプロイ（`.github/workflows/deploy.yml`）
 
@@ -176,10 +212,10 @@ Actions →「Deploy」→「Run workflow」で、戻したいコミットの SH
 
 ### インフラの変更
 
-```
-cd infra/terraform/envs/stg
-terraform plan     # 差分を確認してから
-terraform apply
+```bash
+make plan-aws ENV=stg
+# 保存されたplanを確認してから
+make apply-aws ENV=stg
 ```
 
 タスク定義の環境変数・秘密値の参照・CPU/メモリを変えた場合、Terraform は新しいリビジョンを登録するだけでサービスには反映しない（タスク定義はデプロイの管理下）。次回のデプロイで反映されるので、すぐに反映したいときは Deploy ワークフローを実行する。
@@ -214,12 +250,14 @@ DB はプライベートサブネットにあり外から直接は接続でき�
 | リソース | stg | prod |
 | --- | --- | --- |
 | ALB | 約 $20 | 約 $20 |
-| ECS Fargate（0.25vCPU / 0.5GB） | 約 $10（1タスク） | 約 $20（2タスク） |
+| ECS Fargate（0.25vCPU / 0.5GB） | 約 $10（1タスク） | 約 $10（1タスク） |
 | RDS db.t4g.micro + 20GB | 約 $18 | 約 $18（マルチAZで約2倍） |
 | パブリック IPv4（タスク・ALB） | 約 $10 | 約 $15 |
 | その他（CloudFront・S3・Route53・Secrets Manager・SES・CloudWatch） | 数ドル | 数ドル |
 
 NAT Gateway（約 $45/月）を使わない分を、タスクをパブリックサブネットに置くことで削っている。
+
+この構成をPropositio AIのECSネットワーク標準とする。通常のECS Serviceとデプロイ時のmigration taskはどちらもTerraform outputのpublic subnetを使い、`ECS_ASSIGN_PUBLIC_IP=ENABLED`で起動する。API Security GroupはALBからのコンテナポート通信だけを許可し、RDSはprivate subnetから外へ出さない。ECSは1 task、RDSはSingle-AZ、Container Insightsは無効から始め、可用性や詳細監視が必要になった時点で増強する。
 
 ## まだ入れていないもの（必要になったら追加する）
 

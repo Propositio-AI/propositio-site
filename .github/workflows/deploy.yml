@@ -114,7 +114,7 @@ jobs:
                     --task-definition "$TASK_DEFINITION" \
                     --launch-type FARGATE \
                     --started-by "github-${GITHUB_RUN_ID}" \
-                    --network-configuration "awsvpcConfiguration={subnets=[${{ vars.ECS_SUBNETS }}],securityGroups=[${{ vars.ECS_SECURITY_GROUP }}],assignPublicIp=ENABLED}" \
+                    --network-configuration "awsvpcConfiguration={subnets=[${{ vars.ECS_SUBNETS }}],securityGroups=[${{ vars.ECS_SECURITY_GROUP }}],assignPublicIp=${{ vars.ECS_ASSIGN_PUBLIC_IP || 'ENABLED' }}}" \
                     --overrides "{\"containerOverrides\":[{\"name\":\"${ECS_CONTAINER_NAME}\",\"command\":[\"alembic\",\"upgrade\",\"head\"]}]}" \
                     --query 'tasks[0].taskArn' --output text)
                   echo "Migration task: ${TASK_ARN}"

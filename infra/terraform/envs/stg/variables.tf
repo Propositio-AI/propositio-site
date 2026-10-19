@@ -1,24 +1,9 @@
 # アカウント・ドメイン固有の値（terraform.tfvars で渡す）。環境ごとのサイズ等は main.tf に書く。
 
-variable "project_name" {
-  description = "shared と同じプロジェクト名。"
-  type        = string
-}
-
 variable "aws_region" {
   description = "AWSリージョン。"
   type        = string
-  default     = "ap-northeast-1"
-}
-
-variable "domain_name" {
-  description = "Route53のホストゾーン名（例: example.com）。"
-  type        = string
-}
-
-variable "github_repository" {
-  description = "デプロイを許可するGitHubリポジトリ（owner/name）。"
-  type        = string
+  default     = null
 }
 
 variable "api_image_tag" {
@@ -32,7 +17,7 @@ variable "microcms_service_domain" {
 }
 
 variable "contact_notify_to" {
-  description = "お問い合わせの通知先（Google Workspaceのアドレス）。"
+  description = "お問い合わせの通知先メールアドレス。"
   type        = string
 }
 
@@ -41,4 +26,10 @@ variable "alarm_email" {
   type        = string
   default     = null
   nullable    = true
+}
+
+variable "destroy_mode" {
+  description = "安全なdestroy planで削除保護とS3保持を解除する内部フラグ。通常はfalse。"
+  type        = bool
+  default     = false
 }

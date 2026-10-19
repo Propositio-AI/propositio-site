@@ -1,15 +1,22 @@
 .DEFAULT_GOAL := help
 
+DEFAULTS_FILE := $(CURDIR)/config/defaults.json
+default = $(shell "$(CURDIR)/scripts/read-default.sh" $(1) "$(DEFAULTS_FILE)")
+
 # --- インフラ（Terraform）用の設定 ---
 TF_DIR := infra/terraform
+TF_PLATFORM_PROJECT_NAME ?= $(call default,TF_PLATFORM_PROJECT_NAME)
+TF_PLATFORM_SERVICE_NAME ?= $(call default,TF_PLATFORM_SERVICE_NAME)
+ENV ?=
 # 検証する Terraform のルート（state を持つ単位）
 TF_ROOTS := bootstrap shared envs/stg envs/prod
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
-TF_VERSION ?= 1.14.3
-AWS_PROFILE ?= propositio
-AWS_REGION ?= ap-northeast-1
-AWS_CLI_VERSION ?= 2.31.29
-AWS_SSO_START_URL ?= https://ssoins-77584660547db882.portal.ap-northeast-1.app.aws
+TF_VERSION ?= $(call default,TERRAFORM_VERSION)
+AWS_PROFILE ?= $(call default,AWS_PROFILE)
+AWS_REGION ?= $(call default,AWS_REGION)
+AWS_CLI_VERSION ?= $(call default,AWS_CLI_VERSION)
+AWS_SSO_START_URL ?= $(call default,AWS_SSO_START_URL)
+AWS_PERMISSION_SET ?= $(call default,AWS_PERMISSION_SET)
 
 # ホストのAWS CLI v2を優先し、無ければ公式コンテナを使う。
 # コンテナ利用時も ~/.aws を共有するため、SSO設定と短期セッションはホスト側にだけ保存される。
@@ -17,7 +24,7 @@ ifneq ($(shell command -v aws 2>/dev/null),)
 AWS := aws
 AWS_SSO_LOGIN_FLAGS :=
 else
-AWS := docker run --rm -it -v "$(HOME)/.aws:/root/.aws" -e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) amazon/aws-cli:$(AWS_CLI_VERSION)
+AWS := docker run --rm -i $(shell [ -t 0 ] && echo -t) -v "$(HOME)/.aws:/root/.aws" -e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) amazon/aws-cli:$(AWS_CLI_VERSION)
 AWS_SSO_LOGIN_FLAGS := --use-device-code
 endif
 
@@ -27,11 +34,22 @@ TERRAFORM := cd "$(CURDIR)/$(TF_DIR)" && terraform
 else
 TERRAFORM := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
-	-v "$(CURDIR)/$(TF_DIR):/workspace" -w /workspace \
+	-v "$(CURDIR):/repo" -w /repo/$(TF_DIR) \
 	hashicorp/terraform:$(TF_VERSION)
 endif
 
-.PHONY: help setup install up up-d down down-v build restart logs ps \
+ifneq ($(shell command -v terraform 2>/dev/null),)
+TERRAFORM_ENV := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/envs/$(ENV)
+else
+TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
+	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
+	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
+	-e TF_DATA_DIR=/repo/$(TF_DIR)/envs/$(ENV)/.terraform \
+	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
+	-w /repo/$(TF_DIR)/envs/$(ENV) hashicorp/terraform:$(TF_VERSION)
+endif
+
+.PHONY: help config-show config-value setup install up up-d down down-v build restart logs ps \
 	dev-mobile \
 	migrate makemigration seed \
 	generate-api \
@@ -40,11 +58,19 @@ endif
 	typecheck \
 	format format-backend format-js \
 	shell-backend shell-web shell-db \
-	aws-configure aws-login aws-whoami aws-logout \
-	infra-fmt infra-validate
+	aws-configure aws-login aws-whoami aws-logout aws-preflight \
+	infra-fmt infra-validate check-aws-env check-destroy-confirm \
+	infra-init-aws plan-aws apply-aws output-aws state-backup-aws destroy-plan-aws destroy-apply-aws
 
 help: ## コマンド一覧を表示する
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
+
+config-show: ## 一元管理している既定値を表示する
+	@cat "$(DEFAULTS_FILE)"
+
+config-value: ## 既定値を1件表示する（例: make config-value KEY=TERRAFORM_VERSION）
+	@test -n "$(KEY)" || { echo "KEYを指定してください。" >&2; exit 1; }
+	@"$(CURDIR)/scripts/read-default.sh" "$(KEY)" "$(DEFAULTS_FILE)"
 
 ## --- 通常開発（PostgreSQL + FastAPI + Web をDockerで起動） ---
 
@@ -149,16 +175,16 @@ shell-web: ## webコンテナ内でshellを開く
 shell-db: ## psqlでDBに接続する
 	docker compose exec db psql -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-app}
 
-## --- AWS SSO（Google Workspace → IAM Identity Center） ---
+## --- AWSログイン（IAM Identity Center） ---
 
 aws-configure: ## 初回のみ：AWS IAM Identity Center用のpropositioプロファイルを作成する
 	@mkdir -p "$(HOME)/.aws"
 	@echo "SSO Start URL: $(AWS_SSO_START_URL)"
 	@echo "SSO Region:    $(AWS_REGION)"
-	@echo "Role:          PowerUserAccess"
+	@echo "Role:          $(AWS_PERMISSION_SET)"
 	$(AWS) configure sso --profile $(AWS_PROFILE) --use-device-code
 
-aws-login: ## Google Workspace SSOでAWSへログインし、接続先を表示する
+aws-login: ## AWSへログインし、接続先を表示する
 	@mkdir -p "$(HOME)/.aws"
 	@grep -q '^\[profile $(AWS_PROFILE)\]' "$(HOME)/.aws/config" 2>/dev/null || { echo "先に make aws-configure を実行してください。"; exit 1; }
 	$(AWS) sso login --profile $(AWS_PROFILE) $(AWS_SSO_LOGIN_FLAGS)
@@ -172,7 +198,10 @@ aws-whoami: ## 現在のAWSアカウント・ロール・リージョンを確�
 aws-logout: ## AWS IAM Identity Centerのキャッシュ済みセッションを削除する
 	$(AWS) sso logout
 
-## --- インフラ（Terraform）。実AWSへの plan / apply は誤適用を防ぐため手動で行う（docs/infrastructure.md） ---
+aws-preflight: ## AWS接続・SES・DNSのデプロイ前チェックを行う（変更はしない）
+	AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) ./scripts/check-aws-readiness.sh
+
+## --- インフラ（Terraform）。保存planのレビューを必須にして実AWSへ適用する ---
 
 infra-fmt: ## Terraformコードを整形する
 	$(TERRAFORM) fmt -recursive
@@ -181,6 +210,50 @@ infra-validate: ## Terraformのfmtチェックと、全ルートの構文検証�
 	$(TERRAFORM) fmt -check -recursive
 	@for root in $(TF_ROOTS); do \
 		echo "==> $$root"; \
-		$(TERRAFORM) -chdir=$$root init -input=false -backend=false >/dev/null && \
+		if [ ! -d "$(TF_DIR)/$$root/.terraform/providers" ]; then \
+			$(TERRAFORM) -chdir=$$root init -input=false -backend=false >/dev/null || exit 1; \
+		fi; \
 		$(TERRAFORM) -chdir=$$root validate || exit 1; \
 	done
+
+check-aws-env:
+	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }
+	@test -f "$(TF_DIR)/envs/$(ENV)/terraform.tfvars" || { echo "$(TF_DIR)/envs/$(ENV)/terraform.tfvars がありません。exampleから作成してください。" >&2; exit 2; }
+
+check-destroy-confirm: check-aws-env
+	@test "$(CONFIRM)" = "$(TF_PLATFORM_SERVICE_NAME)-$(ENV)" || { echo "削除には CONFIRM=$(TF_PLATFORM_SERVICE_NAME)-$(ENV) を指定してください。" >&2; exit 2; }
+
+infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化する（ENV=stg|prod）
+	@set -eu; \
+	account_id="$$($(AWS) sts get-caller-identity --profile $(AWS_PROFILE) --query Account --output text)"; \
+	$(TERRAFORM_ENV) init -input=false -reconfigure \
+		-backend-config="bucket=$(TF_PLATFORM_PROJECT_NAME)-terraform-state-$$account_id" \
+		-backend-config="key=services/$(TF_PLATFORM_SERVICE_NAME)/$(ENV)/terraform.tfstate" \
+		-backend-config="region=$(AWS_REGION)" \
+		-backend-config="encrypt=true" \
+		-backend-config="use_lockfile=true"
+
+plan-aws: infra-init-aws ## 実AWSの変更planを保存する（ENV=stg|prod）
+	$(TERRAFORM_ENV) plan -input=false -out=$(ENV).tfplan
+
+apply-aws: check-aws-env ## 保存済みの実AWS planを適用する
+	@test -f "$(TF_DIR)/envs/$(ENV)/$(ENV).tfplan" || { echo "先に make plan-aws ENV=$(ENV) を実行してください。" >&2; exit 2; }
+	$(TERRAFORM_ENV) apply -input=false $(ENV).tfplan
+
+output-aws: infra-init-aws ## 実AWSのTerraform outputを表示する
+	$(TERRAFORM_ENV) output
+
+state-backup-aws: infra-init-aws ## destroy前にremote stateをローカルへ保全する
+	@set -eu; \
+	backup_dir="$(TF_DIR)/backups/$(TF_PLATFORM_SERVICE_NAME)"; \
+	mkdir -p "$$backup_dir"; chmod 700 "$(TF_DIR)/backups" "$$backup_dir"; \
+	backup_file="$$backup_dir/$(ENV)-$$(date -u +%Y%m%dT%H%M%SZ).tfstate"; \
+	umask 077; $(TERRAFORM_ENV) state pull > "$$backup_file"; \
+	echo "State backup: $$backup_file"
+
+destroy-plan-aws: check-destroy-confirm state-backup-aws ## 削除planを保存する
+	$(TERRAFORM_ENV) plan -destroy -input=false -var=destroy_mode=true -out=destroy-$(ENV).tfplan
+
+destroy-apply-aws: check-destroy-confirm ## 保存済みの削除planを適用する
+	@test -f "$(TF_DIR)/envs/$(ENV)/destroy-$(ENV).tfplan" || { echo "先に make destroy-plan-aws を実行してください。" >&2; exit 2; }
+	$(TERRAFORM_ENV) apply -input=false destroy-$(ENV).tfplan

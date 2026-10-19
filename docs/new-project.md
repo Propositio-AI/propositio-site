@@ -55,7 +55,7 @@ git push -u origin main
 | `apps/web/src/pages/WelcomePage.tsx` / `apps/mobile/src/components/welcome/WelcomeView.tsx` | 表示しているプロジェクト名・説明（最初の画面を作るときに置き換える） |
 | `services/backend/app/main.py` | `FastAPI(title=...)`（OpenAPIのタイトル） |
 | `services/backend/pyproject.toml` | 必要であれば`name` / `description` |
-| `infra/terraform/*/terraform.tfvars.example` | `project_name`（AWSリソース名の接頭辞）・ドメイン・GitHubリポジトリ |
+| `propositio-infra/config/defaults.json` | `TF_SERVICES`のresource prefix・stg/prodドメイン・GitHubリポジトリ・認証設定 |
 
 `docs/`配下（このファイルを除く `getting-started.md` / `architecture.md` / `development.md` / `infrastructure.md`）は、このベースリポジトリの構成・規約に関する説明であり、プロジェクト名に依存する記述はほぼ無いためそのまま使い続けてよい。プロジェクト固有のドメイン知識（機能一覧・仕様など）が増えてきたら、別ファイルとして追加していく。
 

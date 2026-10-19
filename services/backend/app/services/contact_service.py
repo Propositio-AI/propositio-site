@@ -160,7 +160,7 @@ class ContactService:
         """
         settings = get_settings()
         notify_to = settings.contact_notify_to
-        # 自動返信に送信者が返信したときは、運営の受信箱（Google Workspace）へ届くようにする
+        # 自動返信に送信者が返信したときは、運営の受信箱へ届くようにする
         mails = [build_auto_reply_mail(contact, settings.mail_reply_to or notify_to or None)]
         if notify_to:
             mails.insert(0, build_notify_mail(contact, notify_to))
@@ -173,7 +173,7 @@ class ContactService:
 
 def build_notify_mail(contact: Contact, notify_to: str) -> MailMessage:
     """
-    運営宛ての通知メールを組み立てる。Reply-Toを送信者にし、Gmailからそのまま返信できるようにする。
+    運営宛ての通知メールを組み立てる。Reply-Toを送信者にし、そのまま返信できるようにする。
 
     Params:
         - contact (Contact): 保存済みのお問い合わせ

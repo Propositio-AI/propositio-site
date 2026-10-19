@@ -1,12 +1,5 @@
 # cp terraform.tfvars.example terraform.tfvars
-project_name = "karynos"
-aws_region   = "ap-northeast-1"
-domain_name  = "propositio.com"
-
-# DMARCを未設定の場合のみ（Google Workspace側で設定済みなら書かない）
+# DMARCを未設定の場合のみ（既存DNSで設定済みなら書かない）
 # propositio.com には既にDMARCがあるため、dmarc_recordは指定しない
-
-# 同じアカウントにGitHubのOIDCプロバイダーが既にある場合
-# create_github_oidc_provider = false
 
 # alarm_email = "info@propositio.com"

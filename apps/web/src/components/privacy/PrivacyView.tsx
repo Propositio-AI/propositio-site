@@ -53,7 +53,7 @@ const SECTIONS: PolicySection[] = [
             '本サイトでは、次の外部サービスを利用しています。各サービスでの情報の取扱いは、それぞれの事業者のプライバシーポリシーに従います。これらの事業者のサーバーは日本国外にある場合があります。',
         ],
         items: [
-            'Google Workspace（Google LLC）：お問い合わせの通知メール・自動返信メールの送信に利用します。',
+            'Amazon Web Services（Amazon Web Services, Inc.）：お問い合わせの通知メール・自動返信メールの送信に利用します。',
             'Cloudflare Turnstile（Cloudflare, Inc.）：フォームのボット対策に利用します。判定のため、ブラウザや端末の情報が同社に送信されます。',
         ],
     },

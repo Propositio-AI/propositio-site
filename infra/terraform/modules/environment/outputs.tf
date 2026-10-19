@@ -22,7 +22,6 @@ output "github_environment_variables" {
   description = "GitHubの Environment（stg / prod）に登録する変数。デプロイワークフローが参照する。"
   value = {
     AWS_REGION                 = var.aws_region
-    AWS_DEPLOY_ROLE_ARN        = aws_iam_role.github_deploy.arn
     ECR_REPOSITORY             = data.aws_ecr_repository.api.name
     ECS_CLUSTER                = aws_ecs_cluster.main.name
     ECS_SERVICE                = aws_ecs_service.api.name
@@ -30,6 +29,7 @@ output "github_environment_variables" {
     ECS_CONTAINER_NAME         = local.api_container_name
     ECS_SUBNETS                = join(",", aws_subnet.public[*].id)
     ECS_SECURITY_GROUP         = aws_security_group.api.id
+    ECS_ASSIGN_PUBLIC_IP       = "ENABLED"
     WEB_BUCKET                 = aws_s3_bucket.web.id
     CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.web.id
     VITE_API_BASE_URL          = "https://${var.api_domain}"

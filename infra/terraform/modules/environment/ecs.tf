@@ -2,8 +2,9 @@ resource "aws_ecs_cluster" "main" {
   name = local.name_prefix
 
   setting {
-    name  = "containerInsights"
-    value = "enabled"
+    name = "containerInsights"
+    # 低トラフィック期は追加メトリクス費用を避ける。必要になった時点で有効化する。
+    value = "disabled"
   }
 }
 
@@ -81,7 +82,7 @@ resource "aws_ecs_service" "api" {
   name                   = "${local.name_prefix}-api"
   cluster                = aws_ecs_cluster.main.id
   task_definition        = aws_ecs_task_definition.api.arn
-  desired_count          = var.api_min_count
+  desired_count          = var.public_enabled ? var.api_min_count : 0
   launch_type            = "FARGATE"
   platform_version       = "LATEST"
   enable_execute_command = var.enable_execute_command
@@ -111,7 +112,7 @@ resource "aws_ecs_service" "api" {
 
   # タスク定義はデプロイ（GitHub Actions）、タスク数はオートスケーリングが管理する
   lifecycle {
-    ignore_changes = [task_definition, desired_count]
+    ignore_changes = [task_definition]
   }
 
   depends_on = [aws_lb_listener.https]
@@ -124,7 +125,7 @@ resource "aws_appautoscaling_target" "api" {
   service_namespace  = "ecs"
   resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.api.name}"
   scalable_dimension = "ecs:service:DesiredCount"
-  min_capacity       = var.api_min_count
+  min_capacity       = var.public_enabled ? var.api_min_count : 0
   max_capacity       = var.api_max_count
 }
 

@@ -36,9 +36,9 @@ class Settings(BaseSettings):
     # 送信元アドレス（SESで認証済みのドメインのアドレス。例: noreply@example.com）
     mail_from: str = "noreply@example.com"
     mail_from_name: str = "Propositio AI"
-    # 自動返信メールのReply-To（送信者が返信したときの宛先。運営のGoogle Workspaceアドレス）
+    # 自動返信メールのReply-To（送信者が返信したときの運営宛先）
     mail_reply_to: str = ""
-    # お問い合わせの通知先（運営のGoogle Workspaceアドレス）
+    # お問い合わせの通知先（運営のメールアドレス）
     contact_notify_to: str = ""
     # SESの設定セット（バウンス・苦情の抑制や送信メトリクスに使う）。空なら指定しない
     ses_configuration_set: str = ""

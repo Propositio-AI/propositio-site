@@ -30,9 +30,25 @@ variable "web_domain" {
   type        = string
 }
 
+variable "web_alias_domains" {
+  description = "Webサイトの別名ドメイン。正規URL（web_domain）へ恒久リダイレクトする。"
+  type        = list(string)
+}
+
+variable "s3_force_destroy" {
+  description = "オブジェクトが残るWebバケットの削除を許可するか。destroy専用。"
+  type        = bool
+  default     = false
+}
+
 variable "api_domain" {
   description = "APIのドメイン（例: api.example.com / api.stg.example.com）。"
   type        = string
+}
+
+variable "public_enabled" {
+  description = "Web/APIを公開するか。falseではCloudFrontを無効化し、公開DNSを作らず、ECSを0タスクにする。"
+  type        = bool
 }
 
 # ---- ネットワーク ----
@@ -44,7 +60,6 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "使うアベイラビリティゾーン（2つ）。"
   type        = list(string)
-  default     = ["ap-northeast-1a", "ap-northeast-1c"]
 
   validation {
     condition     = length(var.availability_zones) == 2
@@ -61,13 +76,11 @@ variable "api_image_tag" {
 variable "api_cpu" {
   description = "APIタスクのCPUユニット（256 = 0.25vCPU）。"
   type        = number
-  default     = 256
 }
 
 variable "api_memory" {
   description = "APIタスクのメモリ（MiB）。"
   type        = number
-  default     = 512
 }
 
 variable "api_min_count" {
@@ -83,7 +96,6 @@ variable "api_max_count" {
 variable "enable_execute_command" {
   description = "ECS Exec（稼働中のコンテナに入って調査する機能）を有効にするか。"
   type        = bool
-  default     = true
 }
 
 variable "alb_deletion_protection" {
@@ -95,25 +107,21 @@ variable "alb_deletion_protection" {
 variable "db_instance_class" {
   description = "RDSのインスタンスクラス。"
   type        = string
-  default     = "db.t4g.micro"
 }
 
 variable "db_allocated_storage" {
   description = "RDSの初期ストレージ（GiB）。"
   type        = number
-  default     = 20
 }
 
 variable "db_max_allocated_storage" {
   description = "RDSストレージの自動拡張の上限（GiB）。"
   type        = number
-  default     = 100
 }
 
 variable "db_multi_az" {
   description = "RDSをマルチAZにするか（障害時の自動フェイルオーバー。費用は約2倍）。"
   type        = bool
-  default     = false
 }
 
 variable "db_backup_retention_days" {
@@ -129,7 +137,6 @@ variable "db_deletion_protection" {
 variable "db_password_version" {
   description = "DBパスワードの版。値を上げてapplyするとパスワードを再生成して入れ替える（stateには残らない）。"
   type        = number
-  default     = 1
 }
 
 # ---- アプリの設定 ----
@@ -144,7 +151,7 @@ variable "mail_from" {
 }
 
 variable "contact_notify_to" {
-  description = "お問い合わせの通知先（運営のGoogle Workspaceアドレス）。自動返信のReply-Toにも使う。"
+  description = "お問い合わせの通知先メールアドレス。自動返信のReply-Toにも使う。"
   type        = string
 }
 
@@ -157,7 +164,6 @@ variable "log_retention_days" {
 variable "noindex" {
   description = "検索エンジンにインデックスさせない（X-Robots-Tag: noindex を付ける）。stg用。"
   type        = bool
-  default     = false
 }
 
 variable "alarm_email" {
@@ -165,14 +171,4 @@ variable "alarm_email" {
   type        = string
   default     = null
   nullable    = true
-}
-
-variable "github_repository" {
-  description = "デプロイを許可するGitHubリポジトリ（owner/name）。"
-  type        = string
-}
-
-variable "allow_image_push" {
-  description = "デプロイロールにECRへのpushを許可するか。prodはstgでビルドしたイメージを昇格させるだけなのでfalseにする。"
-  type        = bool
 }

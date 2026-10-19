@@ -11,6 +11,20 @@
 | `packages/api-client` | Web / モバイル共通のAPIクライアント（orvalでOpenAPIから自動生成 + TanStack Query） |
 | `services/backend` | バックエンド（FastAPI + Python 3.12 / SQLAlchemy 2.0 + Alembic / PostgreSQL 16） |
 | `infra/terraform` | AWS基盤（ECS・RDS・S3 + CloudFront・SES・Route53）。stg / prod の2環境 |
+| `config/defaults.json` | AWS CLI、Terraform、サイト基盤の既定値を一元管理する正本 |
+
+## 既定値の管理
+
+AWSリージョン、CLI・Terraformのバージョン、ECS・RDSなどのTerraform既定値は[`config/defaults.json`](./config/defaults.json)だけで管理します。Makefile、Terraform、GitHub Actions、AWS確認スクリプトは同じファイルを参照します。
+
+```bash
+make config-show
+make config-value KEY=TF_DB_INSTANCE_CLASS
+```
+
+stg/prod固有値は`infra/terraform/envs/<env>`、秘密値はSSM Parameter Storeなどへ分離し、`config/defaults.json`には保存しません。
+
+Terraform stateバケット、GitHub ActionsのOIDC Providerとdeploy Role、共通Cognito、公開ドメイン名の登録は`propositio-infra`が所有します。このリポジリは`service_platform_config["propositio-site"]`の出力値を利用し、その名前に対するACM証明書、CloudFront/ALB、Route 53 recordを作成します。詳しい接続・既存stateの移行手順は[docs/infrastructure.md](./docs/infrastructure.md)を参照してください。
 
 ## 起動方法
 
@@ -35,6 +49,13 @@ make dev-mobile  # モバイル（Expo）の開発サーバーをホスト上で
 ### 本番・ステージング（AWS）
 
 main にマージすると GitHub Actions が stg へ自動デプロイし、prod へは承認付きの手動実行でデプロイする。インフラの構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) を参照。
+
+```bash
+make plan-aws ENV=stg   # 実AWSの差分を保存して確認
+make apply-aws ENV=stg  # 確認済みの保存planだけを適用
+```
+
+ECSはパブリックサブネットでPublic IPを使い、受信をALBからだけに制限する。RDSはプライベートサブネットへ置き、NAT Gatewayを設けないことを低コスト標準とする。
 
 他のコマンド（テスト・Lint・マイグレーションなど）は `make help` で一覧表示できる。
 

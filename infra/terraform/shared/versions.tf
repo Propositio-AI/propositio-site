@@ -10,16 +10,16 @@ terraform {
 
   # bucket / region は terraform init -backend-config=../backend.hcl で渡す
   backend "s3" {
-    key = "propositio-site/shared/terraform.tfstate"
+    key = "services/propositio-site/shared/terraform.tfstate"
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = local.aws_region
 
   default_tags {
     tags = {
-      Project   = var.project_name
+      Project   = local.defaults.TF_PLATFORM_SERVICE_NAME
       ManagedBy = "terraform"
       Stack     = "shared"
     }

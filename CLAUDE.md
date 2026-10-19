@@ -471,7 +471,7 @@ make dev-mobile  # Expo開発サーバーをホストで起動（シミュレー
 ### 本番・ステージング（AWS）
 
 - 構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) にまとめている。アプリのデプロイは GitHub Actions が行い、手元から行わない。
-- 実AWSへの`plan` / `apply`はMakefileに用意していない（誤適用防止）。各ルート（`infra/terraform/shared`・`envs/<env>`）で手動で行う。ホストに`terraform`が無い場合、`make infra-fmt` / `make infra-validate`は公式Dockerイメージで実行する。
+- 環境ごとの実AWS変更は`make plan-aws ENV=stg|prod`で保存planを作り、レビュー後に`make apply-aws ENV=stg|prod`で適用する。削除時は`destroy-plan-aws` / `destroy-apply-aws`が確認文字列とstateバックアップを必須にする。共通の`shared`ルートだけは初回に手動適用する。
 - 環境ごとの差（タスク数・DBの保護設定など）は`envs/<env>/main.tf`のmodule引数だけに書き、リソース定義は`modules/environment`に1つだけ持つ。stg用に本番向けの定義を弱めない。
 - 秘密値をtfvars・Terraformのコードに書かない。DBパスワードはephemeral + write-only属性で生成してstateに残さず、アプリの秘密値はSecrets Managerに運用者が設定する。
 - 本番のAPIコンテナは`services/backend/Dockerfile`の`prod`ターゲット。DB接続情報は`DB_HOST`等の個別の環境変数で渡され、`app/core/config.py`がDATABASE_URLを組み立てる。

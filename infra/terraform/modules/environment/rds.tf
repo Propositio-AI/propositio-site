@@ -14,8 +14,9 @@ resource "aws_db_parameter_group" "main" {
 
   # TLSなしの接続を拒否する
   parameter {
-    name  = "rds.force_ssl"
-    value = "1"
+    name         = "rds.force_ssl"
+    value        = "1"
+    apply_method = "pending-reboot"
   }
 
   # 1秒以上かかったクエリをログに出す（CloudWatch Logsへ転送される）

@@ -3,7 +3,8 @@
 # バケットは非公開で、CloudFront（OAC）からのみ読み取れる。
 # ---------------------------------------------------------------------------
 resource "aws_s3_bucket" "web" {
-  bucket = "${local.name_prefix}-web-${data.aws_caller_identity.current.account_id}"
+  bucket        = "${local.name_prefix}-web-${data.aws_caller_identity.current.account_id}"
+  force_destroy = var.s3_force_destroy
 }
 
 resource "aws_s3_bucket_public_access_block" "web" {
@@ -80,8 +81,9 @@ resource "aws_s3_bucket_policy" "web" {
 resource "aws_acm_certificate" "web" {
   provider = aws.us_east_1
 
-  domain_name       = var.web_domain
-  validation_method = "DNS"
+  domain_name               = var.web_domain
+  subject_alternative_names = var.web_alias_domains
+  validation_method         = "DNS"
 
   lifecycle {
     create_before_destroy = true
@@ -120,13 +122,37 @@ resource "aws_cloudfront_origin_access_control" "web" {
 
 # SPAのルーティング：拡張子のないパス（/activities/xxx など）は index.html を返す。
 # 拡張子のあるパス（/assets/*.js など）はそのまま返し、存在しなければエラーにする。
-resource "aws_cloudfront_function" "spa_rewrite" {
+resource "aws_cloudfront_function" "request_router" {
   name    = "${local.name_prefix}-spa-rewrite"
   runtime = "cloudfront-js-2.0"
   publish = true
   code    = <<-JS
     function handler(event) {
       var request = event.request;
+      var host = request.headers.host && request.headers.host.value;
+      var aliases = ${jsonencode(var.web_alias_domains)};
+      if (aliases.indexOf(host) !== -1) {
+        var query = request.querystring;
+        var parts = [];
+        for (var key in query) {
+          var item = query[key];
+          if (item.multiValue) {
+            for (var i = 0; i < item.multiValue.length; i++) {
+              parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(item.multiValue[i].value));
+            }
+          } else if (item.value !== undefined) {
+            parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(item.value));
+          }
+        }
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: {
+            location: { value: 'https://${var.web_domain}' + request.uri + (parts.length ? '?' + parts.join('&') : '') },
+            'cache-control': { value: 'public, max-age=3600' }
+          }
+        };
+      }
       var uri = request.uri;
       if (uri.lastIndexOf('.') <= uri.lastIndexOf('/')) {
         request.uri = '/index.html';
@@ -202,9 +228,9 @@ data "aws_cloudfront_cache_policy" "caching_optimized" {
 }
 
 resource "aws_cloudfront_distribution" "web" {
-  enabled             = true
+  enabled             = var.public_enabled
   comment             = "${local.name_prefix} web"
-  aliases             = [var.web_domain]
+  aliases             = concat([var.web_domain], var.web_alias_domains)
   default_root_object = "index.html"
   is_ipv6_enabled     = true
   http_version        = "http2and3"
@@ -230,7 +256,7 @@ resource "aws_cloudfront_distribution" "web" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_rewrite.arn
+      function_arn = aws_cloudfront_function.request_router.arn
     }
   }
 
@@ -248,11 +274,18 @@ resource "aws_cloudfront_distribution" "web" {
 }
 
 resource "aws_route53_record" "web" {
-  for_each = toset(["A", "AAAA"])
+  for_each = {
+    for item in var.public_enabled ? setproduct(concat([var.web_domain], var.web_alias_domains), ["A", "AAAA"]) : [] : "${item[0]}-${item[1]}" => {
+      name = item[0]
+      type = item[1]
+    }
+  }
 
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = var.web_domain
-  type    = each.value
+  name    = each.value.name
+  type    = each.value.type
+  # 初回移行時は既存ホスティングの同名AレコードをCloudFront Aliasへ置き換える。
+  allow_overwrite = true
 
   alias {
     name                   = aws_cloudfront_distribution.web.domain_name

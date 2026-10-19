@@ -1,7 +1,7 @@
-# アプリとDBの設定値は、環境ごとのSSM Parameter Storeパスへ集約する。
-# DBパスワードはwrite-only属性で渡すためTerraform stateには保存されない。
+# アプリとDBの設定値は、このサービスが所有するSSM Parameter Storeへ
+# 環境・サービス別パスで保存する。暗号化鍵も同じstateで所有する。
 resource "aws_kms_key" "parameters" {
-  description             = "SSM SecureString parameters for ${local.name_prefix}"
+  description             = "${local.name_prefix} SSM SecureString parameters"
   deletion_window_in_days = 30
   enable_key_rotation     = true
 }
@@ -17,7 +17,7 @@ ephemeral "random_password" "db" {
 }
 
 locals {
-  parameter_prefix = "/propositio/${var.environment}/karynos"
+  parameter_prefix = "/propositio/${var.environment}/${var.project_name}"
 }
 
 resource "aws_ssm_parameter" "db_host" {

@@ -5,7 +5,7 @@ Karynos サイト（`apps/web`）が使う外部サービスの設定手順。�
 | 機能 | 使うもの | 設定する場所 |
 | --- | --- | --- |
 | 活動記録（一覧・詳細・カテゴリ） | microCMS | `services/backend/.env` |
-| お問い合わせの通知・自動返信 | Amazon SES で送信し、Google Workspace（Gmail）で受信・返信 | 本番は Terraform（`infra/terraform`）、開発は `services/backend/.env` |
+| お問い合わせの通知・自動返信 | Amazon SESで送信し、`info@propositio.com`で受信・返信 | 本番は Terraform（`infra/terraform`）、開発は `services/backend/.env` |
 | フォームのボット対策（任意） | Cloudflare Turnstile | 本番は Secrets Manager と GitHub の Variables、開発は `services/backend/.env` と `apps/web/.env` |
 
 ブラウザが microCMS や SES を直接呼ぶことはない。APIキーはすべてバックエンドに置き、Web は `@repo/api-client` 経由で `GET /activities`・`GET /categories`・`POST /contacts` だけを呼ぶ。
@@ -37,16 +37,16 @@ API を2つ作成する（どちらも「リスト形式」）。
 - コンテンツIDは英数字・`-`・`_` だけにする（記事URL `/activities/{id}` に使うため）。
 - API キーは GET 権限だけあればよい。開発では `services/backend/.env` の `MICROCMS_SERVICE_DOMAIN` と `MICROCMS_API_KEY` に設定する。本番では、サービスドメインは `envs/<env>/terraform.tfvars`、API キーはSSM Parameter StoreのSecureStringに設定する（[infrastructure.md](./infrastructure.md) の初回構築 手順5）。
 
-## 2. お問い合わせメール（Amazon SES → Google Workspace）
+## 2. お問い合わせメール
 
-送信は Amazon SES、受信と返信は Google Workspace の Gmail で行う。MX（受信）は Google のままで、SES は送信だけに使う。
+送信は Amazon SES、受信と返信は `info@propositio.com` で行う。既存のMXは変更せず、SESは送信だけに使う。
 
 送信されたお問い合わせは DB（`contacts` テーブル）に保存したうえで、次の2通を送る。
 
 | メール | From | To | Reply-To |
 | --- | --- | --- | --- |
-| 運営への通知 | `noreply@propositio.com` | `info@propositio.com` | 送信者 → Gmail で「返信」すると送信者へ直接届く |
-| 送信者への自動返信 | `noreply@<domain>` | 送信者 | 運営のアドレス → 送信者が返信しても Gmail に届く |
+| 運営への通知 | `noreply@propositio.com` | `info@propositio.com` | 送信者 → メール画面で「返信」すると送信者へ直接届く |
+| 送信者への自動返信 | `noreply@<domain>` | 送信者 | 運営のアドレス → 送信者が返信すると運営に届く |
 
 - 自動返信には、受付の連絡だけを入れる。第三者のアドレス宛てに迷惑メールを送る踏み台にされないよう、お問い合わせ本文は含めない。
 - メールの送信に失敗しても受付は成功扱いにする（内容は DB に残り、エラーはバックエンドのログに出る）。
@@ -57,11 +57,11 @@ API を2つ作成する（どちらも「リスト形式」）。
 SES のドメイン認証（DKIM・MAIL FROM）、送信権限、送信元・通知先の環境変数は Terraform が設定する（[infrastructure.md](./infrastructure.md)）。手動で必要なのは次の2つだけ。
 
 1. **SES の本番利用申請**（サンドボックスの解除）。解除前は、自分のドメインのアドレス（通知）にしか送れず、自動返信が届かない。
-2. **通知先アドレスの用意**：`info@propositio.com` を Google Workspace のユーザーまたはGoogleグループとして作り、外部から受信できる状態にする。
+2. **通知先アドレスの用意**：`info@propositio.com` を外部から受信し、そのアドレスから返信できる状態にする。
 
 本番環境では通知先を `info@propositio.com` に固定している。フォーム通知の `Reply-To` は問い合わせ者のアドレス、自動返信の `Reply-To` は `info@propositio.com` になるため、双方が受信したメールへそのまま返信できる。
 
-DNS は、既存の Google Workspace 用のレコード（MX・ルートドメインの SPF）を変更しない。SES の SPF は MAIL FROM 用のサブドメイン（`mail.<domain>`）に閉じ込め、DMARC は DKIM の署名で満たす。
+DNS は、既存のメール受信用レコード（MX・ルートドメインの SPF）を変更しない。SES の SPF は MAIL FROM 用のサブドメイン（`mail.<domain>`）に閉じ込め、DMARC は DKIM の署名で満たす。
 
 ## 3. Cloudflare Turnstile（任意）
 
@@ -79,4 +79,4 @@ Cloudflare でサイトを登録し、サイトキーとシークレットキー
 
 ## 4. お問い合わせの管理
 
-運営は通知メール（Google Workspace の Gmail）で受け付けた内容を確認し、そのまま返信する。受付内容は DB に保存されるが、個人情報を含むため一覧を返す公開 API は用意していない（以前の `GET /contacts` は削除した）。
+運営は `info@propositio.com` に届いた通知メールで受け付けた内容を確認し、そのまま返信する。受付内容は DB に保存されるが、個人情報を含むため一覧を返す公開 API は用意していない（以前の `GET /contacts` は削除した）。

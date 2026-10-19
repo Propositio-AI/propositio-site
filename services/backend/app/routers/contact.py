@@ -33,7 +33,7 @@ def submit_contact(
 ) -> ContactResponse:
     """
     お問い合わせを受け付けるエンドポイント。
-    受付内容の一覧は公開APIでは提供しない（運営はGoogle Workspaceの通知メールで確認する）。
+    受付内容の一覧は公開APIでは提供しない（運営は通知メールで確認する）。
 
     Params:
         - payload (ContactCreate): 受け付けるお問い合わせの内容

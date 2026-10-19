@@ -2,6 +2,7 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+backups/
 crash.log
 # アカウント固有の値（ドメイン・リポジトリ名など）は各自のファイルに置き、コミットしない
 *.tfvars

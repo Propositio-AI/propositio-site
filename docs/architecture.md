@@ -169,15 +169,15 @@ Web / モバイルはバックエンドAPIを**直接fetchしない**。必ず`@
 ```
 infra/terraform/
 ├── backend.hcl.example   # remote state（S3）の設定のひな形
-├── bootstrap/            # stateバケット（アカウントに1回・ローカルstate）
-├── shared/               # ECR・SES（ドメイン認証・設定セット）・GitHub OIDCプロバイダー
+├── bootstrap/            # propositio-infraの共通stateバケットの存在確認
+├── shared/               # ECR・SES（ドメイン認証・設定セット）
 ├── modules/environment/  # 1環境分：VPC・ALB・ECS・RDS・Secrets Manager・S3 + CloudFront・Route53・IAM・アラーム
 └── envs/
     ├── stg/              # module "environment" を stg のサイズで呼ぶ
     └── prod/             # 同 prod
 ```
 
-リソースの定義は`modules/environment`に1つだけ持ち、環境ごとの差（タスク数・DBの保護設定・ドメイン）は`envs/<env>/main.tf`のmodule引数だけに書く。詳細は [infrastructure.md](./infrastructure.md) を参照。
+リソースの定義は`modules/environment`に1つだけ持ち、環境ごとの差（タスク数・DBの保護設定・ドメイン）は`envs/<env>/main.tf`のmodule引数だけに書く。Terraform state、GitHub OIDC Provider、deploy Roleは`propositio-infra`を参照し、このリポジトリでは重複作成しない。詳細は [infrastructure.md](./infrastructure.md) を参照。
 
 ## 技術スタック一覧
 

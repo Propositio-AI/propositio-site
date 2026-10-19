@@ -16,7 +16,3 @@ data "aws_route53_zone" "main" {
 data "aws_ecr_repository" "api" {
   name = local.ecr_repository_name
 }
-
-data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-}

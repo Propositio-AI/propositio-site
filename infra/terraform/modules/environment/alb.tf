@@ -92,6 +92,7 @@ resource "aws_lb_listener" "http_redirect" {
 }
 
 resource "aws_route53_record" "api" {
+  count   = var.public_enabled ? 1 : 0
   zone_id = data.aws_route53_zone.main.zone_id
   name    = var.api_domain
   type    = "A"
