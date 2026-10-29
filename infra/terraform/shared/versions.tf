@@ -8,10 +8,8 @@ terraform {
     }
   }
 
-  # bucket / region は terraform init -backend-config=../backend.hcl で渡す
-  backend "s3" {
-    key = "services/propositio-site/shared/terraform.tfstate"
-  }
+  # bucket・key・regionはMakefileが共通命名規則からinit時に渡す。
+  backend "s3" {}
 }
 
 provider "aws" {
@@ -19,7 +17,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project   = local.defaults.TF_PLATFORM_SERVICE_NAME
+      Project   = local.service_name
       ManagedBy = "terraform"
       Stack     = "shared"
     }

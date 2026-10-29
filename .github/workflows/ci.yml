@@ -97,9 +97,9 @@ jobs:
             - name: Check AWS site API
               working-directory: .
               run: |
-                  uv run --project services/backend ruff check infra/terraform/services/site-api/handler.py infra/terraform/services/site-api/test_handler.py
-                  uv run --project services/backend ruff format --check infra/terraform/services/site-api/handler.py infra/terraform/services/site-api/test_handler.py
-                  python -m unittest discover -s infra/terraform/services/site-api -p 'test_*.py'
+                  uv run --project services/backend ruff check services/site-api/handler.py services/site-api/test_handler.py
+                  uv run --project services/backend ruff format --check services/site-api/handler.py services/site-api/test_handler.py
+                  python -m unittest discover -s services/site-api -p 'test_*.py'
 
     compose:
         name: Docker Compose config

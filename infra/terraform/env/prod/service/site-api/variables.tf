@@ -9,6 +9,7 @@ variable "mail_from" { type = string }
 variable "contact_notify_to" { type = string }
 variable "ses_identity" { type = string }
 variable "ses_configuration_set" { type = string }
+variable "handler_source_file" { type = string }
 
 variable "alarm_email" {
   type     = string

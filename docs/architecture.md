@@ -169,15 +169,16 @@ Web / モバイルはバックエンドAPIを**直接fetchしない**。必ず`@
 
 ```
 infra/terraform/
-├── backend.hcl.example   # remote state（S3）の設定のひな形
-├── bootstrap/            # propositio-infraの共通stateバケットの存在確認
-├── aws/                  # static-siteとsite-apiを組み立てるstg/prod共通root
-├── shared/               # SES（ドメイン認証・設定セット）
-├── services/             # site固有のsite-api / contact-mail module
-└── envs/                 # stg.tfvars / prod.tfvars（実値はGit管理外）
+├── env/
+│   ├── stg/              # stg root（main/variables/outputs/service）
+│   │   └── service/
+│   │       └── site-api/ # API Gateway/Lambda等をリソース別に分割
+│   └── prod/             # prodの独立root（stgと同じ責務）
+└── shared/
+    └── service/mail/     # SES/DNS/SNS/CloudWatchをリソース別に分割
 ```
 
-S3 + CloudFrontは`propositio-infra`のversion固定された`static-site`を利用する。活動記録・お問い合わせAPIだけをsite固有moduleに置く。Terraform state、GitHub OIDC Provider、deploy Role、ドメイン登録は`propositio-infra`を参照し、このリポジトリでは重複作成しない。詳細は [infrastructure.md](./infrastructure.md) を参照。
+S3 + CloudFrontは`propositio-infra`のversion固定された`static-site`を利用する。活動記録・お問い合わせAPIだけを各環境の`service/site-api`へ置く。Terraform state bucket、GitHub OIDC Provider、deploy Roleは`propositio-infra`が管理し、Hosted Zone名とWeb/APIドメインはこのリポジトリの`env/<env>/main.tf`で決定する。Route 53 recordは`static-site`と`site-api`のmoduleが作成する。詳細は [infrastructure.md](./infrastructure.md) を参照。
 
 ## 技術スタック一覧
 

@@ -29,12 +29,14 @@ AWS公式アイコンを画像ファイルとしてリポジトリへ複製し�
 | --- | --- | --- |
 | 共通module | `propositio-infra/infra/terraform/modules` | S3、CloudFront、Route53等の単一部品 |
 | 標準構成 | `propositio-infra/infra/terraform/service-types/static-site` | static-site部品の組合せ |
-| サービス登録 | `propositio-infra/config/defaults.json` | type、profile、Web/APIドメイン、GitHub repository |
+| deploy Role登録 | `propositio-infra/config/defaults.json` | GitHub repository、resource prefix、deploy権限 |
+| サービス構成 | `infra/terraform/env/<env>/main.tf` | type、profile、Hosted Zone、Web/API/aliasドメイン |
 | 共通state・OIDC・Role | `propositio-infra/infra/terraform/shared` | 全サービス共通の接続基盤 |
 | site共有 | `infra/terraform/shared` | SES identity、DKIM、MAIL FROM、reputation alarm |
-| stg/prod | `infra/terraform/aws` | static-siteの呼出し、API Gateway/Lambda/DynamoDB/SSM |
-| site固有module | `infra/terraform/services` | `contact-mail`、`site-api` |
-| 環境固有非秘密値 | `infra/terraform/envs/<env>.tfvars` | microCMS service domain、通知先等（Git管理外） |
+| stg/prod | `infra/terraform/env/<env>` | static-siteの呼出し、API Gateway/Lambda/DynamoDB/SSM |
+| site固有module | `infra/terraform/env/<env>/service/site-api` | API Gateway、Lambda、DynamoDB、SSMをリソース別ファイルで管理 |
+| 共有メールmodule | `infra/terraform/shared/service/mail` | SES、DNS、SNS、CloudWatchをリソース別ファイルで管理 |
+| 環境固有非秘密値 | `infra/terraform/env/<env>/terraform.tfvars` | microCMS service domain、通知先等（Git管理外） |
 | 秘密値 | SSM `/propositio/<env>/propositio-site/app/*` | microCMS API key、Turnstile secret |
 | Terraform state | S3 `propositio-terraform-state-539247480876` | `services/propositio-site/{shared,stg,prod}/terraform.tfstate` |
 | Web配信 | `.github/workflows/deploy.yml` | build、S3 sync、CloudFront invalidation |
@@ -59,7 +61,7 @@ API Gateway、Lambda、DynamoDB on-demandはリクエストがない時間の常
 
 - `propositio-infra v1.2.0`以降が公開されている。
 - infra shared stateに`propositio-site = static-site`が登録されている。
-- state bucket、GitHub OIDC provider、環境別deploy Role、Route53 hosted zoneが存在する。
+- `propositio-infra`が管理するstate bucket、GitHub OIDC provider、環境別deploy Role、Route53 hosted zoneが存在する。
 - AWSへ`make aws-login`でログイン済み。
 - Docker版Terraformを使う場合は、同じ親フォルダに`propositio-infra`をcheckoutしている（`../propositio-infra`）。ホスト版Terraformを使う場合はGitHub認証済みであればよい。
 - GitHub ActionsのTerraform CI用にrepository secret `INFRA_REPOSITORY_TOKEN`がある。privateな`propositio-infra`をreadできるfine-grained tokenを使う。
@@ -69,13 +71,12 @@ API Gateway、Lambda、DynamoDB on-demandはリクエストがない時間の常
 ### 1. ローカル設定
 
 ```bash
-cp infra/terraform/backend.hcl.example infra/terraform/backend.hcl
 cp infra/terraform/shared/terraform.tfvars.example infra/terraform/shared/terraform.tfvars
-cp infra/terraform/envs/stg.tfvars.example infra/terraform/envs/stg.tfvars
-cp infra/terraform/envs/prod.tfvars.example infra/terraform/envs/prod.tfvars
+cp infra/terraform/env/stg/terraform.tfvars.example infra/terraform/env/stg/terraform.tfvars
+cp infra/terraform/env/prod/terraform.tfvars.example infra/terraform/env/prod/terraform.tfvars
 ```
 
-`stg.tfvars`と`prod.tfvars`に次を設定します。
+各環境の`terraform.tfvars`に次を設定します。
 
 ```hcl
 microcms_service_domain = "microCMSのservice domain"
@@ -83,7 +84,7 @@ contact_notify_to       = "info@propositio.com"
 # alarm_email           = "通知を受けるアドレス"
 ```
 
-これらのファイルと`backend.hcl`はGit管理外です。API keyやpasswordは書きません。
+これらの`terraform.tfvars`はGit管理外です。API keyやpasswordは書きません。S3 backend設定はMakefileがAWSアカウントIDと共通命名規則から自動生成します。
 
 ### 2. SES共有リソース
 
@@ -99,7 +100,7 @@ make shared-apply-aws
 
 ```bash
 make plan-aws ENV=stg
-terraform -chdir=infra/terraform/aws show stg.tfplan
+terraform -chdir=infra/terraform/env/stg show stg.tfplan
 make apply-aws ENV=stg
 make output-aws ENV=stg
 ```
@@ -171,7 +172,7 @@ make apply-aws ENV=stg
 
 ```bash
 make destroy-plan-aws ENV=stg CONFIRM=propositio-site-stg
-terraform -chdir=infra/terraform/aws show destroy-stg.tfplan
+terraform -chdir=infra/terraform/env/stg show destroy-stg.tfplan
 make destroy-apply-aws ENV=stg CONFIRM=propositio-site-stg
 ```
 

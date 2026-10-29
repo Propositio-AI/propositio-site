@@ -138,7 +138,7 @@ pnpm build   # web: tsc -b && vite build / mobile: expo export（iOS・Android�
 | JS | Node.js 22 + pnpm（`packageManager`）+ uv をセットアップ → `uv run python -m app.export_openapi` → `pnpm install --frozen-lockfile` → `pnpm generate:api` → `pnpm lint` / `pnpm format:check` / `pnpm typecheck` / `pnpm test` / `pnpm build` |
 | Backend | `uv sync --locked` → `uv run ruff check .` / `uv run ruff format --check .` / `uv run pytest` |
 | Docker Compose | `make setup` → `docker compose config` |
-| Terraform | `config/defaults.json`のinfra version整合 → `make infra-validate`（bootstrap / shared / aws のfmt・validate） |
+| Terraform | `config/defaults.json`のinfra version整合 → `make infra-validate`（shared / env/stg / env/prodのfmt・validate） |
 
 CIとは別に、`.github/workflows/deploy.yml` が AWS へのデプロイを行う（main で CI が成功したら stg、prod は手動実行＋承認）。詳細は [infrastructure.md](./infrastructure.md#デプロイgithubworkflowsdeployyml) を参照。
 

@@ -5,13 +5,13 @@ default = $(shell "$(CURDIR)/scripts/read-default.sh" $(1) "$(DEFAULTS_FILE)")
 
 # --- インフラ（Terraform）用の設定 ---
 TF_DIR := infra/terraform
-TF_AWS_DIR := $(TF_DIR)/aws
+TF_AWS_DIR = $(TF_DIR)/env/$(ENV)
 TF_SHARED_DIR := $(TF_DIR)/shared
-TF_PLATFORM_PROJECT_NAME ?= $(call default,TF_PLATFORM_PROJECT_NAME)
-TF_PLATFORM_SERVICE_NAME ?= $(call default,TF_PLATFORM_SERVICE_NAME)
+TF_STATE_PROJECT_NAME ?= $(shell awk -F'"' '/^[[:space:]]*project_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/stg/main.tf")
+TF_SERVICE_NAME ?= $(shell awk -F'"' '/^[[:space:]]*service_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/stg/main.tf")
 ENV ?=
 # 検証する Terraform のルート（state を持つ単位）
-TF_ROOTS := bootstrap shared aws
+TF_ROOTS := shared env/stg env/prod
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
 TF_VERSION ?= $(call default,TERRAFORM_VERSION)
 AWS_PROFILE ?= $(call default,AWS_PROFILE)
@@ -252,11 +252,19 @@ validate-root:
 	$(TERRAFORM_VALIDATE) validate
 
 check-shared-aws:
-	@test -f "$(TF_DIR)/backend.hcl" || { echo "$(TF_DIR)/backend.hcl がありません。backend.hcl.exampleから作成してください。" >&2; exit 2; }
 	@test -f "$(TF_DIR)/shared/terraform.tfvars" || { echo "$(TF_DIR)/shared/terraform.tfvars がありません。terraform.tfvars.exampleから作成してください。" >&2; exit 2; }
 
 shared-init-aws: check-shared-aws ## site共有リソース用S3 backendを初期化する
-	$(TERRAFORM_SHARED) init -input=false -reconfigure -backend-config=../backend.hcl
+	@set -eu; \
+	account_id="$$($(AWS_BATCH) sts get-caller-identity --profile $(AWS_PROFILE) --query Account --output text)"; \
+	case "$$account_id" in *[!0-9]*|"") echo "AWSアカウントIDを正しく取得できませんでした: $$account_id" >&2; exit 2;; esac; \
+	[ "$${#account_id}" -eq 12 ] || { echo "AWSアカウントIDが12桁ではありません: $$account_id" >&2; exit 2; }; \
+	$(TERRAFORM_SHARED) init -input=false -reconfigure \
+		-backend-config="bucket=$(TF_STATE_PROJECT_NAME)-terraform-state-$$account_id" \
+		-backend-config="key=services/$(TF_SERVICE_NAME)/shared/terraform.tfstate" \
+		-backend-config="region=$(AWS_REGION)" \
+		-backend-config="encrypt=true" \
+		-backend-config="use_lockfile=true"
 
 shared-plan-aws: shared-init-aws ## site共有リソースの変更planを保存する
 	$(TERRAFORM_SHARED) plan -input=false -out=shared.tfplan
@@ -270,10 +278,10 @@ shared-output-aws: shared-init-aws ## site共有リソースのTerraform output�
 
 check-aws-env:
 	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }
-	@test -f "$(TF_DIR)/envs/$(ENV).tfvars" || { echo "$(TF_DIR)/envs/$(ENV).tfvars がありません。$(ENV).tfvars.exampleから作成してください。" >&2; exit 2; }
+	@test -f "$(TF_AWS_DIR)/terraform.tfvars" || { echo "$(TF_AWS_DIR)/terraform.tfvars がありません。terraform.tfvars.exampleから作成してください。" >&2; exit 2; }
 
 check-destroy-confirm: check-aws-env
-	@test "$(CONFIRM)" = "$(TF_PLATFORM_SERVICE_NAME)-$(ENV)" || { echo "削除には CONFIRM=$(TF_PLATFORM_SERVICE_NAME)-$(ENV) を指定してください。" >&2; exit 2; }
+	@test "$(CONFIRM)" = "$(TF_SERVICE_NAME)-$(ENV)" || { echo "削除には CONFIRM=$(TF_SERVICE_NAME)-$(ENV) を指定してください。" >&2; exit 2; }
 
 infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化する（ENV=stg|prod）
 	@set -eu; \
@@ -281,17 +289,17 @@ infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化す�
 	case "$$account_id" in *[!0-9]*|"") echo "AWSアカウントIDを正しく取得できませんでした: $$account_id" >&2; exit 2;; esac; \
 	[ "$${#account_id}" -eq 12 ] || { echo "AWSアカウントIDが12桁ではありません: $$account_id" >&2; exit 2; }; \
 	$(TERRAFORM_ENV) init -input=false -reconfigure \
-		-backend-config="bucket=$(TF_PLATFORM_PROJECT_NAME)-terraform-state-$$account_id" \
-		-backend-config="key=services/$(TF_PLATFORM_SERVICE_NAME)/$(ENV)/terraform.tfstate" \
+		-backend-config="bucket=$(TF_STATE_PROJECT_NAME)-terraform-state-$$account_id" \
+		-backend-config="key=services/$(TF_SERVICE_NAME)/$(ENV)/terraform.tfstate" \
 		-backend-config="region=$(AWS_REGION)" \
 		-backend-config="encrypt=true" \
 		-backend-config="use_lockfile=true"
 
 plan-aws: infra-init-aws ## 実AWSの変更planを保存する（ENV=stg|prod）
-	$(TERRAFORM_ENV) plan -input=false -var-file=../envs/$(ENV).tfvars -var=environment=$(ENV) -out=$(ENV).tfplan
+	$(TERRAFORM_ENV) plan -input=false -var-file=terraform.tfvars -out=$(ENV).tfplan
 
 apply-aws: check-aws-env ## 保存済みの実AWS planを適用する
-	@test -f "$(TF_DIR)/aws/$(ENV).tfplan" || { echo "先に make plan-aws ENV=$(ENV) を実行してください。" >&2; exit 2; }
+	@test -f "$(TF_AWS_DIR)/$(ENV).tfplan" || { echo "先に make plan-aws ENV=$(ENV) を実行してください。" >&2; exit 2; }
 	$(TERRAFORM_ENV) apply -input=false $(ENV).tfplan
 
 output-aws: infra-init-aws ## 実AWSのTerraform outputを表示する
@@ -299,15 +307,15 @@ output-aws: infra-init-aws ## 実AWSのTerraform outputを表示する
 
 state-backup-aws: infra-init-aws ## destroy前にremote stateをローカルへ保全する
 	@set -eu; \
-	backup_dir="$(TF_DIR)/backups/$(TF_PLATFORM_SERVICE_NAME)"; \
+	backup_dir="$(TF_DIR)/backups/$(TF_SERVICE_NAME)"; \
 	mkdir -p "$$backup_dir"; chmod 700 "$(TF_DIR)/backups" "$$backup_dir"; \
 	backup_file="$$backup_dir/$(ENV)-$$(date -u +%Y%m%dT%H%M%SZ).tfstate"; \
 	umask 077; $(TERRAFORM_ENV) state pull > "$$backup_file"; \
 	echo "State backup: $$backup_file"
 
 destroy-plan-aws: check-destroy-confirm state-backup-aws ## 削除planを保存する
-	$(TERRAFORM_ENV) plan -destroy -input=false -var-file=../envs/$(ENV).tfvars -var=environment=$(ENV) -var=destroy_mode=true -out=destroy-$(ENV).tfplan
+	$(TERRAFORM_ENV) plan -destroy -input=false -var-file=terraform.tfvars -var=destroy_mode=true -out=destroy-$(ENV).tfplan
 
 destroy-apply-aws: check-destroy-confirm ## 保存済みの削除planを適用する
-	@test -f "$(TF_DIR)/aws/destroy-$(ENV).tfplan" || { echo "先に make destroy-plan-aws を実行してください。" >&2; exit 2; }
+	@test -f "$(TF_AWS_DIR)/destroy-$(ENV).tfplan" || { echo "先に make destroy-plan-aws を実行してください。" >&2; exit 2; }
 	$(TERRAFORM_ENV) apply -input=false destroy-$(ENV).tfplan

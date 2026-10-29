@@ -35,7 +35,7 @@ API を2つ作成する（どちらも「リスト形式」）。
 
 - 並び順は `publishedAt`（公開日時）の新しい順。
 - コンテンツIDは英数字・`-`・`_` だけにする（記事URL `/activities/{id}` に使うため）。
-- API キーは GET 権限だけあればよい。開発では `services/backend/.env` の `MICROCMS_SERVICE_DOMAIN` と `MICROCMS_API_KEY` に設定する。本番では、サービスドメインは `envs/<env>/terraform.tfvars`、API キーはSSM Parameter StoreのSecureStringに設定する（[infrastructure.md](./infrastructure.md) の初回構築 手順5）。
+- API キーは GET 権限だけあればよい。開発では `services/backend/.env` の `MICROCMS_SERVICE_DOMAIN` と `MICROCMS_API_KEY` に設定する。本番では、サービスドメインは `infra/terraform/env/<env>/terraform.tfvars`、API キーはSSM Parameter StoreのSecureStringに設定する（[infrastructure.md](./infrastructure.md) の初回構築 手順5）。
 
 ## 2. お問い合わせメール
 

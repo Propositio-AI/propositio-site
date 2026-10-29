@@ -1,11 +1,3 @@
-variable "environment" {
-  type = string
-  validation {
-    condition     = contains(["stg", "prod"], var.environment)
-    error_message = "environment must be stg or prod."
-  }
-}
-
 variable "microcms_service_domain" { type = string }
 variable "contact_notify_to" { type = string }
 

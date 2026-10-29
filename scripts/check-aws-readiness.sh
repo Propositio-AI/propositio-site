@@ -7,8 +7,9 @@ read_default() { "$repository_dir/scripts/read-default.sh" "$1" "$defaults_file"
 aws_profile="${AWS_PROFILE:-$(read_default AWS_PROFILE)}"
 aws_region="${AWS_REGION:-$(read_default AWS_REGION)}"
 aws_cli_version="${AWS_CLI_VERSION:-$(read_default AWS_CLI_VERSION)}"
-platform_project_name="$(read_default TF_PLATFORM_PROJECT_NAME)"
-platform_service_name="$(read_default TF_PLATFORM_SERVICE_NAME)"
+state_project_name="propositio"
+service_name="propositio-site"
+domain="${DOMAIN_NAME:-propositio.com}"
 
 aws_cli() {
   if command -v aws >/dev/null; then
@@ -28,11 +29,9 @@ identity_json="$(aws_cli sts get-caller-identity --output json)"
 jq '.' <<<"$identity_json"
 
 account_id="$(jq -r '.Account' <<<"$identity_json")"
-platform_state="$(aws_cli s3 cp \
-  "s3://${platform_project_name}-terraform-state-${account_id}/shared/terraform.tfstate" -)"
-domain="${DOMAIN_NAME:-$(
-  jq -er ".outputs.service_platform_config.value[\"${platform_service_name}\"].route53_zone_name" <<<"$platform_state"
-)}"
+echo "== Terraform state bucket"
+aws_cli s3api head-bucket --bucket "${state_project_name}-terraform-state-${account_id}"
+echo "Service: ${service_name}"
 
 echo "== SES account (${aws_region})"
 account="$(aws_cli sesv2 get-account --output json)"

@@ -10,5 +10,5 @@ output "ses_configuration_set" {
 
 output "hosted_zone_id" {
   description = "propositio.comのRoute53ホストゾーンID"
-  value       = local.platform.route53_zone_id
+  value       = data.aws_route53_zone.service.zone_id
 }

@@ -75,10 +75,10 @@ propositio-base/
 │       ├── tests/                        # pytest
 │       └── .env.example                  # DATABASE_URL / CORS_ORIGINS
 ├── infra/terraform/                      # AWS基盤（docs/infrastructure.md）
-│   ├── bootstrap/                        # stateバケット（アカウントに1回）
-│   ├── shared/                           # ECR・SES・GitHub OIDC（アカウントに1つ）
-│   ├── modules/environment/              # 1環境分（VPC・ALB・ECS・RDS・CloudFront・Route53・IAM）
-│   └── envs/stg, envs/prod/              # 環境ごとのルート（サイズの違いだけを書く）
+│   ├── shared/service/mail/               # stg/prod共通のSES・DNS・監視
+│   └── env/
+│       ├── stg/service/site-api/          # stgの静的サイトと固有API
+│       └── prod/service/site-api/         # prodの静的サイトと固有API
 └── docs/
 ```
 
@@ -472,7 +472,7 @@ make dev-mobile  # Expo開発サーバーをホストで起動（シミュレー
 
 - 構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) にまとめている。アプリのデプロイは GitHub Actions が行い、手元から行わない。
 - 環境ごとの実AWS変更は`make plan-aws ENV=stg|prod`で保存planを作り、レビュー後に`make apply-aws ENV=stg|prod`で適用する。削除時は`destroy-plan-aws` / `destroy-apply-aws`が確認文字列とstateバックアップを必須にする。共通の`shared`ルートだけは初回に手動適用する。
-- 環境ごとの差（タスク数・DBの保護設定など）は`envs/<env>/main.tf`のmodule引数だけに書き、リソース定義は`modules/environment`に1つだけ持つ。stg用に本番向けの定義を弱めない。
+- 環境ごとの差は`env/<env>/main.tf`と`terraform.tfvars`に明示する。共通の静的サイト構成は`propositio-infra`の`static-site`を利用し、site固有リソースは`env/<env>/service/<feature>`内でリソース種別ごとに分割する。stg用に本番向けの定義を弱めない。
 - 秘密値をtfvars・Terraformのコードに書かない。DBパスワードはephemeral + write-only属性で生成してstateに残さず、アプリの秘密値はSecrets Managerに運用者が設定する。
 - 本番のAPIコンテナは`services/backend/Dockerfile`の`prod`ターゲット。DB接続情報は`DB_HOST`等の個別の環境変数で渡され、`app/core/config.py`がDATABASE_URLを組み立てる。
 - DBマイグレーションはデプロイ時に旧バージョンのAPIが動いたまま先に適用される。旧コードと互換性のない変更（列の削除・名前変更）は複数回のデプロイに分ける。
