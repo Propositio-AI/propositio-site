@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import { Eyebrow } from '@/components/common/Eyebrow';
 import { PageFooter } from '@/components/layout/PageFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
-import { CustomCursor } from '@/components/motion/CustomCursor';
 import { PageWipe } from '@/components/motion/PageWipe';
 import { SplitChars } from '@/components/motion/SplitChars';
 import { usePageIntro } from '@/components/motion/usePageIntro';
@@ -68,7 +67,7 @@ export function ActivitiesIndex({
     return (
         <div
             ref={rootRef}
-            className="relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
+            className="inner-page relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
         >
             <PageWipe direction="vertical" origin="top" inkFirst />
             <SiteHeader variant="page" current="activities" />
@@ -79,7 +78,7 @@ export function ActivitiesIndex({
                     </div>
                     <h1
                         data-title=""
-                        className="m-0 overflow-hidden pb-[.04em] text-[clamp(72px,15vw,240px)] leading-[.88] tracking-[-.06em]"
+                        className="m-0 overflow-hidden pb-[.04em] text-[clamp(46px,9vw,140px)] leading-[1.15] tracking-[-.06em]"
                     >
                         <SplitChars text="Activities" />
                     </h1>
@@ -87,7 +86,7 @@ export function ActivitiesIndex({
 
                 <section
                     data-in=""
-                    className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-b border-t-ink border-b-neutral-300 px-gutter py-3.5"
+                    className="activity-filters flex flex-wrap items-center justify-between gap-4 px-gutter py-4"
                 >
                     <CategoryTabs
                         categories={categories}
@@ -114,14 +113,12 @@ export function ActivitiesIndex({
                         ))}
                     </div>
                     {isError && (
-                        <p className="m-0 border-t-2 border-ink py-12 text-base">
+                        <p className="soft-panel m-0 text-base">
                             活動記録を読み込めませんでした。時間をおいて再度お試しください。
                         </p>
                     )}
                     {!isLoading && !isError && activities.length === 0 && (
-                        <p className="m-0 border-t-2 border-ink py-12 text-base">
-                            記事はまだありません。
-                        </p>
+                        <p className="soft-panel m-0 text-base">記事はまだありません。</p>
                     )}
                     {hasMore && (
                         <div className="flex justify-start">
@@ -142,7 +139,6 @@ export function ActivitiesIndex({
                     { to: '/privacy', label: 'プライバシーポリシー' },
                 ]}
             />
-            <CustomCursor />
         </div>
     );
 }

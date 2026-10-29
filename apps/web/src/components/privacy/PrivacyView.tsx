@@ -102,7 +102,7 @@ export function PrivacyView() {
     return (
         <div
             ref={rootRef}
-            className="relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
+            className="inner-page relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
         >
             <PageWipe direction="horizontal" origin="right" />
             <SiteHeader variant="page" current="privacy" />
@@ -113,7 +113,7 @@ export function PrivacyView() {
                     </div>
                     <h1
                         data-title=""
-                        className="m-0 text-[clamp(44px,6.4vw,104px)] leading-[1.1] tracking-[-.03em]"
+                        className="m-0 text-[clamp(32px,4vw,64px)] leading-[1.5] tracking-[-.03em]"
                     >
                         プライバシー
                         <br />
@@ -123,7 +123,7 @@ export function PrivacyView() {
                         {ENACTED_ON} 制定
                     </p>
                 </div>
-                <div data-in="" className="flex flex-col border-t-2 border-ink">
+                <div data-in="" className="soft-panel policy-panel flex min-w-0 flex-col">
                     <ol className="m-0 list-none p-0">
                         {SECTIONS.map((section, index) => (
                             <li

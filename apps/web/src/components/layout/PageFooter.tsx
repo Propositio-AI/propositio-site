@@ -15,9 +15,9 @@ type PageFooterProps = {
 **/
 export function PageFooter({ links }: PageFooterProps) {
     return (
-        <footer className="flex flex-wrap justify-between gap-4 border-t-2 border-ink px-gutter py-7 text-xs font-semibold tracking-[.06em] text-neutral-700">
+        <footer className="flex flex-wrap justify-between gap-4 border-t border-divider px-gutter py-7 text-xs font-semibold tracking-[.06em] text-neutral-700">
             <span>© 2026 Propositio AI</span>
-            <div className="flex gap-5">
+            <div className="flex flex-wrap gap-5">
                 {links.map((l) => (
                     <Link key={l.to} to={l.to} className="text-ink no-underline hover:text-accent">
                         {l.label}

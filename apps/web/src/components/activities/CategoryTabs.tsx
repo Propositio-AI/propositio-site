@@ -31,8 +31,8 @@ export function CategoryTabs({ categories, selectedId, onSelect }: CategoryTabsP
                         aria-pressed={selected}
                         onClick={() => onSelect(t.id)}
                         className={cn(
-                            'cursor-pointer border border-ink px-3.5 py-2 text-[13px] leading-none font-semibold transition-colors hover:border-accent',
-                            selected ? 'bg-ink text-paper' : 'bg-transparent text-ink',
+                            'category-filter min-h-11 cursor-pointer rounded-full border border-divider px-5 py-3 text-[13px] leading-none font-semibold transition-colors hover:border-accent',
+                            selected ? 'bg-accent-200 text-ink' : 'bg-white text-ink',
                         )}
                     >
                         {t.name}

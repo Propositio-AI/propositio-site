@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 
+import './styles/site-theme.css';
+
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
 import { ActivitiesPage } from '@/pages/ActivitiesPage';
 import { ActivityDetailPage } from '@/pages/ActivityDetailPage';
@@ -19,7 +21,7 @@ import { PrivacyPage } from '@/pages/PrivacyPage';
 **/
 function App() {
     return (
-        <>
+        <div className="site-theme">
             <ScrollToTop />
             <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -29,7 +31,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
-        </>
+        </div>
     );
 }
 

@@ -14,7 +14,7 @@ const LINK_CLASS = 'text-ink no-underline transition-colors hover:text-accent';
 **/
 export function HomeFooter({ lastUpdatedAt }: { lastUpdatedAt?: string }) {
     return (
-        <footer className="flex flex-col gap-10 border-t-2 border-ink px-gutter pt-[clamp(40px,5vw,64px)] pb-7">
+        <footer className="flex flex-col gap-10 border-t border-divider px-gutter pt-[clamp(40px,5vw,64px)] pb-7">
             <div className="flex flex-wrap justify-between gap-8">
                 <div className="flex items-center gap-4">
                     <img src="/images/brand/logo.png" alt="" className="size-12" />

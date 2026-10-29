@@ -1,5 +1,3 @@
-import Lenis from 'lenis';
-
 import {
     gsap,
     isCoarsePointer,
@@ -11,15 +9,11 @@ import {
 
 import type { RefObject } from 'react';
 
-/** 「それらしいもの」を生成中のように見せるときに使う文字 */
-const GENERATE_POOL =
-    'あいうえおかきくけこさしすせそたちつてとなにのはひふへまみむめもやゆよらりるれろわ言葉思意志信念';
-
 /**
 
-トップページ全体のモーション（ローダー → ヒーロー登場、慣性スクロール、ヘッダーの出し入れ、
+トップページ全体のモーション（ローダー → ヒーロー登場、ヘッダーの出し入れ、
 各セクションのスクロール連動演出）を、data属性を目印にまとめて設定するUI用フック。
-「視差効果を減らす」設定の場合は、ローダーと慣性スクロール・自動で繰り返す演出を省略する。
+「視差効果を減らす」設定の場合は、すべての装飾モーションを省略し、内容をそのまま表示する。
 
 @param rootRef トップページのルート要素
 @return なし
@@ -36,21 +30,7 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
             const reduced = prefersReducedMotion();
             const cleanups: (() => void)[] = [];
 
-            // --- 慣性スクロール（Lenis）とページ内アンカー ---
-            let lenis: Lenis | null = null;
-            if (!reduced) {
-                lenis = new Lenis({ lerp: 0.09 });
-                lenis.on('scroll', ScrollTrigger.update);
-                const tick = (t: number) => lenis?.raf(t * 1000);
-                gsap.ticker.add(tick);
-                gsap.ticker.lagSmoothing(0);
-                lenis.stop();
-                cleanups.push(() => {
-                    gsap.ticker.remove(tick);
-                    gsap.ticker.lagSmoothing(500, 33);
-                    lenis?.destroy();
-                });
-            }
+            // ホイール操作はブラウザ標準。ページ内リンクだけ滑らかに移動する。
             q<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
                 /**
 
@@ -65,12 +45,10 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
                     const target = id.length > 1 ? root.querySelector<HTMLElement>(id) : null;
                     if (!target) return;
                     e.preventDefault();
-                    if (lenis) lenis.scrollTo(target, { offset: -60, duration: 1.6 });
-                    else
-                        window.scrollTo({
-                            top: target.getBoundingClientRect().top + window.scrollY - 60,
-                            behavior: reduced ? 'auto' : 'smooth',
-                        });
+                    window.scrollTo({
+                        top: target.getBoundingClientRect().top + window.scrollY - 100,
+                        behavior: reduced ? 'auto' : 'smooth',
+                    });
                 };
                 a.addEventListener('click', onClick);
                 cleanups.push(() => a.removeEventListener('click', onClick));
@@ -84,14 +62,14 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
             let intro: gsap.core.Timeline | null = null;
             if (reduced) {
                 gsap.set(loader, { display: 'none' });
-                ScrollTrigger.refresh();
+                return () => cleanups.forEach((fn) => fn());
             } else {
                 gsap.set(heroChars, { yPercent: 115, rotate: 8 });
                 gsap.set(tagChars, { opacity: 0, y: '0.5em' });
                 gsap.set(q('[data-gl]'), { scaleY: 0, transformOrigin: 'top' });
                 gsap.set(q('[data-shape]'), { scale: 0 });
                 gsap.set(q('[data-hero-fade]'), { opacity: 0, y: 30 });
-                gsap.set(header, { yPercent: -110 });
+                gsap.set(header, { yPercent: -150 });
                 const counter = one('[data-count]');
                 const count = { v: 0 };
                 intro = gsap.timeline({ defaults: { ease: 'expo.out' } });
@@ -156,7 +134,6 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
                     .to(header, { yPercent: 0, duration: 1 }, '<')
                     .add(() => {
                         q('[data-hero-scramble]').forEach((el) => scrambleText(el, 1.2));
-                        lenis?.start();
                         ScrollTrigger.refresh();
                     }, '<');
 
@@ -214,14 +191,18 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
                 });
             }
 
-            // --- ヘッダー：下スクロールで隠し、上スクロールで出す ---
+            // --- ヘッダー：メニュー操作中・キーボード操作中は隠さない ---
             ScrollTrigger.create({
                 start: 0,
                 end: 'max',
                 onUpdate: (self) => {
                     if (intro?.isActive()) return;
+                    const interacting =
+                        header?.contains(document.activeElement) ||
+                        header?.querySelector('[aria-expanded="true"]');
                     gsap.to(header, {
-                        yPercent: self.direction === 1 && self.scroll() > 240 ? -110 : 0,
+                        yPercent:
+                            !interacting && self.direction === 1 && self.scroll() > 240 ? -150 : 0,
                         duration: 0.45,
                         ease: 'power3.out',
                         overwrite: true,
@@ -229,18 +210,18 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
                 },
             });
 
-            // --- ヒーロー：スクロールで見出しが沈む ---
+            // --- 既存のワードマークの視差を継承 ---
             const hero = one('[data-hero]');
             gsap.to('[data-hero-title]', {
-                yPercent: 40,
-                scale: 0.92,
+                yPercent: 18,
+                scale: 0.96,
                 transformOrigin: 'left bottom',
                 ease: 'none',
                 scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
             });
             q('[data-depth]').forEach((el) =>
                 gsap.to(el.firstElementChild, {
-                    yPercent: -Number(el.dataset.depth) * 2.2,
+                    yPercent: -Number(el.dataset.depth) * 1.5,
                     ease: 'none',
                     scrollTrigger: {
                         trigger: hero,
@@ -251,179 +232,129 @@ export function useHomeMotion(rootRef: RefObject<HTMLElement | null>) {
                 }),
             );
 
-            // --- 汎用のスクロール登場 ---
+            // --- 文字と罫線の登場。通常の縦スクロールで読めるよう固定しない ---
             q('[data-reveal]').forEach((el) =>
                 gsap.from(el, {
-                    y: 60,
+                    y: 40,
                     opacity: 0,
-                    duration: 1.1,
+                    duration: 0.9,
                     ease: 'expo.out',
-                    scrollTrigger: { trigger: el, start: 'top 88%' },
+                    scrollTrigger: { trigger: el, start: 'top 92%', once: true },
                 }),
             );
             q('[data-split-reveal]').forEach((el) =>
                 gsap.from(el.querySelectorAll('[data-char]'), {
-                    yPercent: 90,
+                    yPercent: 65,
                     opacity: 0,
-                    rotateX: -80,
-                    duration: 1,
-                    stagger: 0.035,
+                    rotateX: -50,
+                    duration: 0.8,
+                    stagger: { amount: 0.45 },
                     ease: 'expo.out',
-                    scrollTrigger: { trigger: el, start: 'top 85%' },
+                    scrollTrigger: { trigger: el, start: 'top 92%', once: true },
                 }),
             );
-
-            // --- 02 イントロ：固定して1文字ずつ塗る ---
-            const fillChars = q('[data-fill-a] [data-char]');
-            gsap.set(fillChars, { color: 'var(--color-ghost)' });
-            gsap.timeline({
-                scrollTrigger: {
-                    trigger: '[data-opener]',
-                    start: 'top top',
-                    end: '+=120%',
-                    pin: true,
-                    scrub: 0.6,
-                },
-            }).to(fillChars, { color: 'var(--color-ink)', stagger: 0.03, ease: 'none' });
-
-            // --- 01 About ---
-            const firstCol = one('[data-about-col]');
-            gsap.from(q('[data-about-line]'), {
-                scaleX: 0,
-                duration: 1.4,
-                stagger: 0.15,
-                ease: 'expo.inOut',
-                scrollTrigger: { trigger: firstCol, start: 'top 85%' },
-            });
-            gsap.from(q('[data-about-col] > :not([data-about-line])'), {
-                y: 40,
+            q('[data-rule]').forEach((el) =>
+                gsap.from(el, {
+                    scaleX: 0,
+                    transformOrigin: 'left',
+                    duration: 1.2,
+                    ease: 'expo.inOut',
+                    scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+                }),
+            );
+            gsap.from(q('[data-work-card]'), {
+                y: 50,
+                rotate: 1.5,
                 opacity: 0,
                 duration: 1,
-                stagger: 0.06,
+                stagger: 0.12,
                 ease: 'expo.out',
-                scrollTrigger: { trigger: firstCol, start: 'top 85%' },
+                scrollTrigger: { trigger: '[data-work-card]', start: 'top 90%', once: true },
             });
-
-            // --- 03 場面：固定して4つの場面を切り替える ---
-            const scenes = one('[data-scenes]');
-            const scItems = q('[data-sc]');
-            const scWords = q('[data-sc-word]');
-            const scDots = q('[data-sc-dot]');
-            const scNum = one('[data-sc-num]');
-            const n = scItems.length;
-            gsap.set(scItems.slice(1), { opacity: 0, yPercent: 30 });
-            gsap.set(scWords.slice(1), { yPercent: 110 });
-            gsap.from(scWords[0], {
-                yPercent: 110,
-                duration: 1.2,
-                ease: 'expo.out',
-                scrollTrigger: { trigger: scenes, start: 'top 60%' },
-            });
-            const sceneTl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: scenes,
-                    start: 'top top',
-                    end: `+=${n * 60}%`,
-                    pin: true,
-                    scrub: 0.6,
-                    onUpdate: (self) => {
-                        const i = Math.min(n - 1, Math.round(self.progress * (n - 1)));
-                        if (scNum) scNum.textContent = String(i + 1).padStart(2, '0');
-                        scDots.forEach((d, j) => {
-                            d.style.background =
-                                j <= i ? 'var(--color-ink)' : 'var(--color-neutral-300)';
-                        });
+            q('[data-dialogue-line]').forEach((el, i) =>
+                gsap.from(el, {
+                    x: i % 2 ? 24 : -24,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+                }),
+            );
+            gsap.fromTo(
+                q('[data-fill] [data-char]'),
+                { color: 'var(--color-neutral-500)' },
+                {
+                    color: 'var(--color-ink)',
+                    stagger: 0.04,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: '[data-fill]',
+                        start: 'top 85%',
+                        end: 'bottom 55%',
+                        scrub: 0.5,
                     },
                 },
-            });
-            sceneTl.to({}, { duration: 0.3 });
-            for (let i = 1; i < n; i++) {
-                sceneTl
-                    .to(scWords[i - 1], { yPercent: -110, duration: 1 })
-                    .to(scWords[i], { yPercent: 0, duration: 1 }, '<')
-                    .to(scItems[i - 1], { opacity: 0, yPercent: -30, duration: 1 }, '<')
-                    .to(scItems[i], { opacity: 1, yPercent: 0, duration: 1 }, '<0.15')
-                    .to({}, { duration: 0.3 });
-            }
+            );
 
-            // --- 04 ミッション：「それらしいもの」が生成されるように入れ替わる ---
-            const ai = one('[data-ai]');
-            if (ai && !reduced) {
-                ScrollTrigger.create({
-                    trigger: ai,
-                    start: 'top 85%',
-                    once: true,
-                    // 後から生成する無限ループのTimelineもアンマウント時に破棄されるよう、contextSafeで包む
-                    onEnter: contextSafe?.(() => {
-                        scrambleText(ai, 1.2, GENERATE_POOL);
-                        gsap.timeline({ repeat: -1, repeatDelay: 2.6, delay: 2.6 }).call(() =>
-                            scrambleText(ai, 1.2, GENERATE_POOL),
-                        );
-                    }),
-                });
-            }
-
-            // --- 05 原則：縦スクロールで横に流す ---
-            const hSection = one('[data-hsection]');
-            const track = one('[data-htrack]');
-            if (hSection && track) {
-                const dist = () => Math.max(0, track.scrollWidth - window.innerWidth);
-                const hTween = gsap.to(track, {
-                    x: () => -dist(),
-                    ease: 'none',
-                    scrollTrigger: {
-                        trigger: hSection,
-                        start: 'top top',
-                        end: () => `+=${dist()}`,
-                        pin: true,
-                        scrub: 1,
-                        invalidateOnRefresh: true,
-                    },
-                });
-                gsap.to('[data-hprogress]', {
-                    scaleX: 1,
-                    ease: 'none',
-                    scrollTrigger: {
-                        trigger: hSection,
-                        start: 'top top',
-                        end: () => `+=${dist()}`,
-                        scrub: true,
-                        invalidateOnRefresh: true,
-                    },
-                });
-                q('[data-hcard]').forEach((card) => {
-                    gsap.from(card.querySelectorAll('[data-hc-in]'), {
-                        y: 80,
-                        opacity: 0,
-                        stagger: 0.08,
-                        duration: 1,
-                        ease: 'expo.out',
-                        scrollTrigger: {
-                            trigger: card,
-                            containerAnimation: hTween,
-                            start: 'left 90%',
-                        },
-                    });
+            // ネイティブのdetailsを保ち、開く時も閉じる時も高さを補間する。
+            q<HTMLDetailsElement>('[data-disclosure]').forEach((details) => {
+                const summary = details.querySelector('summary');
+                const body = details.querySelector<HTMLElement>('[data-disclosure-body]');
+                if (!summary || !body) return;
+                let expanded = details.open;
+                const onClick = contextSafe?.((event: MouseEvent) => {
+                    event.preventDefault();
+                    const startHeight = details.getBoundingClientRect().height;
+                    expanded = !expanded;
+                    gsap.killTweensOf([details, body]);
+                    details.open = true;
+                    details.dataset.expanded = String(expanded);
+                    details.style.height = 'auto';
+                    const naturalHeight = details.getBoundingClientRect().height;
+                    const style = getComputedStyle(details);
+                    const closedHeight =
+                        summary.offsetHeight +
+                        parseFloat(style.paddingTop) +
+                        parseFloat(style.paddingBottom) +
+                        parseFloat(style.borderTopWidth) +
+                        parseFloat(style.borderBottomWidth);
                     gsap.fromTo(
-                        card,
-                        { rotate: 2.5 },
+                        details,
+                        { height: startHeight, overflow: 'hidden' },
                         {
-                            rotate: -2.5,
-                            ease: 'none',
-                            scrollTrigger: {
-                                trigger: card,
-                                containerAnimation: hTween,
-                                start: 'left right',
-                                end: 'right left',
-                                scrub: true,
+                            height: expanded ? naturalHeight : closedHeight,
+                            duration: 0.38,
+                            ease: 'power3.inOut',
+                            onComplete: () => {
+                                details.open = expanded;
+                                gsap.set(details, { clearProps: 'height,overflow' });
+                                ScrollTrigger.refresh();
                             },
                         },
                     );
+                    gsap.to(body, {
+                        opacity: expanded ? 1 : 0,
+                        y: expanded ? 0 : -8,
+                        duration: 0.25,
+                        ease: 'power2.out',
+                    });
                 });
-            }
+                if (!onClick) return;
+                summary.addEventListener('click', onClick);
+                cleanups.push(() => {
+                    summary.removeEventListener('click', onClick);
+                    delete details.dataset.expanded;
+                });
+            });
 
-            void document.fonts?.ready.then(() => ScrollTrigger.refresh());
-            return () => cleanups.forEach((fn) => fn());
+            let mounted = true;
+            void document.fonts?.ready.then(() => {
+                if (mounted) ScrollTrigger.refresh();
+            });
+            return () => {
+                mounted = false;
+                cleanups.forEach((fn) => fn());
+            };
         },
         { scope: rootRef },
     );

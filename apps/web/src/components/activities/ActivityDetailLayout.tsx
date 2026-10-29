@@ -13,7 +13,7 @@ import type { ReactNode } from 'react';
 **/
 export function ActivityDetailLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink">
+        <div className="inner-page relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink">
             <div
                 data-progress=""
                 aria-hidden="true"
@@ -44,7 +44,7 @@ export function ActivityDetailLayout({ children }: { children: ReactNode }) {
 **/
 export function ActivityDetailMessage({ children }: { children: ReactNode }) {
     return (
-        <div className="flex w-full max-w-[760px] flex-col gap-6 border-t-2 border-ink pt-8 text-base leading-[1.9]">
+        <div className="soft-panel flex w-full max-w-[840px] flex-col gap-6 text-base leading-[1.9]">
             {children}
         </div>
     );

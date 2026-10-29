@@ -2,7 +2,7 @@ import { SplitChars } from '@/components/motion/SplitChars';
 
 /**
 
-トップページのファーストビュー。グリッド線・装飾図形・タグライン・「Karynos」の大見出しを表示する。
+文理選択前の読者に問いかけるファーストビュー。淡い背景と丸い図形にワードマーク演出を組み合わせる。
 
 @param なし
 @return ヒーローセクションのJSX
@@ -13,20 +13,17 @@ export function HeroSection() {
         <section
             id="top"
             data-hero=""
-            className="relative flex min-h-screen flex-col justify-between gap-8 overflow-hidden px-gutter pt-[110px] pb-9"
+            className="hero-soft relative flex min-h-screen flex-col justify-between gap-8 overflow-hidden px-gutter pt-[130px] pb-12"
         >
-            <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 grid grid-cols-6 px-gutter"
-            >
-                {Array.from({ length: 6 }, (_, i) => (
-                    <div key={i} data-gl="" className="border-l border-neutral-200 last:border-r" />
+            <div aria-hidden="true" className="hero-ambient pointer-events-none absolute inset-0">
+                {Array.from({ length: 3 }, (_, i) => (
+                    <div key={i} data-gl="" className="hero-glow" />
                 ))}
             </div>
             <div
                 data-sweep=""
                 aria-hidden="true"
-                className="absolute top-[44%] right-0 left-0 h-px bg-neutral-300"
+                className="hero-sweep absolute right-[8%] bottom-[18%] h-1 w-20 rounded-full bg-accent-2"
                 style={{ transform: 'scaleX(0)', transformOrigin: 'left' }}
             />
             <div
@@ -37,7 +34,7 @@ export function HeroSection() {
                 <div
                     data-shape=""
                     data-spin=""
-                    className="aspect-square w-[clamp(160px,22vw,320px)] rounded-full border border-dashed border-neutral-400"
+                    className="hero-orb aspect-square w-[clamp(120px,17vw,240px)]"
                 />
             </div>
             <div
@@ -47,39 +44,51 @@ export function HeroSection() {
             >
                 <div
                     data-shape=""
-                    className="aspect-square w-[clamp(10px,1vw,14px)] rounded-full bg-accent-2"
+                    className="hero-pebble aspect-square w-[clamp(28px,4vw,64px)] rounded-full"
                 />
             </div>
 
-            <div
-                data-hero-fade=""
-                className="relative text-xs font-semibold tracking-[.14em] uppercase"
-            >
-                <span data-hero-scramble="">Propositio AI</span>
+            <div data-hero-fade="" className="relative text-xs font-semibold tracking-[.12em]">
+                <span data-hero-scramble="" className="hero-label">
+                    Karynos / Propositio AI
+                </span>
+                <p className="mt-3 text-sm tracking-normal">文理選択を迎えるあなたへ</p>
             </div>
 
             <div className="relative flex flex-col gap-[clamp(12px,2vw,24px)]">
-                <p
-                    data-hero-tag=""
-                    className="m-0 max-w-[18em] text-[clamp(20px,2.8vw,40px)] leading-[1.5] font-medium text-pretty"
-                >
-                    <SplitChars text="誰もが、夢を実現できる世界へ。" />
-                </p>
                 <h1
+                    data-hero-tag=""
+                    className="m-0 text-[clamp(22px,7.4vw,30px)] leading-[1.5] font-semibold tracking-[-.03em] sm:text-[clamp(30px,4.2vw,64px)]"
+                >
+                    <SplitChars text={['進路を選ぶ前に、', '自分の思いを、言葉に。']} />
+                </h1>
+                <p
                     data-hero-title=""
-                    className="m-0 overflow-hidden pb-[.04em] text-[clamp(88px,20vw,340px)] leading-[.86] font-bold tracking-[-.06em]"
+                    aria-hidden="true"
+                    className="m-0 overflow-hidden pb-[.04em] text-[clamp(64px,14vw,200px)] leading-[1.15] font-bold tracking-[-.06em] whitespace-nowrap"
                 >
                     <SplitChars text="Karynos" />
-                </h1>
+                </p>
             </div>
 
-            <div className="relative flex flex-wrap items-end justify-between gap-8 border-t-2 border-ink pt-5">
-                <p
-                    data-hero-fade=""
-                    className="m-0 max-w-[600px] text-[15px] leading-[1.9] text-pretty"
-                >
-                    Karynosは、自分の中にある思いを対話によって言葉にし、自分だけの夢の形を見つけるためのプロジェクトです。
-                </p>
+            <div className="relative flex flex-wrap items-end justify-between gap-8 pt-5">
+                <div data-hero-fade="" className="flex max-w-[650px] flex-col gap-4">
+                    <p className="text-base leading-[1.9]">
+                        得意な科目。行きたい学校。
+                        <br />
+                        その先で、何をして、どんなふうに生きたいだろう。
+                    </p>
+                    <p className="text-sm leading-[1.9]">
+                        Karynosは、自分の中にある思いを言葉にし、納得して進路を選べるように、対話による自己理解を研究するプロジェクトです。
+                    </p>
+                    <a
+                        href="#questions"
+                        className="btn btn-primary min-h-12 self-start"
+                        data-magnetic=""
+                    >
+                        自分に問いかけてみる ↓
+                    </a>
+                </div>
                 <div
                     data-hero-fade=""
                     aria-hidden="true"

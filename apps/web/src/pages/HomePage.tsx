@@ -1,13 +1,15 @@
 import { AboutSection } from '@/components/home/AboutSection';
+import { CurrentWorkSection } from '@/components/home/CurrentWorkSection';
+import { DialogueSection } from '@/components/home/DialogueSection';
+import { FutureSection } from '@/components/home/FutureSection';
 import { HeroSection } from '@/components/home/HeroSection';
 import { HomeFooter } from '@/components/home/HomeFooter';
 import { HomeLoader } from '@/components/home/HomeLoader';
 import { HomeScene } from '@/components/home/HomeScene';
-import { IntroSection } from '@/components/home/IntroSection';
+import { IssueSection } from '@/components/home/IssueSection';
+import { JoinSection } from '@/components/home/JoinSection';
 import { LatestActivitiesSection } from '@/components/home/LatestActivitiesSection';
-import { MissionSection } from '@/components/home/MissionSection';
-import { PrinciplesSection } from '@/components/home/PrinciplesSection';
-import { ScenesSection } from '@/components/home/ScenesSection';
+import { QuestionsSection } from '@/components/home/QuestionsSection';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { useLatestActivities } from '@/hooks/useLatestActivities';
 
@@ -27,16 +29,18 @@ export function HomePage() {
             <SiteHeader variant="home" />
             <main>
                 <HeroSection />
+                <QuestionsSection />
+                <IssueSection />
+                <DialogueSection />
+                <CurrentWorkSection />
+                <FutureSection />
                 <AboutSection />
-                <IntroSection />
-                <ScenesSection />
-                <MissionSection />
-                <PrinciplesSection />
                 <LatestActivitiesSection
                     activities={activities}
                     isLoading={isLoading}
                     isError={isError}
                 />
+                <JoinSection />
             </main>
             <HomeFooter lastUpdatedAt={activities[0]?.published_at} />
         </HomeScene>

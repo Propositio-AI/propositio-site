@@ -55,7 +55,7 @@ export function ActivityArticle({ activity }: { activity: ActivityDetail }) {
     return (
         <article
             ref={rootRef}
-            className="flex w-full max-w-[760px] flex-col gap-[clamp(28px,4vw,48px)]"
+            className="soft-panel article-panel flex w-full max-w-[900px] flex-col gap-[clamp(28px,4vw,48px)]"
         >
             <PageWipe direction="horizontal" origin="right" />
             <Link
@@ -91,7 +91,7 @@ export function ActivityArticle({ activity }: { activity: ActivityDetail }) {
             </div>
             <div
                 data-cover=""
-                className="relative aspect-video overflow-hidden border-2 border-ink bg-surface"
+                className="relative aspect-video overflow-hidden rounded-3xl border border-divider bg-surface"
             >
                 <ActivityThumb
                     thumbnail={activity.thumbnail}
@@ -107,7 +107,7 @@ export function ActivityArticle({ activity }: { activity: ActivityDetail }) {
             />
             <nav
                 aria-label="前後の記事"
-                className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4 border-t-2 border-ink pt-6"
+                className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4 border-t border-divider pt-6"
             >
                 {activity.newer && (
                     <NeighborLink

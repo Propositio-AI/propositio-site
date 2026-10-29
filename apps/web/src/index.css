@@ -4,51 +4,50 @@
  * ============================================================================
  * Karynos Design System — Tokens
  * ----------------------------------------------------------------------------
- * claude.ai/design の「Karynos」プロジェクト（Modernist デザインシステム）を移植したもの。
- * 白地 + 濃いインク色の罫線、ブルー（accent）とグリーン（accent-2）の2色アクセント、角丸なし。
+ * 全ページ共通：温かな白、明るい緑、丸い文字と柔らかな輪郭。
  * ============================================================================
  */
 
 @theme {
-    --font-sans: 'Archivo', 'Noto Sans JP', system-ui, sans-serif;
+    --font-sans: 'Zen Maru Gothic', 'Noto Sans JP', system-ui, sans-serif;
 
-    --color-paper: #ffffff;
-    --color-surface: #f3f5f8;
-    --color-ink: #0e1116;
-    --color-divider: color-mix(in srgb, #0e1116 40%, transparent);
+    --color-paper: #fbf8f4;
+    --color-surface: #f0f9ef;
+    --color-ink: #293b32;
+    --color-divider: #dce7df;
     --color-danger: #d0342c;
     /* ローディング中の「まだ塗られていない」文字色 */
     --color-ghost: #d7dbe2;
 
     --color-neutral-100: #f8f4f4;
-    --color-neutral-200: #eae7e7;
-    --color-neutral-300: #d7d3d3;
-    --color-neutral-400: #bab6b6;
-    --color-neutral-500: #9b9797;
-    --color-neutral-600: #7d7979;
-    --color-neutral-700: #605d5d;
+    --color-neutral-200: #e7eee7;
+    --color-neutral-300: #d3dfd5;
+    --color-neutral-400: #8fa597;
+    --color-neutral-500: #7c9384;
+    --color-neutral-600: #637c6b;
+    --color-neutral-700: #53695b;
     --color-neutral-800: #444141;
     --color-neutral-900: #2d2b2b;
 
-    --color-accent: #2453ff;
-    --color-accent-100: #eef3ff;
-    --color-accent-200: #dbe5ff;
-    --color-accent-300: #bccfff;
-    --color-accent-400: #8aa9ff;
-    --color-accent-500: #4d7bff;
-    --color-accent-600: #1f45e0;
-    --color-accent-700: #1c3fc4;
-    --color-accent-800: #172f8c;
-    --color-accent-900: #13214f;
+    --color-accent: #298249;
+    --color-accent-100: #edf6ef;
+    --color-accent-200: #d5eadb;
+    --color-accent-300: #b8efbd;
+    --color-accent-400: #91dda0;
+    --color-accent-500: #49a961;
+    --color-accent-600: #216d3c;
+    --color-accent-700: #1c6034;
+    --color-accent-800: #194c2c;
+    --color-accent-900: #163e26;
 
-    --color-accent-2: #14b874;
+    --color-accent-2: #8cdb9f;
     --color-accent-2-100: #eafbf2;
     --color-accent-2-200: #cff5e1;
     --color-accent-2-300: #a3eac6;
     --color-accent-2-400: #5fd6a0;
     --color-accent-2-500: #1fbf7a;
     --color-accent-2-600: #10a065;
-    --color-accent-2-700: #0b7a4d;
+    --color-accent-2-700: #326b57;
     --color-accent-2-800: #0b5738;
     --color-accent-2-900: #0a3624;
 
@@ -67,7 +66,8 @@
     --color-border: var(--color-neutral-300);
     --color-input: var(--color-neutral-300);
     --color-ring: var(--color-accent);
-    --radius: 0px;
+    --radius: 18px;
+    --shadow-soft: 0 8px 28px rgb(57 104 74 / 6%);
 }
 
 @layer base {
@@ -124,8 +124,45 @@
     }
 }
 
-/* — Modernist デザインシステムのコンポーネントクラス — */
+/* — 全ページ共通のコンポーネントクラス — */
 @layer components {
+    .home-section {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(28px, 4vw, 56px);
+        border-top: 2px solid var(--color-divider);
+        padding: clamp(64px, 8vw, 112px) var(--spacing-gutter);
+        scroll-margin-top: 88px;
+    }
+
+    .home-body {
+        font-size: 16px;
+        line-height: 1.95;
+        text-wrap: pretty;
+    }
+
+    .dialogue-line {
+        width: 90%;
+        border: 1px solid var(--color-divider);
+        padding: clamp(18px, 2.4vw, 32px);
+        background: var(--color-surface);
+        font-size: clamp(16px, 1.5vw, 21px);
+        line-height: 1.9;
+    }
+
+    .dialogue-reply {
+        margin-left: auto;
+        border-left: 3px solid var(--color-accent);
+        background: var(--color-accent-100);
+    }
+
+    .dialogue-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--color-neutral-700);
+    }
+
     .btn {
         display: inline-flex;
         align-items: center;
@@ -202,7 +239,7 @@
         line-height: 1.5;
         margin: 2.4em 0 0.8em;
         padding-top: 0.8em;
-        border-top: 2px solid var(--color-ink);
+        border-top: 1px solid var(--color-divider);
     }
 
     .richtext h3 {
@@ -230,7 +267,7 @@
     .richtext blockquote {
         margin: 2em 0;
         padding: 4px 0 4px 20px;
-        border-left: 2px solid var(--color-ink);
+        border-left: 3px solid var(--color-accent-2);
         color: var(--color-neutral-700);
     }
 

@@ -1,0 +1,359 @@
+/* 共通の緑・角丸テーマ。ホーム固有の演出は各data属性とセクションで指定する。 */
+.site-theme {
+    min-height: 100dvh;
+}
+
+.site-theme .inner-page {
+    background:
+        radial-gradient(ellipse 65vw 500px at 0 0, #e7f7df, transparent),
+        radial-gradient(ellipse 50vw 400px at 100% 0, #e9f5ec, transparent), var(--color-paper);
+}
+
+.site-theme [data-header][data-variant='page'] {
+    margin: 12px clamp(12px, 2vw, 28px) 0;
+}
+
+.site-theme .inner-page h1 {
+    color: #3c9851;
+    overflow-wrap: anywhere;
+}
+
+.site-theme .soft-panel {
+    border: 1px solid var(--color-divider);
+    border-radius: clamp(24px, 3vw, 36px);
+    padding: clamp(20px, 3vw, 40px);
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+    min-width: 0;
+}
+
+.site-theme .contact-panel {
+    padding-top: 8px;
+}
+
+.site-theme .contact-steps li {
+    background: rgb(255 255 255 / 65%);
+}
+.site-theme .contact-steps [aria-current='step'] {
+    background: #d9f3d4;
+}
+
+.site-theme .contact-input {
+    width: 100%;
+    transition:
+        border-color 180ms,
+        box-shadow 180ms,
+        background-color 180ms;
+}
+.site-theme .contact-input:focus {
+    background: #fff;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 4px rgb(140 219 159 / 22%);
+}
+.site-theme .contact-input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+}
+.site-theme .contact-form [data-field] {
+    border-color: var(--color-divider);
+}
+
+.site-theme .activity-filters {
+    margin-inline: var(--spacing-gutter);
+    border-radius: 24px;
+    padding-inline: 20px;
+    background: #e8f6e4;
+}
+.site-theme .category-filter {
+    transition:
+        background-color 180ms,
+        border-color 180ms,
+        translate 180ms;
+}
+.site-theme .category-filter:hover {
+    translate: 0 -2px;
+}
+.site-theme .category-filter[aria-pressed='true'] {
+    border-color: #8cce99;
+}
+.site-theme .article-panel {
+    overflow-wrap: anywhere;
+}
+.site-theme .richtext :is(img, blockquote) {
+    border-radius: 18px;
+}
+.site-theme .richtext blockquote {
+    background: var(--color-surface);
+    padding: 20px 24px;
+}
+.site-theme .policy-panel > ol > li:last-child {
+    border-bottom: 0;
+}
+.site-theme .policy-panel h2 {
+    line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-theme .category-filter:hover {
+        translate: none;
+    }
+}
+
+.site-theme [data-header] {
+    top: 12px;
+    right: clamp(12px, 2vw, 28px);
+    left: clamp(12px, 2vw, 28px);
+    border: 1px solid rgb(255 255 255 / 90%);
+    border-radius: 999px;
+    padding: 10px clamp(16px, 2vw, 32px);
+    background: rgb(255 255 255 / 91%);
+    box-shadow: var(--shadow-soft);
+}
+
+.site-theme [data-header] button {
+    border-radius: 50%;
+    border-color: var(--color-divider);
+    background: var(--color-paper);
+}
+
+.site-theme #mobile-navigation {
+    top: calc(100% + 10px);
+    border: 1px solid var(--color-divider);
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+}
+
+.site-theme .btn {
+    min-height: 46px;
+    border-radius: 999px;
+    padding: 12px 22px;
+    transition:
+        background-color 180ms,
+        box-shadow 180ms,
+        translate 180ms,
+        scale 180ms;
+}
+
+.site-theme .btn-primary {
+    background: #b8efbd;
+    color: #28573a;
+    box-shadow: 0 4px 14px rgb(57 104 74 / 8%);
+}
+
+.site-theme .btn-primary:hover {
+    background: #9ee6aa;
+    box-shadow: 0 6px 20px rgb(57 104 74 / 14%);
+}
+
+.site-theme .btn-secondary {
+    background: #fff;
+    border-color: var(--color-divider);
+}
+
+.site-theme .btn-secondary:hover {
+    background: var(--color-accent-100);
+}
+
+.site-theme .tag {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border-color: transparent;
+    background: #e3f2e9;
+    color: #326b57;
+}
+
+.site-theme .home-section {
+    border-top: 0;
+    padding-block: clamp(64px, 8vw, 112px);
+    scroll-margin-top: 110px;
+}
+
+.site-theme :is(#questions, #work, #join) {
+    border-radius: clamp(28px, 5vw, 72px);
+}
+
+.site-theme #questions {
+    background: #eff9ec;
+}
+.site-theme #work {
+    background: #f0f9ef;
+}
+.site-theme #join {
+    background: #e4f6df;
+}
+.site-theme #future {
+    background: radial-gradient(ellipse at 90% 50%, #eaf2e8, transparent 65%);
+}
+
+.site-theme .hero-soft {
+    background: var(--color-paper);
+}
+
+.site-theme .hero-glow {
+    position: absolute;
+    width: 70vw;
+    height: 70vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ddf6d7, transparent 68%);
+    top: -35%;
+    left: -25%;
+    opacity: 0.65;
+}
+
+.site-theme .hero-glow:nth-child(2) {
+    background: radial-gradient(circle, #dcefe3, transparent 68%);
+    top: -15%;
+    left: 55%;
+}
+
+.site-theme .hero-glow:nth-child(3) {
+    background: radial-gradient(circle, #f9e8db, transparent 68%);
+    top: 40%;
+    left: 20%;
+}
+
+.site-theme .hero-orb {
+    border-radius: 58% 42% 52% 48% / 55% 52% 48% 45%;
+    background: #c0edb1;
+    box-shadow:
+        inset 12px 14px 24px rgb(255 255 255 / 65%),
+        inset -12px -14px 24px rgb(57 104 74 / 7%),
+        0 20px 34px -20px rgb(57 104 74 / 25%);
+}
+
+.site-theme .hero-pebble {
+    background: #bceecb;
+    box-shadow: inset 6px 6px 12px rgb(255 255 255 / 70%);
+}
+
+.site-theme .hero-label {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 80%);
+    color: var(--color-accent);
+}
+
+.site-theme [data-hero-title] {
+    color: #3c9851;
+}
+
+.site-theme [data-wipe='2'] {
+    background: #b8efbd;
+}
+
+.site-theme [data-hero-tag] {
+    font-weight: 700;
+}
+
+.site-theme .question-card {
+    padding-inline: clamp(20px, 3vw, 40px);
+    border: 1px solid rgb(255 255 255 / 90%);
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+}
+
+.site-theme .question-card[open] {
+    border-color: #b6d4bd;
+}
+.site-theme .question-plus {
+    padding: 8px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-accent);
+}
+
+.site-theme :is(.issue-card, .work-card, .team-card, .evidence-card, .lab-card) {
+    border: 1px solid var(--color-divider);
+    border-radius: 32px;
+    padding: clamp(24px, 3vw, 40px);
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+}
+
+.site-theme .issue-card {
+    background: #fffcf8;
+}
+.site-theme .evidence-card {
+    background: #eaf3e8;
+    border-color: transparent;
+}
+.site-theme .team-card {
+    background: #f0f9ef;
+    border-color: transparent;
+}
+.site-theme .lab-card {
+    background: #fffefa;
+}
+.site-theme .work-number {
+    color: #70b37f;
+}
+
+.site-theme .dialogue-line {
+    border: 1px solid var(--color-divider);
+    border-radius: 26px 26px 26px 8px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+}
+
+.site-theme .dialogue-reply {
+    border-color: #c9decc;
+    border-radius: 26px 26px 8px 26px;
+    background: #e4f6df;
+}
+
+.site-theme [data-card] > div:first-child {
+    border: 1px solid var(--color-divider);
+    border-radius: 24px;
+}
+
+.site-theme :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 5px;
+}
+
+@media (max-width: 639px) {
+    .site-theme .hero-orb {
+        opacity: 0.4;
+    }
+    .site-theme .hero-sweep {
+        display: none;
+    }
+    .site-theme .question-card {
+        padding-inline: 16px;
+        border-radius: 22px;
+    }
+    .site-theme .question-card [data-disclosure-body] {
+        padding-left: 0;
+    }
+    .site-theme .btn {
+        padding-inline: 18px;
+    }
+}
+
+.site-theme .btn:hover {
+    translate: 0 -2px;
+}
+.site-theme .btn:active {
+    scale: 0.97;
+    translate: 0 0;
+}
+.site-theme .question-card {
+    transition:
+        border-color 220ms,
+        box-shadow 220ms;
+}
+.site-theme .question-card:hover {
+    box-shadow: 0 10px 30px rgb(57 104 74 / 10%);
+}
+.site-theme [data-disclosure][data-expanded='false'] summary svg {
+    transform: rotate(0);
+}
+@media (prefers-reduced-motion: reduce) {
+    .site-theme .btn:hover,
+    .site-theme .btn:active {
+        translate: none;
+        scale: none;
+    }
+}

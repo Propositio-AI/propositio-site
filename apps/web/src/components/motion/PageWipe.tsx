@@ -21,7 +21,7 @@ type PageWipeProps = {
 
 **/
 export function PageWipe({ direction, origin, inkFirst = false }: PageWipeProps) {
-    const panels = inkFirst ? ['bg-ink', 'bg-surface'] : ['bg-surface', 'bg-ink'];
+    const panels = inkFirst ? ['bg-accent-200', 'bg-surface'] : ['bg-surface', 'bg-accent-200'];
     return (
         <div
             data-wipe=""

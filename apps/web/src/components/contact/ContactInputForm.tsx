@@ -7,7 +7,7 @@ import {
     type ContactErrors,
     type ContactValues,
 } from '@/hooks/useContactForm';
-import { gsap } from '@/lib/gsap';
+import { gsap, prefersReducedMotion } from '@/lib/gsap';
 
 import { INQUIRY_TYPE_OPTIONS } from './inquiryTypes';
 
@@ -23,8 +23,8 @@ type ContactInputFormProps = {
     onSubmit: () => boolean;
 };
 
-const UNDERLINE_INPUT_CLASS =
-    'rounded-none border-0 border-b-2 border-ink bg-transparent py-3 text-lg leading-[1.4] font-medium text-ink outline-none focus:border-accent';
+const INPUT_CLASS =
+    'contact-input min-w-0 rounded-2xl border border-divider bg-paper px-4 py-3 text-lg leading-[1.4] font-medium text-ink outline-none focus:border-accent';
 
 /**
 
@@ -51,7 +51,7 @@ export function ContactInputForm({
             noValidate
             onSubmit={(e) => {
                 e.preventDefault();
-                if (!onSubmit()) {
+                if (!onSubmit() && !prefersReducedMotion()) {
                     gsap.fromTo(
                         ctaRef.current,
                         { x: -8 },
@@ -59,7 +59,7 @@ export function ContactInputForm({
                     );
                 }
             }}
-            className="flex flex-col border-t-2 border-ink"
+            className="contact-form flex flex-col"
         >
             <fieldset
                 data-field=""
@@ -79,7 +79,7 @@ export function ContactInputForm({
                                 onChange={() => onChange('inquiryType', o.value)}
                                 className="peer sr-only"
                             />
-                            <span className="block border border-ink px-4 py-3 text-sm leading-none font-semibold transition-colors peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent hover:border-accent">
+                            <span className="block rounded-full border border-divider px-4 py-3 text-sm leading-none font-semibold transition-colors peer-checked:border-accent peer-checked:bg-accent-200 peer-checked:text-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent hover:border-accent">
                                 {o.label}
                             </span>
                         </label>
@@ -148,7 +148,7 @@ export function ContactInputForm({
                     rows={7}
                     placeholder="ご用件をご記入ください"
                     aria-invalid={!!errors.message}
-                    className="resize-y rounded-none border-2 border-ink bg-transparent p-3.5 text-base leading-[1.9] font-medium text-ink outline-none focus:border-accent"
+                    className="contact-input min-w-0 resize-y rounded-2xl border border-divider bg-paper p-3.5 text-base leading-[1.9] font-medium text-ink outline-none focus:border-accent"
                 />
                 <FieldError message={errors.message} />
             </label>
@@ -162,7 +162,7 @@ export function ContactInputForm({
                     />
                     <span
                         aria-hidden="true"
-                        className="flex size-[22px] flex-none items-center justify-center border-2 border-ink text-sm leading-none text-paper peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
+                        className="flex size-[22px] flex-none items-center justify-center rounded-md border border-divider text-sm leading-none text-ink peer-checked:bg-accent-200 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
                     >
                         {agreed ? '✓' : ''}
                     </span>
@@ -178,7 +178,7 @@ export function ContactInputForm({
             <button
                 ref={ctaRef}
                 type="submit"
-                className="btn btn-primary min-w-[280px] self-start justify-between px-6 py-[18px] text-base"
+                className="btn btn-primary w-full sm:w-auto sm:min-w-[240px] self-start justify-between px-6 py-[18px] text-base"
             >
                 入力内容を確認する<span aria-hidden="true">→</span>
             </button>
@@ -266,7 +266,7 @@ function TextField({
                 placeholder={placeholder}
                 autoComplete={autoComplete}
                 aria-invalid={!!error}
-                className={UNDERLINE_INPUT_CLASS}
+                className={INPUT_CLASS}
             />
             {required && <FieldError message={error} />}
         </label>

@@ -23,14 +23,23 @@ export function SplitChars({ text }: SplitCharsProps) {
                 {lines.map((line, i) => (
                     <Fragment key={i}>
                         {i > 0 && <br />}
-                        {Array.from(line).map((c, j) => (
-                            <span
-                                key={j}
-                                data-char=""
-                                className="inline-block"
-                                style={c === ' ' ? { whiteSpace: 'pre' } : undefined}
-                            >
-                                {c}
+                        {/* 括弧と句読点を隣の文字とまとめ、狭い画面で行頭に孤立させない。 */}
+                        {(
+                            line.match(
+                                /[「『（【]*[^「『（【、。！？）」』】\s][、。！？）」』】]*|\s|./gu,
+                            ) ?? []
+                        ).map((group, j) => (
+                            <span key={j} className="inline-block whitespace-nowrap">
+                                {Array.from(group).map((c, k) => (
+                                    <span
+                                        key={k}
+                                        data-char=""
+                                        className="inline-block"
+                                        style={c === ' ' ? { whiteSpace: 'pre' } : undefined}
+                                    >
+                                        {c}
+                                    </span>
+                                ))}
                             </span>
                         ))}
                     </Fragment>

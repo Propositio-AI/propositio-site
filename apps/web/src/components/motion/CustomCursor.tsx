@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-import { gsap, isCoarsePointer, useGSAP } from '@/lib/gsap';
+import { gsap, isCoarsePointer, prefersReducedMotion, useGSAP } from '@/lib/gsap';
 
 /**
 
@@ -19,7 +19,7 @@ export function CustomCursor() {
         const ring = ringRef.current;
         const dot = dotRef.current;
         if (!ring || !dot) return;
-        if (isCoarsePointer()) {
+        if (isCoarsePointer() || prefersReducedMotion()) {
             gsap.set([ring, dot], { display: 'none' });
             return;
         }
@@ -43,7 +43,8 @@ export function CustomCursor() {
             dy(e.clientY);
             rx(e.clientX);
             ry(e.clientY);
-            const over = e.target instanceof Element && !!e.target.closest('a, button, article');
+            const over =
+                e.target instanceof Element && !!e.target.closest('a, button, summary, article');
             if (over !== hovering) {
                 hovering = over;
                 gsap.to(ring, {
@@ -62,6 +63,7 @@ export function CustomCursor() {
         <>
             <div
                 ref={ringRef}
+                data-cursor-ring=""
                 aria-hidden="true"
                 className="pointer-events-none fixed top-0 left-0 z-[200] size-11 rounded-full border border-ink"
             />

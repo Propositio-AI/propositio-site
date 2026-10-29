@@ -6,8 +6,6 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from '@/App';
 
-import 'lenis/dist/lenis.css';
-
 import './index.css';
 
 const queryClient = new QueryClient();

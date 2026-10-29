@@ -49,11 +49,14 @@ export function ContactView({ step, children }: ContactViewProps) {
                 { y: 30, opacity: 0 },
                 { y: 0, opacity: 1, duration: 0.8, stagger: 0.05, ease: 'expo.out' },
             );
-            gsap.fromTo(
-                '[data-done-mark]',
-                { scale: 0, rotate: -90 },
-                { scale: 1, rotate: 0, duration: 1.2, ease: 'elastic.out(1,0.5)' },
-            );
+            const doneMark = rootRef.current?.querySelector('[data-done-mark]');
+            if (doneMark) {
+                gsap.fromTo(
+                    doneMark,
+                    { scale: 0, rotate: -90 },
+                    { scale: 1, rotate: 0, duration: 1.2, ease: 'elastic.out(1,0.5)' },
+                );
+            }
         },
         { scope: rootRef, dependencies: [step] },
     );
@@ -61,18 +64,18 @@ export function ContactView({ step, children }: ContactViewProps) {
     return (
         <div
             ref={rootRef}
-            className="relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
+            className="inner-page relative flex min-h-screen flex-col overflow-x-clip bg-paper text-ink"
         >
             <PageWipe direction="vertical" origin="bottom" />
             <SiteHeader variant="page" current="contact" />
-            <main className="grid flex-1 grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] items-start gap-[clamp(40px,6vw,96px)] px-gutter pt-[clamp(64px,8vw,112px)] pb-[clamp(80px,10vw,140px)]">
-                <div className="flex flex-col gap-[clamp(24px,3vw,40px)] md:sticky md:top-[120px]">
+            <main className="grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)] items-start gap-[clamp(40px,6vw,96px)] px-gutter pt-[clamp(64px,8vw,112px)] pb-[clamp(80px,10vw,140px)]">
+                <div className="flex flex-col gap-[clamp(24px,3vw,40px)] lg:sticky lg:top-[120px]">
                     <div data-in="">
                         <Eyebrow>CONTACT</Eyebrow>
                     </div>
                     <h1
                         data-title=""
-                        className="m-0 overflow-hidden pb-[.05em] text-[clamp(56px,9vw,150px)] leading-[.9] tracking-[-.05em]"
+                        className="m-0 overflow-hidden pb-[.05em] text-[clamp(48px,6.5vw,96px)] leading-[1.15] tracking-[-.05em]"
                     >
                         <SplitChars text="Contact" />
                     </h1>
@@ -83,7 +86,7 @@ export function ContactView({ step, children }: ContactViewProps) {
                         <ContactSteps step={step} />
                     </div>
                 </div>
-                <div data-panel="" className="flex flex-col">
+                <div data-panel="" className="soft-panel contact-panel flex min-w-0 flex-col">
                     {children}
                 </div>
             </main>

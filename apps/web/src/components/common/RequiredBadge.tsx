@@ -8,11 +8,11 @@
 **/
 export function RequiredBadge({ required }: { required: boolean }) {
     return required ? (
-        <span className="bg-ink px-1.5 py-0.5 text-[11px] font-semibold tracking-[.08em] text-paper">
+        <span className="rounded-full bg-accent-200 px-2.5 py-0.5 text-[11px] font-semibold tracking-[.08em] text-accent-700">
             必須
         </span>
     ) : (
-        <span className="border border-neutral-400 px-1.5 py-0.5 text-[11px] font-semibold tracking-[.08em] text-neutral-600">
+        <span className="rounded-full border border-divider px-2.5 py-0.5 text-[11px] font-semibold tracking-[.08em] text-neutral-600">
             任意
         </span>
     );

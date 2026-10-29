@@ -14,11 +14,11 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 **/
 export function NotFoundPage() {
     return (
-        <div className="flex min-h-screen flex-col bg-paper text-ink">
+        <div className="inner-page flex min-h-screen flex-col bg-paper text-ink">
             <SiteHeader variant="page" />
             <main className="flex flex-1 flex-col gap-6 px-gutter py-[clamp(64px,9vw,120px)]">
                 <Eyebrow>404 — NOT FOUND</Eyebrow>
-                <h1 className="m-0 text-[clamp(56px,9vw,150px)] leading-[.9] tracking-[-.05em]">
+                <h1 className="m-0 text-[clamp(44px,8vw,120px)] leading-[1.2] tracking-[-.05em]">
                     Not Found
                 </h1>
                 <p className="m-0 max-w-[28em] text-base leading-[1.9]">

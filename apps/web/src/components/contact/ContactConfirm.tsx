@@ -51,7 +51,7 @@ export function ContactConfirm({
     const waitingForTurnstile = Boolean(turnstileSiteKey) && !hasTurnstileToken;
 
     return (
-        <div className="flex flex-col border-t-2 border-ink">
+        <div className="flex min-w-0 flex-col">
             <p
                 data-field=""
                 className="m-0 border-b border-neutral-300 py-5 text-[15px] leading-[1.8]"
@@ -63,7 +63,7 @@ export function ContactConfirm({
                     <div
                         key={label}
                         data-field=""
-                        className="grid grid-cols-[minmax(120px,180px)_minmax(0,1fr)] gap-5 border-b border-neutral-300 py-5"
+                        className="grid grid-cols-1 sm:grid-cols-[minmax(100px,140px)_minmax(0,1fr)] gap-5 border-b border-neutral-300 py-5"
                     >
                         <dt className="text-[13px] font-bold text-neutral-700">{label}</dt>
                         <dd className="m-0 text-base leading-[1.8] break-words whitespace-pre-wrap">
@@ -77,7 +77,7 @@ export function ContactConfirm({
                     <Turnstile
                         key={turnstileKey}
                         siteKey={turnstileSiteKey}
-                        options={{ language: 'ja' }}
+                        options={{ language: 'ja', size: 'flexible' }}
                         onSuccess={onTurnstileToken}
                         onExpire={() => onTurnstileToken(null)}
                         onError={() => onTurnstileToken(null)}
@@ -101,7 +101,7 @@ export function ContactConfirm({
                 </button>
                 <button
                     type="button"
-                    className="btn btn-primary min-w-60 justify-between px-6 py-[18px] text-base"
+                    className="btn btn-primary w-full sm:w-auto sm:min-w-52 justify-between px-6 py-[18px] text-base"
                     onClick={onSend}
                     disabled={isSending || waitingForTurnstile}
                 >
