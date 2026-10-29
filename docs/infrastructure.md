@@ -6,22 +6,103 @@ propositio-siteは`propositio-infra`に登録された`static-site`を利用し�
 
 ```mermaid
 flowchart LR
-  U[利用者] --> R53[Route 53]
-  R53 --> CF[CloudFront + ACM]
-  CF --> S3[(private S3\nReact build)]
-  U --> APIGW[API Gateway\napi.*]
-  APIGW --> L[Lambda\nsite-api]
-  L --> MC[microCMS]
-  L --> DDB[(DynamoDB\ncontacts)]
-  L --> SES[SES]
-  SES --> INFO[info@propositio.com]
-  L --> SSM[SSM Parameter Store]
-  SSM --> KMS[KMS]
-  GH[GitHub Actions OIDC] --> S3
-  GH --> CF
+  U[利用者のブラウザ]
+  MC[microCMS]
+  INFO[info@propositio.com]
+
+  subgraph DNS[Amazon Route 53 / propositio.com]
+    WEB_DNS[stg.propositio.com]
+    API_DNS[api.stg.propositio.com]
+    MAIL_DNS[DKIM・MAIL FROM records]
+  end
+
+  subgraph WEB[Web配信]
+    ACM[Amazon Certificate Manager<br/>TLS certificate]
+    CF[Amazon CloudFront<br/>TLS・CSP・SPA rewrite]
+    OAC[Origin Access Control]
+    S3[(Private Amazon S3<br/>React/Vite build)]
+  end
+
+  subgraph API[Site API / ap-northeast-1]
+    APIGW[Amazon API Gateway<br/>HTTP API・CORS・throttle]
+    L[AWS Lambda<br/>Python 3.13 arm64]
+    DDB[(Amazon DynamoDB<br/>お問い合わせ)]
+    SSM[AWS Systems Manager<br/>SecureString]
+    KMS[AWS KMS]
+  end
+
+  subgraph MAIL[メール]
+    SES[Amazon SES<br/>propositio.com identity]
+    CONFIG[SES Configuration Set]
+  end
+
+  subgraph MONITORING[監視]
+    LOGS[Amazon CloudWatch Logs]
+    ALARM[CloudWatch Alarms]
+    SNS[Amazon SNS]
+  end
+
+  subgraph DELIVERY[Webデプロイ]
+    GH[GitHub Actions]
+    OIDC[GitHub OIDC]
+    ROLE[stg deploy IAM Role]
+  end
+
+  subgraph PROVISIONING[インフラ管理]
+    DEV[開発者]
+    LOGIN[AWS login]
+    TF[Terraform CLI]
+    STATE[(Terraform state S3)]
+  end
+
+  U --> WEB_DNS --> CF --> OAC --> S3
+  ACM --> CF
+  U --> API_DNS --> APIGW --> L
+  L --> MC
+  L --> DDB
+  L --> SSM --> KMS
+  L --> SES
+  CONFIG --> SES
+  MAIL_DNS --> SES
+  SES -->|お問い合わせ通知・返信先は送信者| INFO
+  SES -->|自動返信| U
+  L --> LOGS --> ALARM --> SNS --> INFO
+  SES --> ALARM
+
+  GH --> OIDC --> ROLE
+  ROLE -.->|Web upload| S3
+  ROLE -.->|cache invalidation| CF
+  DEV --> LOGIN --> TF
+  TF <--> STATE
+  TF -.->|plan / apply| DNS
+  TF -.->|plan / apply| WEB
+  TF -.->|plan / apply| API
+  TF -.->|plan / apply| MAIL
+  TF -.->|plan / apply| MONITORING
 ```
 
 AWS公式アイコンを画像ファイルとしてリポジトリへ複製しません。READMEで壊れやすい外部画像URLや、ライセンス確認の難しいアイコンを埋め込まず、GitHubでそのまま保守できるMermaidとサービス正式名称を使います。AWS公式の詳細図が必要な資料だけ、AWS Architecture Iconsの最新版をダウンロードして別の作図データとして管理します。
+
+### 通信経路
+
+| URL・経路 | AWSサービス | 用途 |
+| --- | --- | --- |
+| `https://stg.propositio.com` | Route 53 → CloudFront → private S3 | React/Viteの静的サイト |
+| `https://api.stg.propositio.com/activities` | Route 53 → API Gateway → Lambda → microCMS | 活動記録の取得 |
+| `https://api.stg.propositio.com/contacts` | Route 53 → API Gateway → Lambda → DynamoDB/SES | 問い合わせ受付、通知、自動返信 |
+| `/propositio/stg/propositio-site/app/*` | SSM Parameter Store + KMS | microCMS API key、Turnstile secret |
+
+### Terraform stateの境界
+
+```text
+services/propositio-site/shared/terraform.tfstate
+  └─ SES identity、DKIM・MAIL FROM、Configuration Set、共有メール監視
+
+services/propositio-site/stg/terraform.tfstate
+  └─ S3、CloudFront、Web/API DNS・ACM、API Gateway、Lambda、DynamoDB、SSM/KMS、環境監視
+```
+
+このサイトは`static-site`構成です。VPC、ECS、RDS、Cognitoは使用しません。Web用S3は公開せず、CloudFront Origin Access Control経由だけで読み取れます。GitHubのdeploy RoleはWeb配信だけに使用し、Terraformの変更権限とは分離しています。
 
 ## どこで何を管理するか
 

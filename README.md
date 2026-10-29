@@ -14,6 +14,7 @@ Propositio AI / Karynos の公式サイトです。Webは React + Vite、ロー�
 | CI/CD | GitHub Actions + AWS OIDC | Roleは`propositio-infra`、配信は`.github/workflows/deploy.yml` |
 
 ECS・RDS・ALB・ECR・Cognitoは使用しません。共通基盤とsiteの責務、初回構築、GitHub設定は[インフラ運用マニュアル](./docs/infrastructure.md)にまとめています。
+実際のWeb・API・メール・監視の通信経路も、同資料の[全体構成図](./docs/infrastructure.md#全体構成)で確認できます。
 
 ## リポジトリ構成
 
