@@ -1,7 +1,6 @@
 name: Deploy
 
-# mainのCI成功後はstgへ自動配信する。prodはGitHub Actionsから手動実行し、
-# GitHub Environment「prod」の承認ルールを通す。
+# mainのCI成功後、GitHub Environment「prod」の承認ルールを通して本番配信する。
 on:
     workflow_run:
         workflows: [CI]
@@ -9,11 +8,6 @@ on:
         branches: [main]
     workflow_dispatch:
         inputs:
-            environment:
-                description: デプロイ先
-                type: choice
-                options: [stg, prod]
-                required: true
             ref:
                 description: デプロイするcommit SHA（空なら選択ブランチの先頭）
                 required: false
@@ -23,7 +17,7 @@ permissions:
     id-token: write
 
 concurrency:
-    group: deploy-${{ inputs.environment || 'stg' }}
+    group: deploy-prod
     cancel-in-progress: false
 
 jobs:
@@ -31,11 +25,11 @@ jobs:
         if: >-
             github.event_name == 'workflow_dispatch' ||
             (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
-        name: Deploy static site (${{ inputs.environment || 'stg' }})
+        name: Deploy static site (prod)
         runs-on: ubuntu-latest
         timeout-minutes: 20
         environment:
-            name: ${{ inputs.environment || 'stg' }}
+            name: prod
             url: ${{ vars.WEB_URL }}
         steps:
             - uses: actions/checkout@v7

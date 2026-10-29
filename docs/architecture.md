@@ -13,7 +13,7 @@ services/backend ──────────────▶ packages/api-clie
    └─ PostgreSQL                        ├──▶ apps/web     （React + Vite）
                                         └──▶ apps/mobile  （Expo / React Native）
 
-infra/terraform ──▶ AWS（stg / prod）
+infra/terraform ──▶ AWS（prod）
                     Web: S3 + CloudFront
                     API: API Gateway + Lambda / お問い合わせ: DynamoDB + SES
 ```
@@ -36,7 +36,7 @@ propositio-site/
 │   └── api-client/                       # Web / モバイル共通のAPIクライアント
 ├── services/
 │   └── backend/                          # FastAPI
-├── infra/terraform/                      # AWS基盤（stg / prod）
+├── infra/terraform/                      # AWS本番基盤
 └── docs/
 ```
 
@@ -45,7 +45,7 @@ propositio-site/
 | 環境 | 定義 | 内容 |
 | --- | --- | --- |
 | ローカル開発 | `docker-compose.yml` | PostgreSQL / FastAPI / WebをDockerで起動し、モバイルはホストでExpoを起動する。メールは送信せずログに出す |
-| stg / prod | `infra/terraform/` + `.github/workflows/deploy.yml` | AWS上で動かす。詳細は [infrastructure.md](./infrastructure.md) |
+| prod | `infra/terraform/` + `.github/workflows/deploy.yml` | AWS本番で動かす。詳細は [infrastructure.md](./infrastructure.md) |
 
 ## バックエンド構成（`services/backend/`）
 
@@ -170,15 +170,14 @@ Web / モバイルはバックエンドAPIを**直接fetchしない**。必ず`@
 ```
 infra/terraform/
 ├── env/
-│   ├── stg/              # stg root（main/variables/outputs/service）
-│   │   └── service/
-│   │       └── site-api/ # API Gateway/Lambda等をリソース別に分割
-│   └── prod/             # prodの独立root（stgと同じ責務）
+│   └── prod/             # 本番root（main/variables/outputs/service）
+│       └── service/
+│           └── site-api/ # API Gateway/Lambda等をリソース別に分割
 └── shared/
     └── service/mail/     # SES/DNS/SNS/CloudWatchをリソース別に分割
 ```
 
-S3 + CloudFrontは`propositio-infra`のversion固定された`static-site`を利用する。活動記録・お問い合わせAPIだけを各環境の`service/site-api`へ置く。Terraform state bucket、GitHub OIDC Provider、deploy Roleは`propositio-infra`が管理し、Hosted Zone名とWeb/APIドメインはこのリポジトリの`env/<env>/main.tf`で決定する。Route 53 recordは`static-site`と`site-api`のmoduleが作成する。詳細は [infrastructure.md](./infrastructure.md) を参照。
+S3 + CloudFrontは`propositio-infra`のversion固定された`static-site`を利用する。活動記録・お問い合わせAPIだけを`env/prod/service/site-api`へ置く。Terraform state bucket、GitHub OIDC Provider、prod deploy Roleは`propositio-infra`が管理し、Hosted Zone名とWeb/APIドメインはこのリポジトリの`env/prod/main.tf`で決定する。Route 53 recordは`static-site`と`site-api`のmoduleが作成する。詳細は [infrastructure.md](./infrastructure.md) を参照。
 
 ## 技術スタック一覧
 

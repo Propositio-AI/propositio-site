@@ -1,6 +1,6 @@
 # はじめに（セットアップ・起動方法）
 
-ローカルの開発環境は `docker-compose.yml` で PostgreSQL / FastAPI / Web を起動する（モバイルはホスト上のExpo）。本番・ステージング（AWS）の構成とデプロイは [infrastructure.md](./infrastructure.md) を参照。
+ローカルの開発環境は `docker-compose.yml` で PostgreSQL / FastAPI / Web を起動する（モバイルはホスト上のExpo）。本番AWSの構成とデプロイは [infrastructure.md](./infrastructure.md) を参照。
 
 ## 必要なもの
 

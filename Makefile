@@ -7,11 +7,11 @@ default = $(shell "$(CURDIR)/scripts/read-default.sh" $(1) "$(DEFAULTS_FILE)")
 TF_DIR := infra/terraform
 TF_AWS_DIR = $(TF_DIR)/env/$(ENV)
 TF_SHARED_DIR := $(TF_DIR)/shared
-TF_STATE_PROJECT_NAME ?= $(shell awk -F'"' '/^[[:space:]]*project_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/stg/main.tf")
-TF_SERVICE_NAME ?= $(shell awk -F'"' '/^[[:space:]]*service_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/stg/main.tf")
-ENV ?=
+TF_STATE_PROJECT_NAME ?= $(shell awk -F'"' '/^[[:space:]]*project_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/prod/main.tf")
+TF_SERVICE_NAME ?= $(shell awk -F'"' '/^[[:space:]]*service_name[[:space:]]*=/{print $$2; exit}' "$(CURDIR)/$(TF_DIR)/env/prod/main.tf")
+ENV ?= prod
 # 検証する Terraform のルート（state を持つ単位）
-TF_ROOTS := shared env/stg env/prod
+TF_ROOTS := shared env/prod
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
 TF_VERSION ?= $(call default,TERRAFORM_VERSION)
 AWS_PROFILE ?= $(call default,AWS_PROFILE)
@@ -277,13 +277,13 @@ shared-output-aws: shared-init-aws ## site共有リソースのTerraform output�
 	$(TERRAFORM_SHARED) output
 
 check-aws-env:
-	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }
+	@test "$(ENV)" = "prod" || { echo "propositio-siteはENV=prodのみ対応しています。" >&2; exit 2; }
 	@test -f "$(TF_AWS_DIR)/terraform.tfvars" || { echo "$(TF_AWS_DIR)/terraform.tfvars がありません。terraform.tfvars.exampleから作成してください。" >&2; exit 2; }
 
 check-destroy-confirm: check-aws-env
 	@test "$(CONFIRM)" = "$(TF_SERVICE_NAME)-$(ENV)" || { echo "削除には CONFIRM=$(TF_SERVICE_NAME)-$(ENV) を指定してください。" >&2; exit 2; }
 
-infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化する（ENV=stg|prod）
+infra-init-aws: check-aws-env ## 本番AWS用S3 backendを初期化する
 	@set -eu; \
 	account_id="$$($(AWS_BATCH) sts get-caller-identity --profile $(AWS_PROFILE) --query Account --output text)"; \
 	case "$$account_id" in *[!0-9]*|"") echo "AWSアカウントIDを正しく取得できませんでした: $$account_id" >&2; exit 2;; esac; \
@@ -295,7 +295,7 @@ infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化す�
 		-backend-config="encrypt=true" \
 		-backend-config="use_lockfile=true"
 
-plan-aws: infra-init-aws ## 実AWSの変更planを保存する（ENV=stg|prod）
+plan-aws: infra-init-aws ## 本番AWSの変更planを保存する
 	$(TERRAFORM_ENV) plan -input=false -var-file=terraform.tfvars -out=$(ENV).tfplan
 
 apply-aws: check-aws-env ## 保存済みの実AWS planを適用する

@@ -6,11 +6,11 @@ Propositio AI / Karynos の公式サイトです。Webは React + Vite、ロー�
 
 | 役割 | AWSサービス | 管理場所 |
 | --- | --- | --- |
-| Web配信 | S3 + CloudFront + ACM | `propositio-infra`の`static-site`を`infra/terraform/env/<env>`から利用 |
-| DNS | Route53 | Hosted Zone・ドメイン名は`env/<env>/main.tf`、レコード作成はinfraのservice typeとsite固有module |
-| 活動記録API | API Gateway + Lambda → microCMS | `infra/terraform/env/<env>/service/site-api` |
-| お問い合わせ | API Gateway + Lambda + DynamoDB + SES | `infra/terraform/env/<env>/service/site-api` |
-| 秘密値 | SSM Parameter Store + KMS | propositio-site固有、環境別 |
+| Web配信 | S3 + CloudFront + ACM | `propositio-infra`の`static-site`を`infra/terraform/env/prod`から利用 |
+| DNS | Route53 | Hosted Zone・ドメイン名は`env/prod/main.tf`、レコード作成はinfraのservice typeとsite固有module |
+| 活動記録API | API Gateway + Lambda → microCMS | `infra/terraform/env/prod/service/site-api` |
+| お問い合わせ | API Gateway + Lambda + DynamoDB + SES | `infra/terraform/env/prod/service/site-api` |
+| 秘密値 | SSM Parameter Store + KMS | propositio-site本番固有 |
 | CI/CD | GitHub Actions + AWS OIDC | Roleは`propositio-infra`、配信は`.github/workflows/deploy.yml` |
 
 ECS・RDS・ALB・ECR・Cognitoは使用しません。共通基盤とsiteの責務、初回構築、GitHub設定は[インフラ運用マニュアル](./docs/infrastructure.md)にまとめています。
@@ -23,11 +23,11 @@ ECS・RDS・ALB・ECR・Cognitoは使用しません。共通基盤とsiteの責
 | `apps/web` | 公開Web（React 19 + TypeScript + Vite） |
 | `services/backend` | ローカル開発・API契約の正本（FastAPI） |
 | `packages/api-client` | OpenAPIから生成するWeb共通APIクライアント |
-| `infra/terraform/env/<env>` | stg/prodの静的サイトとsite固有APIを組み立てるroot |
-| `infra/terraform/shared` | stg/prod共通のSESドメイン認証 |
-| `infra/terraform/env/<env>/service` | propositio-siteだけが使うTerraform module |
+| `infra/terraform/env/prod` | 本番の静的サイトとsite固有APIを組み立てるroot |
+| `infra/terraform/shared` | 本番で利用するSESドメイン認証 |
+| `infra/terraform/env/prod/service` | propositio-siteだけが使うTerraform module |
 | `config/defaults.json` | ローカルツール、AWS CLI、Terraform、共通module versionの既定値 |
-| `infra/terraform/env/<env>/main.tf` | サービス名、profile、Hosted Zone、Web/APIドメインの正本 |
+| `infra/terraform/env/prod/main.tf` | サービス名、profile、Hosted Zone、Web/APIドメインの正本 |
 
 ## ローカル開発
 
@@ -51,11 +51,11 @@ make generate-api  # OpenAPIからAPI clientを生成
 make aws-login
 make shared-plan-aws
 make shared-apply-aws
-make plan-aws ENV=stg
-make apply-aws ENV=stg
+make plan-aws
+make apply-aws
 ```
 
-`main`のCI成功がstg配信のフックです。prodはActionsの`Deploy`を手動実行し、GitHub Environmentの承認後に配信します。インフラ変更はpushだけでは適用されず、保存したTerraform planを人が確認してapplyします。
+`main`のCI成功が本番配信のフックです。GitHub Environment `prod`の承認後に配信します。Actionsの`Deploy`からcommit SHAを指定した手動配信もできます。インフラ変更はpushだけでは適用されず、保存したTerraform planを人が確認してapplyします。
 
 ## ドキュメント
 

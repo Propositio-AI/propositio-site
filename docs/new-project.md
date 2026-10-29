@@ -56,7 +56,7 @@ git push -u origin main
 | `services/backend/app/main.py` | `FastAPI(title=...)`（OpenAPIのタイトル） |
 | `services/backend/pyproject.toml` | 必要であれば`name` / `description` |
 | `propositio-infra/config/defaults.json` | deploy Role用のresource prefix・GitHubリポジトリ・deploy権限 |
-| `infra/terraform/env/<env>/main.tf` | profile・Hosted Zone・stg/prodドメイン・認証設定 |
+| `infra/terraform/env/prod/main.tf` | profile・Hosted Zone・本番ドメイン・認証設定 |
 
 `docs/`配下（このファイルを除く `getting-started.md` / `architecture.md` / `development.md` / `infrastructure.md`）は、このベースリポジトリの構成・規約に関する説明であり、プロジェクト名に依存する記述はほぼ無いためそのまま使い続けてよい。プロジェクト固有のドメイン知識（機能一覧・仕様など）が増えてきたら、別ファイルとして追加していく。
 
@@ -90,7 +90,7 @@ make seed          # 初期データが必要な場合
 make install && make dev-mobile   # モバイルを確認する場合
 ```
 
-[getting-started.md](./getting-started.md)の手順どおりに起動し、Web（http://localhost:5173 ）とバックエンドAPI（http://localhost:8000/docs ）、モバイル（Expo）にアクセスできることを確認する。AWS基盤を使う場合は、[infrastructure.md](./infrastructure.md)の「初回構築」に従って stg を作成する。
+[getting-started.md](./getting-started.md)の手順どおりに起動し、Web（http://localhost:5173 ）とバックエンドAPI（http://localhost:8000/docs ）、モバイル（Expo）にアクセスできることを確認する。AWS基盤を使う場合は、[infrastructure.md](./infrastructure.md)の手順に従って本番planを確認してから適用する。
 
 ### 5. CIを有効にする
 
