@@ -6,7 +6,7 @@ Karynos サイト（`apps/web`）が使う外部サービスの設定手順。�
 | --- | --- | --- |
 | 活動記録（一覧・詳細・カテゴリ） | microCMS | `services/backend/.env` |
 | お問い合わせの通知・自動返信 | Amazon SESで送信し、`info@propositio.com`で受信・返信 | 本番は Terraform（`infra/terraform`）、開発は `services/backend/.env` |
-| フォームのボット対策（任意） | Cloudflare Turnstile | 本番は Secrets Manager と GitHub の Variables、開発は `services/backend/.env` と `apps/web/.env` |
+| フォームのボット対策（任意） | Cloudflare Turnstile | 本番はSSM Parameter StoreとGitHub Variables、開発は`services/backend/.env`と`apps/web/.env` |
 
 ブラウザが microCMS や SES を直接呼ぶことはない。APIキーはすべてバックエンドに置き、Web は `@repo/api-client` 経由で `GET /activities`・`GET /categories`・`POST /contacts` だけを呼ぶ。
 
@@ -70,7 +70,7 @@ Cloudflare でサイトを登録し、サイトキーとシークレットキー
 | | サイトキー（公開してよい） | シークレットキー |
 | --- | --- | --- |
 | 開発 | `apps/web/.env` の `VITE_TURNSTILE_SITE_KEY` | `services/backend/.env` の `TURNSTILE_SECRET_KEY` |
-| 本番 | GitHub の Environment の Variables `VITE_TURNSTILE_SITE_KEY` | Secrets Manager `<project>-<env>/app` の `TURNSTILE_SECRET_KEY` |
+| 本番 | GitHub Environment Variable `VITE_TURNSTILE_SITE_KEY` | SSM `/propositio/<env>/propositio-site/app/turnstile-secret-key` |
 
 - サイトキーが空ならウィジェットを表示せず、シークレットキーが空（または `disabled`）なら検証しない。
 - 有効にすると、確認画面にウィジェットが表示され、トークンを取得するまで「送信する」が押せなくなる。検証APIに接続できない場合も送信は受け付けない。
@@ -79,4 +79,4 @@ Cloudflare でサイトを登録し、サイトキーとシークレットキー
 
 ## 4. お問い合わせの管理
 
-運営は `info@propositio.com` に届いた通知メールで受け付けた内容を確認し、そのまま返信する。受付内容は DB に保存されるが、個人情報を含むため一覧を返す公開 API は用意していない（以前の `GET /contacts` は削除した）。
+運営は `info@propositio.com` に届いた通知メールで受け付けた内容を確認し、そのまま返信する。本番の受付内容はDynamoDBへ保存するが、個人情報を含むため一覧を返す公開APIは用意しない。

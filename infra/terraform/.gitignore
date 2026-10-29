@@ -1,7 +1,9 @@
 .terraform/
+.terraform-*/
 *.tfstate
 *.tfstate.*
 *.tfplan
+*.zip
 backups/
 crash.log
 # アカウント固有の値（ドメイン・リポジトリ名など）は各自のファイルに置き、コミットしない

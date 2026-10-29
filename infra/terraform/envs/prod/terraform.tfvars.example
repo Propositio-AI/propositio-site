@@ -1,5 +1,0 @@
-# cp terraform.tfvars.example terraform.tfvars
-microcms_service_domain = "your-service"
-# 初回のみ：ECRにpush済みのイメージのタグ（コミットSHA）
-api_image_tag = "0000000000000000000000000000000000000000"
-# alarm_email = "info@propositio.com"

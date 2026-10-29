@@ -5,11 +5,13 @@ default = $(shell "$(CURDIR)/scripts/read-default.sh" $(1) "$(DEFAULTS_FILE)")
 
 # --- インフラ（Terraform）用の設定 ---
 TF_DIR := infra/terraform
+TF_AWS_DIR := $(TF_DIR)/aws
+TF_SHARED_DIR := $(TF_DIR)/shared
 TF_PLATFORM_PROJECT_NAME ?= $(call default,TF_PLATFORM_PROJECT_NAME)
 TF_PLATFORM_SERVICE_NAME ?= $(call default,TF_PLATFORM_SERVICE_NAME)
 ENV ?=
 # 検証する Terraform のルート（state を持つ単位）
-TF_ROOTS := bootstrap shared envs/stg envs/prod
+TF_ROOTS := bootstrap shared aws
 # ホストにterraformが無い場合に使う公式Dockerイメージのバージョン
 TF_VERSION ?= $(call default,TERRAFORM_VERSION)
 AWS_PROFILE ?= $(call default,AWS_PROFILE)
@@ -33,24 +35,33 @@ endif
 # ホストのterraformを優先し、無ければDockerで実行する
 ifneq ($(shell command -v terraform 2>/dev/null),)
 TERRAFORM := cd "$(CURDIR)/$(TF_DIR)" && terraform
+TERRAFORM_VALIDATE := TF_DATA_DIR="$(CURDIR)/$(TF_DIR)/.terraform-validate/$(ROOT)" terraform -chdir=$(TF_DIR)/$(ROOT)
 else
 TERRAFORM := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
 	-v "$(CURDIR):/repo" -w /repo/$(TF_DIR) \
 	hashicorp/terraform:$(TF_VERSION)
+TERRAFORM_VALIDATE := docker run --rm -i \
+	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
+	-e TF_DATA_DIR=/repo/$(TF_DIR)/.terraform-validate/$(ROOT) \
+	-v "$(CURDIR):/repo" -v "$(CURDIR)/../propositio-infra:/local-infra:ro" \
+	-w /repo/$(TF_DIR)/$(ROOT) --entrypoint /bin/sh hashicorp/terraform:$(TF_VERSION) \
+	-c 'git config --global url."file:///local-infra".insteadOf "https://github.com/Propositio-AI/propositio-infra.git"; terraform "$$@"' --
 endif
 
 ifneq ($(shell command -v terraform 2>/dev/null),)
-TERRAFORM_ENV := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/envs/$(ENV)
+TERRAFORM_ENV := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) TF_DATA_DIR="$(CURDIR)/$(TF_DIR)/.terraform-aws/$(ENV)" terraform -chdir=$(TF_AWS_DIR)
 TERRAFORM_SHARED := AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=$(TF_DIR)/shared
 TERRAFORM_SHARED_BATCH := $(TERRAFORM_SHARED)
 else
 TERRAFORM_ENV := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
 	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
-	-e TF_DATA_DIR=/repo/$(TF_DIR)/envs/$(ENV)/.terraform \
+	-e TF_DATA_DIR=/repo/$(TF_DIR)/.terraform-aws/$(ENV) \
 	-v "$(HOME)/.aws:/tmp/.aws:ro" -v "$(CURDIR):/repo" \
-	-w /repo/$(TF_DIR)/envs/$(ENV) hashicorp/terraform:$(TF_VERSION)
+	-v "$(CURDIR)/../propositio-infra:/local-infra:ro" -w /repo/$(TF_AWS_DIR) \
+	--entrypoint /bin/sh hashicorp/terraform:$(TF_VERSION) \
+	-c 'git config --global url."file:///local-infra".insteadOf "https://github.com/Propositio-AI/propositio-infra.git"; terraform "$$@"' --
 TERRAFORM_SHARED := docker run --rm -i $(shell [ -t 0 ] && echo -t) \
 	--user $(shell id -u):$(shell id -g) -e HOME=/tmp -e CHECKPOINT_DISABLE=1 \
 	-e AWS_PROFILE=$(AWS_PROFILE) -e AWS_REGION=$(AWS_REGION) \
@@ -65,7 +76,7 @@ TERRAFORM_SHARED_BATCH := docker run --rm -i \
 	-w /repo/$(TF_DIR)/shared hashicorp/terraform:$(TF_VERSION)
 endif
 
-.PHONY: help config-show config-value setup install up up-d down down-v build restart logs ps \
+.PHONY: help config-show config-value sync-infra-version check-infra-version setup install up up-d down down-v build restart logs ps \
 	dev-mobile \
 	migrate makemigration seed \
 	generate-api \
@@ -75,9 +86,8 @@ endif
 	format format-backend format-js \
 	shell-backend shell-web shell-db \
 	aws-configure aws-login aws-whoami aws-logout aws-preflight \
-	infra-fmt infra-validate check-shared-aws check-aws-env check-destroy-confirm \
+	infra-fmt infra-validate validate-root check-shared-aws check-aws-env check-destroy-confirm \
 	shared-init-aws shared-plan-aws shared-apply-aws shared-output-aws \
-	push-api-image \
 	infra-init-aws plan-aws apply-aws output-aws state-backup-aws destroy-plan-aws destroy-apply-aws
 
 help: ## コマンド一覧を表示する
@@ -89,6 +99,12 @@ config-show: ## 一元管理している既定値を表示する
 config-value: ## 既定値を1件表示する（例: make config-value KEY=TERRAFORM_VERSION）
 	@test -n "$(KEY)" || { echo "KEYを指定してください。" >&2; exit 1; }
 	@"$(CURDIR)/scripts/read-default.sh" "$(KEY)" "$(DEFAULTS_FILE)"
+
+sync-infra-version: ## config/defaults.jsonのinfra versionをmodule sourceへ同期する
+	@"$(CURDIR)/scripts/sync-infra-module-version.sh"
+
+check-infra-version: ## module sourceが一元管理versionと一致するか検査する
+	@"$(CURDIR)/scripts/check-infra-module-version.sh"
 
 ## --- 通常開発（PostgreSQL + FastAPI + Web をDockerで起動） ---
 
@@ -224,15 +240,16 @@ aws-preflight: ## AWS接続・SES・DNSのデプロイ前チェックを行う�
 infra-fmt: ## Terraformコードを整形する
 	$(TERRAFORM) fmt -recursive
 
-infra-validate: ## Terraformのfmtチェックと、全ルートの構文検証を行う（backend・クラウド接続なし）
+infra-validate: check-infra-version ## Terraformのfmtチェックと、全ルートの構文検証を行う（backend・クラウド接続なし）
 	$(TERRAFORM) fmt -check -recursive
 	@for root in $(TF_ROOTS); do \
 		echo "==> $$root"; \
-		if [ ! -d "$(TF_DIR)/$$root/.terraform/providers" ]; then \
-			$(TERRAFORM) -chdir=$$root init -input=false -backend=false >/dev/null || exit 1; \
-		fi; \
-		$(TERRAFORM) -chdir=$$root validate || exit 1; \
+		$(MAKE) --no-print-directory validate-root ROOT=$$root || exit 1; \
 	done
+
+validate-root:
+	$(TERRAFORM_VALIDATE) init -input=false -backend=false
+	$(TERRAFORM_VALIDATE) validate
 
 check-shared-aws:
 	@test -f "$(TF_DIR)/backend.hcl" || { echo "$(TF_DIR)/backend.hcl がありません。backend.hcl.exampleから作成してください。" >&2; exit 2; }
@@ -251,25 +268,9 @@ shared-apply-aws: check-shared-aws ## 確認済みのsite共有リソースplan�
 shared-output-aws: shared-init-aws ## site共有リソースのTerraform outputを表示する
 	$(TERRAFORM_SHARED) output
 
-push-api-image: check-shared-aws ## 現在のコミットの本番APIイメージをECRへ登録する
-	@docker info >/dev/null 2>&1 || { echo "Docker Desktopを起動してください。" >&2; exit 2; }
-	@set -eu; \
-		repository="$$($(TERRAFORM_SHARED_BATCH) output -raw ecr_repository_url)"; \
-		tag="$$(git rev-parse HEAD)"; \
-		if $(AWS_BATCH) ecr describe-images --repository-name "$${repository##*/}" --image-ids "imageTag=$$tag" --profile "$(AWS_PROFILE)" --region "$(AWS_REGION)" >/dev/null 2>&1; then \
-			echo "既に登録済みです: $$repository:$$tag"; \
-			exit 0; \
-		fi; \
-		$(AWS_BATCH) ecr get-login-password --profile "$(AWS_PROFILE)" --region "$(AWS_REGION)" \
-			| docker login --username AWS --password-stdin "$${repository%%/*}"; \
-		docker build --platform linux/amd64 --target prod -t "$$repository:$$tag" services/backend; \
-		docker push "$$repository:$$tag"; \
-		echo "API_IMAGE_TAG=$$tag"; \
-		echo "API_IMAGE_URI=$$repository:$$tag"
-
 check-aws-env:
 	@test "$(ENV)" = "stg" -o "$(ENV)" = "prod" || { echo "ENV=stg または ENV=prod を指定してください。" >&2; exit 2; }
-	@test -f "$(TF_DIR)/envs/$(ENV)/terraform.tfvars" || { echo "$(TF_DIR)/envs/$(ENV)/terraform.tfvars がありません。exampleから作成してください。" >&2; exit 2; }
+	@test -f "$(TF_DIR)/envs/$(ENV).tfvars" || { echo "$(TF_DIR)/envs/$(ENV).tfvars がありません。$(ENV).tfvars.exampleから作成してください。" >&2; exit 2; }
 
 check-destroy-confirm: check-aws-env
 	@test "$(CONFIRM)" = "$(TF_PLATFORM_SERVICE_NAME)-$(ENV)" || { echo "削除には CONFIRM=$(TF_PLATFORM_SERVICE_NAME)-$(ENV) を指定してください。" >&2; exit 2; }
@@ -287,10 +288,10 @@ infra-init-aws: check-aws-env ## 実AWS用S3 backendを環境別に初期化す�
 		-backend-config="use_lockfile=true"
 
 plan-aws: infra-init-aws ## 実AWSの変更planを保存する（ENV=stg|prod）
-	$(TERRAFORM_ENV) plan -input=false -out=$(ENV).tfplan
+	$(TERRAFORM_ENV) plan -input=false -var-file=../envs/$(ENV).tfvars -var=environment=$(ENV) -out=$(ENV).tfplan
 
 apply-aws: check-aws-env ## 保存済みの実AWS planを適用する
-	@test -f "$(TF_DIR)/envs/$(ENV)/$(ENV).tfplan" || { echo "先に make plan-aws ENV=$(ENV) を実行してください。" >&2; exit 2; }
+	@test -f "$(TF_DIR)/aws/$(ENV).tfplan" || { echo "先に make plan-aws ENV=$(ENV) を実行してください。" >&2; exit 2; }
 	$(TERRAFORM_ENV) apply -input=false $(ENV).tfplan
 
 output-aws: infra-init-aws ## 実AWSのTerraform outputを表示する
@@ -305,8 +306,8 @@ state-backup-aws: infra-init-aws ## destroy前にremote stateをローカルへ�
 	echo "State backup: $$backup_file"
 
 destroy-plan-aws: check-destroy-confirm state-backup-aws ## 削除planを保存する
-	$(TERRAFORM_ENV) plan -destroy -input=false -var=destroy_mode=true -out=destroy-$(ENV).tfplan
+	$(TERRAFORM_ENV) plan -destroy -input=false -var-file=../envs/$(ENV).tfvars -var=environment=$(ENV) -var=destroy_mode=true -out=destroy-$(ENV).tfplan
 
 destroy-apply-aws: check-destroy-confirm ## 保存済みの削除planを適用する
-	@test -f "$(TF_DIR)/envs/$(ENV)/destroy-$(ENV).tfplan" || { echo "先に make destroy-plan-aws を実行してください。" >&2; exit 2; }
+	@test -f "$(TF_DIR)/aws/destroy-$(ENV).tfplan" || { echo "先に make destroy-plan-aws を実行してください。" >&2; exit 2; }
 	$(TERRAFORM_ENV) apply -input=false destroy-$(ENV).tfplan

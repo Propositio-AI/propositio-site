@@ -1,0 +1,5 @@
+# cp stg.tfvars.example stg.tfvars
+microcms_service_domain = "your-service"
+contact_notify_to       = "info@example.com"
+# alarm_email = "ops@example.com"
+# noindex = true

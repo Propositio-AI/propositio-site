@@ -1,73 +1,66 @@
-# propositio-base
+# propositio-site
 
-全プロジェクトのベースとなるリポジトリ。pnpm workspace + uv のモノレポで、Web・モバイル・バックエンドと、AWS基盤（Terraform）をまとめて持つ。
+Propositio AI / Karynos の公式サイトです。Webは React + Vite、ローカルAPIは FastAPI で開発し、AWSでは固定費を抑えるため **static-site** として配信します。
 
-## 構成
+## 本番構成
+
+| 役割 | AWSサービス | 管理場所 |
+| --- | --- | --- |
+| Web配信 | S3 + CloudFront + ACM | `propositio-infra`の`static-site`を`infra/terraform/aws`から利用 |
+| DNS | Route53 | ドメイン名の登録は`propositio-infra`、レコード作成はsite Terraform |
+| 活動記録API | API Gateway + Lambda → microCMS | `infra/terraform/services/site-api` |
+| お問い合わせ | API Gateway + Lambda + DynamoDB + SES | `infra/terraform/services/site-api` |
+| 秘密値 | SSM Parameter Store + KMS | propositio-site固有、環境別 |
+| CI/CD | GitHub Actions + AWS OIDC | Roleは`propositio-infra`、配信は`.github/workflows/deploy.yml` |
+
+ECS・RDS・ALB・ECR・Cognitoは使用しません。共通基盤とsiteの責務、初回構築、GitHub設定は[インフラ運用マニュアル](./docs/infrastructure.md)にまとめています。
+
+## リポジトリ構成
 
 | パス | 内容 |
 | --- | --- |
-| `apps/web` | Web（React 19 + TypeScript + Vite + React Compiler / react-router-dom / TailwindCSS v4 + shadcn/ui） |
-| `apps/mobile` | モバイル（Expo SDK 57 + React Native / Expo Router。WebViewを使わないネイティブUI） |
-| `packages/api-client` | Web / モバイル共通のAPIクライアント（orvalでOpenAPIから自動生成 + TanStack Query） |
-| `services/backend` | バックエンド（FastAPI + Python 3.12 / SQLAlchemy 2.0 + Alembic / PostgreSQL 16） |
-| `infra/terraform` | AWS基盤（ECS・RDS・S3 + CloudFront・SES・Route53）。stg / prod の2環境 |
-| `config/defaults.json` | AWS CLI、Terraform、サイト基盤の既定値を一元管理する正本 |
+| `apps/web` | 公開Web（React 19 + TypeScript + Vite） |
+| `services/backend` | ローカル開発・API契約の正本（FastAPI） |
+| `packages/api-client` | OpenAPIから生成するWeb共通APIクライアント |
+| `infra/terraform/aws` | stg/prodの静的サイトとsite固有APIを組み立てるroot |
+| `infra/terraform/shared` | stg/prod共通のSESドメイン認証 |
+| `infra/terraform/services` | propositio-siteだけが使うTerraform module |
+| `config/defaults.json` | AWS・Terraform・共通module versionの既定値 |
 
-## 既定値の管理
+## ローカル開発
 
-AWSリージョン、CLI・Terraformのバージョン、ECS・RDSなどのTerraform既定値は[`config/defaults.json`](./config/defaults.json)だけで管理します。Makefile、Terraform、GitHub Actions、AWS確認スクリプトは同じファイルを参照します。
-
-```bash
-make config-show
-make config-value KEY=TF_DB_INSTANCE_CLASS
-```
-
-stg/prod固有値は`infra/terraform/envs/<env>`、秘密値はSSM Parameter Storeなどへ分離し、`config/defaults.json`には保存しません。
-
-Terraform stateバケット、GitHub ActionsのOIDC Providerとdeploy Role、共通Cognito、公開ドメイン名の登録は`propositio-infra`が所有します。このリポジリは`service_platform_config["propositio-site"]`の出力値を利用し、その名前に対するACM証明書、CloudFront/ALB、Route 53 recordを作成します。詳しい接続・既存stateの移行手順は[docs/infrastructure.md](./docs/infrastructure.md)を参照してください。
-
-## 起動方法
-
-開発環境は2つに分かれていて、互いに独立して起動する。
-
-### 通常開発（PostgreSQL + FastAPI + Web）
-
-前提: Docker / Docker Compose、Node.js 22.18以上 + pnpm 12（corepack）、`make`
+前提は Docker / Docker Compose、Node.js 22.18以上、pnpm 12、`make`です。
 
 ```bash
-make up          # .envを作成し、db / backend / web をビルドして起動する
-make seed        # 初期データを投入する（初回のみ）
-make install     # ホストにpnpm workspaceの依存をインストールする（mobile・Lint・型チェック用）
-make generate-api  # OpenAPIからAPIクライアント（packages/api-client）を生成する
-make dev-mobile  # モバイル（Expo）の開発サーバーをホスト上で起動する
+make up            # PostgreSQL / FastAPI / Webを起動
+make seed          # 初回データ
+make install       # pnpm依存関係
+make generate-api  # OpenAPIからAPI clientを生成
 ```
 
-- Web: http://localhost:5173
-- バックエンドAPI: http://localhost:8000 （Swagger UI: http://localhost:8000/docs）
-- PostgreSQL: localhost:5432
+- Web: <http://localhost:5173>
+- API / Swagger: <http://localhost:8000> / <http://localhost:8000/docs>
 
-### 本番・ステージング（AWS）
+ローカルではFastAPIで実装と契約を検証します。AWSでは同じ公開契約（`activities`、`categories`、`contacts`）を小さなLambdaが実装します。
 
-main にマージすると GitHub Actions が stg へ自動デプロイし、prod へは承認付きの手動実行でデプロイする。インフラの構成・初回構築・運用は [docs/infrastructure.md](./docs/infrastructure.md) を参照。
+## AWSへの反映
 
 ```bash
-make plan-aws ENV=stg   # 実AWSの差分を保存して確認
-make apply-aws ENV=stg  # 確認済みの保存planだけを適用
+make aws-login
+make shared-plan-aws
+make shared-apply-aws
+make plan-aws ENV=stg
+make apply-aws ENV=stg
 ```
 
-ECSはパブリックサブネットでPublic IPを使い、受信をALBからだけに制限する。RDSはプライベートサブネットへ置き、NAT Gatewayを設けないことを低コスト標準とする。
-
-他のコマンド（テスト・Lint・マイグレーションなど）は `make help` で一覧表示できる。
+`main`のCI成功がstg配信のフックです。prodはActionsの`Deploy`を手動実行し、GitHub Environmentの承認後に配信します。インフラ変更はpushだけでは適用されず、保存したTerraform planを人が確認してapplyします。
 
 ## ドキュメント
 
-詳しい使用方法は [`docs/`](./docs) を参照。
+- [AWS構成・構築・デプロイ](./docs/infrastructure.md)
+- [ローカルセットアップ](./docs/getting-started.md)
+- [アプリ設計](./docs/architecture.md)
+- [開発手順](./docs/development.md)
+- [microCMS・お問い合わせ・Turnstile](./docs/karynos-site.md)
 
-- [docs/getting-started.md](./docs/getting-started.md) — セットアップ・起動・環境変数の詳細
-- [docs/architecture.md](./docs/architecture.md) — ディレクトリ構成・レイヤー分離の設計方針
-- [docs/development.md](./docs/development.md) — 新機能の追加手順、API自動生成、マイグレーション、テスト、Lint/Format、CI、コメント規約
-- [docs/infrastructure.md](./docs/infrastructure.md) — AWSの構成（Terraform）・初回構築・デプロイ・運用
-- [docs/karynos-site.md](./docs/karynos-site.md) — microCMS・SES（お問い合わせメール）・Turnstileの設定
-- [docs/new-project.md](./docs/new-project.md) — このリポジトリをベースに新しいプロジェクトを作る手順
-
-AIエージェント向けの規約は [`CLAUDE.md`](./CLAUDE.md) を参照。
+コマンド一覧は`make help`で確認できます。

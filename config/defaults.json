@@ -5,21 +5,8 @@
   "AWS_SSO_START_URL": "https://ssoins-77584660547db882.portal.ap-northeast-1.app.aws",
   "AWS_PERMISSION_SET": "PowerUserAccess",
   "TERRAFORM_VERSION": "1.14.3",
+  "TF_INFRA_MODULE_VERSION": "v1.2.0",
   "TF_PLATFORM_PROJECT_NAME": "propositio",
   "TF_PLATFORM_SERVICE_NAME": "propositio-site",
-  "TF_MAIL_FROM_SUBDOMAIN": "mail",
-  "TF_PUBLIC_ENABLED": true,
-  "TF_AVAILABILITY_ZONES": [
-    "ap-northeast-1a",
-    "ap-northeast-1c"
-  ],
-  "TF_API_CPU": 256,
-  "TF_API_MEMORY": 512,
-  "TF_ENABLE_EXECUTE_COMMAND": true,
-  "TF_DB_INSTANCE_CLASS": "db.t4g.micro",
-  "TF_DB_ALLOCATED_STORAGE": 20,
-  "TF_DB_MAX_ALLOCATED_STORAGE": 100,
-  "TF_DB_MULTI_AZ": false,
-  "TF_DB_PASSWORD_VERSION": 1,
-  "TF_NOINDEX": false
+  "TF_MAIL_FROM_SUBDOMAIN": "mail"
 }

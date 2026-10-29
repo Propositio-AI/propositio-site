@@ -1,4 +1,4 @@
-# shared / envs/* の terraform init で -backend-config=../backend.hcl（envsは ../../backend.hcl）として渡す。
+# shared / aws の terraform init で -backend-configとして渡す。
 # cp backend.hcl.example backend.hcl し、propositio-infraのservice_platform_config.state.bucketを記入する。
 bucket       = "propositio-terraform-state-123456789012"
 region       = "ap-northeast-1"

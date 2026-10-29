@@ -94,9 +94,12 @@ jobs:
             - name: Test
               run: uv run pytest
 
-            # 本番用イメージ（ECSで動かすもの）がビルドできることを確認する
-            - name: Build production image
-              run: docker build --target prod -t backend:ci .
+            - name: Check AWS site API
+              working-directory: .
+              run: |
+                  uv run --project services/backend ruff check infra/terraform/services/site-api/handler.py infra/terraform/services/site-api/test_handler.py
+                  uv run --project services/backend ruff format --check infra/terraform/services/site-api/handler.py infra/terraform/services/site-api/test_handler.py
+                  python -m unittest discover -s infra/terraform/services/site-api -p 'test_*.py'
 
     compose:
         name: Docker Compose config
@@ -116,6 +119,14 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
+
+            - name: Configure private Terraform module access
+              env:
+                  INFRA_REPOSITORY_TOKEN: ${{ secrets.INFRA_REPOSITORY_TOKEN }}
+              run: |
+                  test -n "$INFRA_REPOSITORY_TOKEN"
+                  git config --global url."https://x-access-token:${INFRA_REPOSITORY_TOKEN}@github.com/Propositio-AI/propositio-infra.git".insteadOf \
+                    "https://github.com/Propositio-AI/propositio-infra.git"
 
             - name: Read repository defaults
               id: defaults

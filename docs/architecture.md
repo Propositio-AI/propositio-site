@@ -2,7 +2,7 @@
 
 ## 全体構成
 
-pnpm workspace（TypeScript）+ uv（Python）のモノレポ。Web（React + Vite）・モバイル（Expo）・バックエンド（FastAPI + PostgreSQL）と、AWS基盤のTerraformを1つのリポジトリで管理する。
+pnpm workspace（TypeScript）+ uv（Python）のモノレポ。Web（React + Vite）・モバイル（Expo）・ローカル開発用バックエンド（FastAPI + PostgreSQL）と、AWS基盤のTerraformを1つのリポジトリで管理する。
 
 Web / モバイルとバックエンドの間は、バックエンドが公開するOpenAPIスキーマから自動生成された共通APIクライアント（`@repo/api-client`）経由でのみ通信する。
 
@@ -14,11 +14,12 @@ services/backend ──────────────▶ packages/api-clie
                                         └──▶ apps/mobile  （Expo / React Native）
 
 infra/terraform ──▶ AWS（stg / prod）
-                    Web: S3 + CloudFront / API: ECS Fargate + ALB / DB: RDS / メール: SES
+                    Web: S3 + CloudFront
+                    API: API Gateway + Lambda / お問い合わせ: DynamoDB + SES
 ```
 
 ```
-propositio-base/
+propositio-site/
 ├── package.json / pnpm-workspace.yaml   # pnpm workspace（apps/* と packages/*）
 ├── pnpm-lock.yaml
 ├── eslint.config.js                      # TS全体で共有するESLint設定
@@ -170,14 +171,13 @@ Web / モバイルはバックエンドAPIを**直接fetchしない**。必ず`@
 infra/terraform/
 ├── backend.hcl.example   # remote state（S3）の設定のひな形
 ├── bootstrap/            # propositio-infraの共通stateバケットの存在確認
-├── shared/               # ECR・SES（ドメイン認証・設定セット）
-├── modules/environment/  # 1環境分：VPC・ALB・ECS・RDS・Secrets Manager・S3 + CloudFront・Route53・IAM・アラーム
-└── envs/
-    ├── stg/              # module "environment" を stg のサイズで呼ぶ
-    └── prod/             # 同 prod
+├── aws/                  # static-siteとsite-apiを組み立てるstg/prod共通root
+├── shared/               # SES（ドメイン認証・設定セット）
+├── services/             # site固有のsite-api / contact-mail module
+└── envs/                 # stg.tfvars / prod.tfvars（実値はGit管理外）
 ```
 
-リソースの定義は`modules/environment`に1つだけ持ち、環境ごとの差（タスク数・DBの保護設定・ドメイン）は`envs/<env>/main.tf`のmodule引数だけに書く。Terraform state、GitHub OIDC Provider、deploy Roleは`propositio-infra`を参照し、このリポジトリでは重複作成しない。詳細は [infrastructure.md](./infrastructure.md) を参照。
+S3 + CloudFrontは`propositio-infra`のversion固定された`static-site`を利用する。活動記録・お問い合わせAPIだけをsite固有moduleに置く。Terraform state、GitHub OIDC Provider、deploy Role、ドメイン登録は`propositio-infra`を参照し、このリポジトリでは重複作成しない。詳細は [infrastructure.md](./infrastructure.md) を参照。
 
 ## 技術スタック一覧
 
@@ -196,7 +196,7 @@ infra/terraform/
 | バックエンドLint/Format | ruff |
 | バックエンドテスト | pytest |
 | DB | PostgreSQL 16 |
-| インフラ | Terraform（hashicorp/aws 6.x） / ECS Fargate + ALB・S3 + CloudFront・RDS PostgreSQL・SES・Route53・Secrets Manager |
+| インフラ | Terraform（hashicorp/aws 6.x） / S3 + CloudFront・API Gateway + Lambda・DynamoDB・SES・Route53・SSM + KMS |
 | デプロイ | GitHub Actions（OIDC） |
 | CI | GitHub Actions |
 | パッケージ管理 | pnpm workspace（TS） / uv（Python） |
