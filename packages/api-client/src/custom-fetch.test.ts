@@ -50,8 +50,27 @@ describe('customFetch', () => {
             'http://api.example.com/health',
             expect.objectContaining({ method: 'GET' }),
         );
+        const request = fetchMock.mock.calls[0]?.[1];
+        expect(new Headers(request?.headers).has('Content-Type')).toBe(false);
         expect(result.data).toEqual({ status: 'ok' });
         expect(result.status).toBe(200);
+    });
+
+    it('JSON本文を送る場合だけContent-Typeを設定する', async () => {
+        fetchMock.mockResolvedValue(
+            new Response(JSON.stringify({ status: 'accepted' }), {
+                status: 201,
+                headers: { 'Content-Type': 'application/json' },
+            }),
+        );
+
+        await customFetch('/contacts', {
+            method: 'POST',
+            body: JSON.stringify({ message: 'hello' }),
+        });
+
+        const request = fetchMock.mock.calls[0]?.[1];
+        expect(new Headers(request?.headers).get('Content-Type')).toBe('application/json');
     });
 
     it('レスポンスが失敗ステータスの場合は例外を送出する', async () => {

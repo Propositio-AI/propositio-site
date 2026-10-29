@@ -90,6 +90,17 @@ class HandlerTests(unittest.TestCase):
         self.assertEqual(result["statusCode"], 404)
         self.assertNotIn("Access-Control-Allow-Origin", result["headers"])
 
+    def test_options_preflight_is_accepted(self):
+        result = handler.lambda_handler(
+            {
+                "rawPath": "/activities",
+                "requestContext": {"http": {"method": "OPTIONS"}},
+            },
+            None,
+        )
+        self.assertEqual(result["statusCode"], 204)
+        self.assertEqual(result["body"], "")
+
     def test_contact_response_keeps_fastapi_contract(self):
         handler.PARAMETER_CACHE["/turnstile"] = "disabled"
         payload = {

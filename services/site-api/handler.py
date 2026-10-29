@@ -426,6 +426,8 @@ def lambda_handler(event: dict[str, Any], _context: Any) -> dict[str, Any]:
         method = request.get("method", "")
         path = event.get("rawPath", "/").rstrip("/") or "/"
         query = event.get("queryStringParameters") or {}
+        if method == "OPTIONS":
+            return {"statusCode": 204, "headers": {}, "body": ""}
         if method == "GET" and path == "/activities":
             return response(200, list_activities(query))
         if method == "GET" and path.startswith("/activities/"):

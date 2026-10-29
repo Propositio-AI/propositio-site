@@ -104,12 +104,14 @@ Tはorvalが生成する「ステータスコード込みのレスポンス型�
 
 **/
 export async function customFetch<T>(url: string, options: CustomFetchOptions): Promise<T> {
+    const headers = new Headers(options.headers);
+    if (options.body != null && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+    }
+
     const response = await fetch(`${config.baseUrl}${url}`, {
         ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
+        headers,
     });
 
     if (!response.ok) {
